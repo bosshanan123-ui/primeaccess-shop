@@ -2676,34 +2676,7 @@ self.addEventListener('fetch', e => {
         '''
         return Response(sw_code, mimetype='application/javascript')
 
-@app.route('/offline.html')
-def serve_offline():
-    """Serve offline page"""
-    try:
-        return send_file('offline.html')
-    except:
-        offline_html = '''
-<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Offline</title>
-<style>body{font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#f0f4fa;text-align:center;}
-.offline-box{padding:40px;background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.1);max-width:400px;}
-.offline-box .icon{font-size:80px;margin-bottom:20px;}
-.offline-box h1{color:#1A2332;}.offline-box p{color:#666;margin-bottom:20px;line-height:1.6;}
-.retry-btn{background:#2563EB;color:white;border:none;padding:12px 30px;border-radius:8px;font-size:16px;cursor:pointer;}
-.retry-btn:hover{background:#1D4ED8;}</style>
-</head>
-<body>
-<div class="offline-box">
-<div class="icon">📡</div>
-<h1>No Internet Connection</h1>
-<p>You are offline. Please check your internet connection and try again.</p>
-<button class="retry-btn" onclick="location.reload()">🔄 Retry</button>
-</div>
-</body>
-</html>
-        '''
-        return Response(offline_html, mimetype='text/html')
+
 # ============================================
 # OFFLINE SYNC API
 # ============================================
