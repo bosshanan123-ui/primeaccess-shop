@@ -1,0 +1,176 @@
+<!-- templates/expenses.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}اخراجات - شاپ مینجمنٹ{% else %}Expenses - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-money-bill-wave text-primary me-2"></i>
+                {% if current_lang == 'ur' %}اخراجات{% else %}Expenses{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}اخراجات{% else %}Expenses{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="window.location.href='{{ url_for('add_expense') }}'">
+                <i class="fas fa-plus me-2"></i>
+                {% if current_lang == 'ur' %}خرچہ شامل کریں{% else %}Add Expense{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #e17055;">
+            <div class="stat-number">{{ "%.0f"|format(total_monthly) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}اس مہینے کا کل{% else %}This Month Total{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #fdcb6e;">
+            <div class="stat-number">{{ expenses|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل اخراجات{% else %}Total Expenses{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table table-hover" id="expensesTable">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}زمرہ{% else %}Category{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}تفصیل{% else %}Description{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}رقم{% else %}Amount{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}ادائیگی{% else %}Payment{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                        <tr>
+                            <td>{{ expense.expense_date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ expense.category }}</span>
+                                {% if expense.sub_category %}
+                                    <span class="badge bg-secondary">{{ expense.sub_category }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ expense.description }}</td>
+                            <td class="fw-bold text-danger">{{ "%.0f"|format(expense.amount) }}</td>
+                            <td>
+                                <span class="badge bg-secondary">{{ expense.payment_method or 'N/A' }}</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteExpense({{ expense.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#expensesTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[0, 'desc']]
+        });
+    });
+    
+   function deleteExpense(id) {
+    const lang = '{{ current_lang }}';
+    Swal.fire({
+        title: lang === 'ur' ? 'خرچہ حذف کریں؟' : 'Delete Expense?',
+        text: lang === 'ur' ? 'یہ عمل واپس نہیں کیا جا سکتا۔' : 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e17055',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: lang === 'ur' ? 'ہاں، حذف کریں!' : 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: lang === 'ur' ? 'حذف ہو رہا ہے...' : 'Deleting...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Use correct URL with trailing slash
+            fetch('/delete_expense/' + id, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close();
+                if (data.status === 'success') {
+                    const msg = lang === 'ur' ? '✅ خرچہ کامیابی سے حذف ہو گیا' : '✅ Expense deleted successfully';
+                    showToast(msg, 'success');
+                    // Remove the row from table
+                    location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: lang === 'ur' ? 'ناکام!' : 'Failed!',
+                        text: data.message || (lang === 'ur' ? 'خرچہ حذف کرنے میں ناکامی' : 'Failed to delete expense')
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: lang === 'ur' ? 'خرابی!' : 'Error!',
+                    text: lang === 'ur' ? 'خرچہ حذف کرنے میں خرابی' : 'Error deleting expense'
+                });
+                console.error('Error:', error);
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

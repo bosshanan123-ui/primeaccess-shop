@@ -1,0 +1,157 @@
+<!-- templates/return_sale.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}سیل واپس کریں - شاپ مینجمنٹ{% else %}Return Sale - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-undo text-primary me-2"></i>
+                {% if current_lang == 'ur' %}سیل واپس کریں{% else %}Return Sale{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('sales') }}">
+                        {% if current_lang == 'ur' %}سیلز{% else %}Sales{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('view_sale', sale_id=sale.id) }}">{{ sale.invoice_number }}</a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}واپسی{% else %}Return{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}واپس کرنے کے لیے آئٹمز{% else %}Items to Return{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="table-container">
+                        <table class="table table-hover" id="returnTable">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        {% if current_lang == 'ur' %}آئٹم{% else %}Item{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if current_lang == 'ur' %}قیمت{% else %}Price{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if current_lang == 'ur' %}فروخت مقدار{% else %}Qty Sold{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if current_lang == 'ur' %}واپسی مقدار{% else %}Return Qty{% endif %}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in sale.items %}
+                                    {% if item.is_product and not item.is_returned %}
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold">{{ item.product.name }}</div>
+                                                <small class="text-muted">SKU: {{ item.product.sku }}</small>
+                                            </td>
+                                            <td>PKR {{ "%.0f"|format(item.unit_price) }}</td>
+                                            <td>{{ item.quantity }}</td>
+                                            <td>
+                                                <input type="hidden" name="return_item[]" value="{{ item.id }}">
+                                                <input type="number" class="form-control return-qty" name="return_quantity[]" 
+                                                       min="0" max="{{ item.quantity }}" value="{{ item.quantity }}" 
+                                                       style="width: 80px;" onchange="updateTotal()">
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <label class="form-label fw-semibold">
+                            {% if current_lang == 'ur' %}واپسی کی وجہ{% else %}Return Reason{% endif %}
+                        </label>
+                        <textarea class="form-control" name="return_reason" rows="3" 
+                                  placeholder="{% if current_lang == 'ur' %}براہ کرم واپسی کی وجہ بتائیں...{% else %}Please provide reason for return...{% endif %}"></textarea>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-calculator me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}واپسی کا خلاصہ{% else %}Return Summary{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted small">
+                        {% if current_lang == 'ur' %}انوائس نمبر{% else %}Invoice Number{% endif %}
+                    </label>
+                    <div class="fw-bold">{{ sale.invoice_number }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">
+                        {% if current_lang == 'ur' %}اصل رقم{% else %}Original Amount{% endif %}
+                    </label>
+                    <div class="fw-bold">PKR {{ "%.0f"|format(sale.total_amount) }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">
+                        {% if current_lang == 'ur' %}واپسی کی رقم{% else %}Return Amount{% endif %}
+                    </label>
+                    <div class="fw-bold text-danger" id="returnAmount">PKR 0</div>
+                </div>
+                <hr>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>
+                        {% if current_lang == 'ur' %}نوٹ:{% else %}Note:{% endif %}
+                    </strong> 
+                    {% if current_lang == 'ur' %}واپس کی گئی اشیاء انوینٹری میں دوبارہ شامل کر دی جائیں گی۔{% else %}Returned items will be added back to inventory.{% endif %}
+                </div>
+                <button type="submit" class="btn btn-warning w-100 py-2" onclick="return confirm('{% if current_lang == 'ur' %}کیا آپ اس واپسی کو پروسیس کرنا چاہتے ہیں؟{% else %}Are you sure you want to process this return?{% endif %}')">
+                    <i class="fas fa-undo me-2"></i>
+                    {% if current_lang == 'ur' %}واپسی پروسیس کریں{% else %}Process Return{% endif %}
+                </button>
+                <a href="{{ url_for('view_sale', sale_id=sale.id) }}" class="btn btn-secondary w-100 mt-2">
+                    <i class="fas fa-times me-2"></i>
+                    {% if current_lang == 'ur' %}منسوخ کریں{% else %}Cancel{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateTotal() {
+        const lang = '{{ current_lang }}';
+        let total = 0;
+        document.querySelectorAll('.return-qty').forEach(input => {
+            const qty = parseInt(input.value) || 0;
+            const price = parseFloat(input.closest('tr').querySelector('td:nth-child(2)').textContent.replace('PKR ', '')) || 0;
+            total += qty * price;
+        });
+        document.getElementById('returnAmount').textContent = 'PKR ' + total.toFixed(0);
+    }
+    
+    document.addEventListener('DOMContentLoaded', updateTotal);
+</script>
+{% endblock %}

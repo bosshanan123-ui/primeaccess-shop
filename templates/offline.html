@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - PRIMEACCESS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f0f4fa;
+        }
+        .offline-box {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 400px;
+        }
+        .offline-box .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .offline-box h1 {
+            color: #1A2332;
+            margin-bottom: 10px;
+        }
+        .offline-box p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .offline-box .retry-btn {
+            background: #2563EB;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .offline-box .retry-btn:hover {
+            background: #1D4ED8;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-box">
+        <div class="icon">📡</div>
+        <h1>No Internet Connection</h1>
+        <p>You are offline. Please check your internet connection and try again.</p>
+        <p style="font-size: 14px; color: #999;">
+            💡 Previously loaded pages may still work.
+        </p>
+        <button class="retry-btn" onclick="location.reload()">🔄 Retry</button>
+    </div>
+</body>
+</html>

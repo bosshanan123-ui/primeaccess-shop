@@ -1,0 +1,115 @@
+<!-- templates/purchases.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}پرچیزز - شاپ مینجمنٹ{% else %}Purchases - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-file-invoice text-primary me-2"></i>
+                {% if current_lang == 'ur' %}پرچیز کی تاریخ{% else %}Purchase History{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}پرچیزز{% else %}Purchases{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="window.location.href='{{ url_for('new_purchase') }}'">
+                <i class="fas fa-plus me-2"></i>
+                {% if current_lang == 'ur' %}نیا پرچیز{% else %}New Purchase{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table table-hover" id="purchasesTable">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if current_lang == 'ur' %}پی او #{% else %}PO #{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}سپلائر{% else %}Supplier{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}آئٹمز{% else %}Items{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}کل{% else %}Total{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for purchase in purchases %}
+                        <tr>
+                            <td><span class="badge bg-primary">{{ purchase.purchase_number }}</span></td>
+                            <td>{{ purchase.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                {% if purchase.supplier %}
+                                    {{ purchase.supplier.name }}
+                                {% else %}
+                                    <span class="text-muted">
+                                        {% if current_lang == 'ur' %}کوئی سپلائر نہیں{% else %}No supplier{% endif %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ purchase.items|length }}</td>
+                            <td class="fw-bold">{{ "%.0f"|format(purchase.total_amount) }}</td>
+                            <td>
+                                <span class="badge-status {% if purchase.payment_status == 'paid' %}paid{% elif purchase.payment_status == 'pending' %}pending{% else %}due{% endif %}">
+                                    {% if purchase.payment_status == 'paid' %}
+                                        {% if current_lang == 'ur' %}ادا شدہ{% else %}Paid{% endif %}
+                                    {% elif purchase.payment_status == 'pending' %}
+                                        {% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}
+                                    {% else %}
+                                        {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="window.location.href='{{ url_for('view_purchase', purchase_id=purchase.id) }}'">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#purchasesTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[1, 'desc']]
+        });
+    });
+</script>
+{% endblock %}

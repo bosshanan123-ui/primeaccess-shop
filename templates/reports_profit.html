@@ -1,0 +1,185 @@
+<!-- templates/reports_profit.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}منافع کی رپورٹ - شاپ مینجمنٹ{% else %}Profit Report - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-coins text-primary me-2"></i>
+                {% if current_lang == 'ur' %}منافع کی رپورٹ{% else %}Profit Report{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('reports') }}">
+                        {% if current_lang == 'ur' %}رپورٹس{% else %}Reports{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}منافع{% else %}Profit{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>
+                {% if current_lang == 'ur' %}رپورٹ پرنٹ کریں{% else %}Print Report{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Profit Summary -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #667eea;">
+            <div class="stat-number">PKR {{ "%.0f"|format(total_revenue) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل ریونیو{% else %}Total Revenue{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #e17055;">
+            <div class="stat-number">PKR {{ "%.0f"|format(total_cost) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}مال کی لاگت{% else %}Cost of Goods Sold{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #fdcb6e;">
+            <div class="stat-number">PKR {{ "%.0f"|format(total_expenses) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل اخراجات{% else %}Total Expenses{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: {% if net_profit > 0 %}#00b894{% else %}#e17055{% endif %};">
+            <div class="stat-number {% if net_profit > 0 %}text-success{% else %}text-danger{% endif %}">
+                PKR {{ "%.0f"|format(net_profit) }}
+            </div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}خالص منافع{% else %}Net Profit{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profit Breakdown -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-percent me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}منافع کا مارجن{% else %}Profit Margin{% endif %}
+            </div>
+            <div class="card-body text-center">
+                <h1 class="display-1 fw-bold {% if total_revenue > 0 and net_profit > 0 %}text-success{% else %}text-muted{% endif %}">
+                    {% if total_revenue > 0 %}
+                        {{ "%.1f"|format((net_profit / total_revenue) * 100) }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </h1>
+                <p class="text-muted">
+                    {% if current_lang == 'ur' %}خالص منافع کا مارجن{% else %}Net Profit Margin{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-arrow-up me-2 text-success"></i>
+                {% if current_lang == 'ur' %}مجموعی منافع{% else %}Gross Profit{% endif %}
+            </div>
+            <div class="card-body text-center">
+                <h1 class="display-1 fw-bold text-success">PKR {{ "%.0f"|format(gross_profit) }}</h1>
+                <p class="text-muted">
+                    {% if current_lang == 'ur' %}ریونیو - مال کی لاگت{% else %}Revenue - Cost of Goods Sold{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-arrow-down me-2 text-danger"></i>
+                {% if current_lang == 'ur' %}اخراجات کا تناسب{% else %}Expense Ratio{% endif %}
+            </div>
+            <div class="card-body text-center">
+                <h1 class="display-1 fw-bold {% if total_revenue > 0 %}text-warning{% else %}text-muted{% endif %}">
+                    {% if total_revenue > 0 %}
+                        {{ "%.1f"|format((total_expenses / total_revenue) * 100) }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </h1>
+                <p class="text-muted">
+                    {% if current_lang == 'ur' %}اخراجات / ریونیو{% else %}Expenses / Revenue{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Breakdown -->
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-calendar-alt me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}ماہانہ تفصیل{% else %}Monthly Breakdown{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if current_lang == 'ur' %}مہینہ{% else %}Month{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}ریونیو{% else %}Revenue{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}لاگت{% else %}Cost{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}منافع{% else %}Profit{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}مارجن{% else %}Margin{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in monthly_data %}
+                        <tr>
+                            <td>{{ data.month }}</td>
+                            <td>PKR {{ "%.0f"|format(data.revenue) }}</td>
+                            <td>PKR {{ "%.0f"|format(data.cost) }}</td>
+                            <td class="fw-bold {% if data.revenue - data.cost > 0 %}text-success{% else %}text-danger{% endif %}">
+                                PKR {{ "%.0f"|format(data.revenue - data.cost) }}
+                            </td>
+                            <td>
+                                {% if data.revenue > 0 %}
+                                    {{ "%.1f"|format(((data.revenue - data.cost) / data.revenue) * 100) }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

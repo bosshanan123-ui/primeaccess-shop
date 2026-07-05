@@ -1,0 +1,278 @@
+<!-- templates/products.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}پروڈکٹس - شاپ مینجمنٹ{% else %}Products - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-box text-primary me-2"></i>
+                {% if current_lang == 'ur' %}پروڈکٹس{% else %}Products{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}پروڈکٹس{% else %}Products{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="window.location.href='{{ url_for('add_product') }}'">
+                <i class="fas fa-plus me-2"></i>
+                {% if current_lang == 'ur' %}پروڈکٹ شامل کریں{% else %}Add Product{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="productSearch" 
+                           placeholder="{% if current_lang == 'ur' %}پروڈکٹس تلاش کریں...{% else %}Search products...{% endif %}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="categoryFilter">
+                    <option value="">
+                        {% if current_lang == 'ur' %}تمام زمرہ جات{% else %}All Categories{% endif %}
+                    </option>
+                    {% for category in categories %}
+                        <option value="{{ category[0] }}">{{ category[0] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="stockFilter">
+                    <option value="">
+                        {% if current_lang == 'ur' %}تمام اسٹاک{% else %}All Stock{% endif %}
+                    </option>
+                    <option value="low">
+                        {% if current_lang == 'ur' %}کم اسٹاک{% else %}Low Stock{% endif %}
+                    </option>
+                    <option value="out">
+                        {% if current_lang == 'ur' %}اسٹاک ختم{% else %}Out of Stock{% endif %}
+                    </option>
+                    <option value="in">
+                        {% if current_lang == 'ur' %}اسٹاک میں{% else %}In Stock{% endif %}
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-danger w-100" onclick="bulkDelete()">
+                    <i class="fas fa-trash me-2"></i>
+                    {% if current_lang == 'ur' %}بلک حذف کریں{% else %}Bulk Delete{% endif %}
+                </button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="table table-hover" id="productsTable">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll"></th>
+                        <th>SKU</th>
+                        <th>
+                            {% if current_lang == 'ur' %}نام{% else %}Name{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}زمرہ{% else %}Category{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}قیمت{% else %}Price{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اسٹاک{% else %}Stock{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td><input type="checkbox" class="product-checkbox" value="{{ product.id }}"></td>
+                            <td><span class="badge bg-secondary">{{ product.sku }}</span></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="product-icon me-2" style="width: 35px; height: 35px; border-radius: 8px; background: rgba(102, 126, 234, 0.1); display: flex; align-items: center; justify-content: center; color: #667eea;">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ product.name }}</div>
+                                        <small class="text-muted">{{ product.barcode or 'No barcode' }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-info">{{ product.category }}</span></td>
+                            <td>
+                                <div>
+                                    {% if current_lang == 'ur' %}فروخت:{% else %}Sale:{% endif %} 
+                                    <strong>{{ "%.0f"|format(product.selling_price) }}</strong>
+                                </div>
+                                <small class="text-muted">
+                                    {% if current_lang == 'ur' %}لاگت:{% else %}Cost:{% endif %} 
+                                    {{ "%.0f"|format(product.purchase_price) }}
+                                </small>
+                            </td>
+                            <td>
+                                <span class="badge {% if product.stock_quantity <= 0 %}bg-danger{% elif product.stock_quantity <= product.min_stock_level %}bg-warning{% else %}bg-success{% endif %}">
+                                    {{ product.stock_quantity }} {{ product.unit }}
+                                </span>
+                                {% if product.stock_quantity <= product.min_stock_level and product.stock_quantity > 0 %}
+                                    <span class="badge bg-warning ms-1">
+                                        {% if current_lang == 'ur' %}کم{% else %}Low{% endif %}
+                                    </span>
+                                {% elif product.stock_quantity <= 0 %}
+                                    <span class="badge bg-danger ms-1">
+                                        {% if current_lang == 'ur' %}ختم{% else %}Out{% endif %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if product.is_active %}
+                                    <span class="badge-status paid">
+                                        {% if current_lang == 'ur' %}فعال{% else %}Active{% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="badge-status pending">
+                                        {% if current_lang == 'ur' %}غیر فعال{% else %}Inactive{% endif %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="window.location.href='{{ url_for('update_product', product_id=product.id) }}'">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteProduct({{ product.id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        const table = $('#productsTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[1, 'asc']],
+            columnDefs: [
+                { orderable: false, targets: [0, 7] }
+            ]
+        });
+        
+        // Search
+        $('#productSearch').on('keyup', function() {
+            table.search(this.value).draw();
+        });
+        
+        // Category filter
+        $('#categoryFilter').on('change', function() {
+            table.column(3).search(this.value).draw();
+        });
+        
+        // Stock filter
+        $('#stockFilter').on('change', function() {
+            const value = this.value;
+            const lang = '{{ current_lang }}';
+            if (value === 'low') {
+                table.column(5).search(lang === 'ur' ? 'کم' : 'Low').draw();
+            } else if (value === 'out') {
+                table.column(5).search(lang === 'ur' ? 'ختم' : 'Out').draw();
+            } else if (value === 'in') {
+                table.column(5).search(lang === 'ur' ? 'اسٹاک میں' : 'In Stock', true, false).draw();
+            } else {
+                table.column(5).search('').draw();
+            }
+        });
+        
+        // Select all
+        $('#selectAll').on('change', function() {
+            $('.product-checkbox').prop('checked', this.checked);
+        });
+    });
+    
+    function deleteProduct(id) {
+        const lang = '{{ current_lang }}';
+        Swal.fire({
+            title: lang === 'ur' ? 'پروڈکٹ حذف کریں؟' : 'Delete Product?',
+            text: lang === 'ur' ? 'یہ پروڈکٹ ردی میں منتقل کر دی جائے گی۔' : 'This product will be moved to trash.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e17055',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: lang === 'ur' ? 'ہاں، حذف کریں!' : 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/delete_product/' + id,
+                    method: 'POST',
+                    success: function() {
+                        location.reload();
+                    }
+                });
+            }
+        });
+    }
+    
+    function bulkDelete() {
+        const lang = '{{ current_lang }}';
+        const ids = [];
+        $('.product-checkbox:checked').each(function() {
+            ids.push($(this).val());
+        });
+        
+        if (ids.length === 0) {
+            const msg = lang === 'ur' ? 'براہ کرم حذف کرنے کے لیے پروڈکٹس منتخب کریں' : 'Please select products to delete';
+            showToast(msg, 'warning');
+            return;
+        }
+        
+        Swal.fire({
+            title: lang === 'ur' ? 'بلک حذف کریں؟' : 'Bulk Delete?',
+            text: lang === 'ur' ? 'آپ ' + ids.length + ' پروڈکٹس حذف کرنے والے ہیں۔' : 'You are about to delete ' + ids.length + ' products.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e17055',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: lang === 'ur' ? 'ہاں، سب حذف کریں!' : 'Yes, delete all!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/products/bulk_delete',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({product_ids: ids}),
+                    success: function() {
+                        location.reload();
+                    }
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

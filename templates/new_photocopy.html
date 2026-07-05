@@ -1,0 +1,221 @@
+<!-- templates/new_photocopy.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}نیا فوٹو کاپی جاب - شاپ مینجمنٹ{% else %}New Photocopy Job - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-copy text-primary me-2"></i>
+                {% if current_lang == 'ur' %}نیا فوٹو کاپی جاب{% else %}New Photocopy Job{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('photocopy') }}">
+                        {% if current_lang == 'ur' %}فوٹو کاپی جابز{% else %}Photocopy Jobs{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}نیا{% else %}New{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}
+                            </label>
+                            <select class="form-select" name="customer_id">
+                                <option value="">
+                                    {% if current_lang == 'ur' %}واک ان کسٹمر{% else %}Walk-in Customer{% endif %}
+                                </option>
+                                {% for customer in customers %}
+                                    <option value="{{ customer.id }}">{{ customer.name }} - {{ customer.phone }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}صفحہ کی قسم{% else %}Page Type{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" name="page_type" required onchange="updateRate()">
+                                <option value="">
+                                    {% if current_lang == 'ur' %}قسم منتخب کریں{% else %}Select Type{% endif %}
+                                </option>
+                                <option value="b&w">
+                                    {% if current_lang == 'ur' %}سیاہ و سفید{% else %}Black & White{% endif %}
+                                </option>
+                                <option value="color">
+                                    {% if current_lang == 'ur' %}رنگین{% else %}Color{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}کاغذ کا سائز{% else %}Paper Size{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" name="paper_size" required>
+                                <option value="A4">A4</option>
+                                <option value="A3">A3</option>
+                                <option value="A5">A5</option>
+                                <option value="Letter">Letter</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}کل صفحات{% else %}Total Pages{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" name="total_pages" required min="1" value="1" onchange="calculateTotal()">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}فی صفحہ ریٹ{% else %}Rate Per Page{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">PKR</span>
+                                <input type="number" class="form-control" name="rate_per_page" id="ratePerPage" required step="0.5" min="0" value="5" onchange="calculateTotal()">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}کاپیاں{% else %}Copies{% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="copies" min="1" value="1" onchange="calculateTotal()">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}کل رقم{% else %}Total Amount{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">PKR</span>
+                                <input type="text" class="form-control" id="totalAmount" readonly style="background: #f8f9fa; font-weight: bold; color: #667eea;">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}رنگ کی قسم{% else %}Color Type{% endif %}
+                            </label>
+                            <select class="form-select" name="color_type">
+                                <option value="">
+                                    {% if current_lang == 'ur' %}منتخب کریں{% else %}Select{% endif %}
+                                </option>
+                                <option value="black_white">
+                                    {% if current_lang == 'ur' %}سیاہ و سفید{% else %}Black & White{% endif %}
+                                </option>
+                                <option value="grayscale">
+                                    {% if current_lang == 'ur' %}گرے اسکیل{% else %}Grayscale{% endif %}
+                                </option>
+                                <option value="full_color">
+                                    {% if current_lang == 'ur' %}مکمل رنگ{% else %}Full Color{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}بائنڈنگ{% else %}Binding{% endif %}
+                            </label>
+                            <select class="form-select" name="binding">
+                                <option value="">
+                                    {% if current_lang == 'ur' %}کوئی بائنڈنگ نہیں{% else %}No Binding{% endif %}
+                                </option>
+                                <option value="spiral">
+                                    {% if current_lang == 'ur' %}اسپائرل بائنڈنگ{% else %}Spiral Binding{% endif %}
+                                </option>
+                                <option value="perfect">
+                                    {% if current_lang == 'ur' %}پرفیکٹ بائنڈنگ{% else %}Perfect Binding{% endif %}
+                                </option>
+                                <option value="staple">
+                                    {% if current_lang == 'ur' %}سٹیپل{% else %}Staple{% endif %}
+                                </option>
+                                <option value="thermal">
+                                    {% if current_lang == 'ur' %}تھرمل بائنڈنگ{% else %}Thermal Binding{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="double_sided" id="doubleSided">
+                                <label class="form-check-label" for="doubleSided">
+                                    {% if current_lang == 'ur' %}دو طرفہ پرنٹنگ{% else %}Double Sided Printing{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}نوٹس{% else %}Notes{% endif %}
+                            </label>
+                            <textarea class="form-control" name="notes" rows="2" 
+                                      placeholder="{% if current_lang == 'ur' %}خصوصی ہدایات...{% else %}Special instructions...{% endif %}"></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success px-4">
+                                    <i class="fas fa-check me-2"></i>
+                                    {% if current_lang == 'ur' %}جاب مکمل کریں{% else %}Complete Job{% endif %}
+                                </button>
+                                <a href="{{ url_for('photocopy') }}" class="btn btn-secondary px-4">
+                                    <i class="fas fa-times me-2"></i>
+                                    {% if current_lang == 'ur' %}منسوخ کریں{% else %}Cancel{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateRate() {
+        const pageType = document.querySelector('select[name="page_type"]').value;
+        const rateInput = document.getElementById('ratePerPage');
+        if (pageType === 'b&w') {
+            rateInput.value = 5;
+        } else if (pageType === 'color') {
+            rateInput.value = 15;
+        }
+        calculateTotal();
+    }
+    
+    function calculateTotal() {
+        const pages = parseInt(document.querySelector('input[name="total_pages"]').value) || 0;
+        const rate = parseFloat(document.getElementById('ratePerPage').value) || 0;
+        const copies = parseInt(document.querySelector('input[name="copies"]').value) || 1;
+        const total = pages * rate * copies;
+        document.getElementById('totalAmount').value = total.toFixed(2);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,315 @@
+<!-- templates/view_sale.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}سیل کی تفصیلات - شاپ مینجمنٹ{% else %}Sale Details - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-receipt text-primary me-2"></i>
+                {% if current_lang == 'ur' %}سیل کی تفصیلات{% else %}Sale Details{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('sales') }}">
+                        {% if current_lang == 'ur' %}سیلز{% else %}Sales{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}تفصیلات{% else %}Details{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="window.location.href='{{ url_for('new_sale') }}'">
+                    <i class="fas fa-plus me-2"></i>
+                    {% if current_lang == 'ur' %}نیا سیل{% else %}New Sale{% endif %}
+                </button>
+                <button class="btn btn-info" onclick="printReceipt({{ sale.id }})">
+                    <i class="fas fa-print me-2"></i>
+                    {% if current_lang == 'ur' %}رسیپٹ پرنٹ کریں{% else %}Print Receipt{% endif %}
+                </button>
+                <button class="btn btn-success" onclick="shareWhatsApp({{ sale.id }})">
+                    <i class="fab fa-whatsapp me-2"></i>
+                    {% if current_lang == 'ur' %}واٹس ایپ پر شیئر کریں{% else %}Share on WhatsApp{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Sale Info -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}سیل کی معلومات{% else %}Sale Information{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted small">
+                        {% if current_lang == 'ur' %}انوائس نمبر{% else %}Invoice Number{% endif %}
+                    </label>
+                    <div class="fw-bold h5">{{ sale.invoice_number }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">
+                        {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
+                    </label>
+                    <div>{{ sale.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">
+                        {% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}
+                    </label>
+                    <div>
+                        {% if sale.customer %}
+                            <a href="{{ url_for('view_customer', customer_id=sale.customer.id) }}">{{ sale.customer.name }}</a>
+                        {% else %}
+                            <span class="text-muted">
+                                {% if current_lang == 'ur' %}واک ان{% else %}Walk-in{% endif %}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">
+                        {% if current_lang == 'ur' %}سیل کی قسم{% else %}Sale Type{% endif %}
+                    </label>
+                    <div>
+                        <span class="badge bg-primary">
+                            {% if sale.sale_type == 'retail' %}
+                                {% if current_lang == 'ur' %}ریٹیل{% else %}Retail{% endif %}
+                            {% elif sale.sale_type == 'wholesale' %}
+                                {% if current_lang == 'ur' %}تھوک{% else %}Wholesale{% endif %}
+                            {% else %}
+                                {{ sale.sale_type|title }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">
+                        {% if current_lang == 'ur' %}ادائیگی کا طریقہ{% else %}Payment Method{% endif %}
+                    </label>
+                    <div>
+                        <span class="badge {% if sale.payment_method == 'cash' %}bg-success{% elif sale.payment_method == 'card' %}bg-primary{% elif sale.payment_method == 'due' %}bg-warning{% else %}bg-secondary{% endif %}">
+                            {% if sale.payment_method == 'cash' %}
+                                {% if current_lang == 'ur' %}نقد{% else %}Cash{% endif %}
+                            {% elif sale.payment_method == 'card' %}
+                                {% if current_lang == 'ur' %}کارڈ{% else %}Card{% endif %}
+                            {% elif sale.payment_method == 'due' %}
+                                {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                            {% elif sale.payment_method == 'online' %}
+                                {% if current_lang == 'ur' %}آن لائن{% else %}Online{% endif %}
+                            {% else %}
+                                {{ sale.payment_method|title }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">
+                        {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                    </label>
+                    <div>
+                        <span class="badge-status {% if sale.payment_status == 'paid' %}paid{% elif sale.payment_status == 'pending' %}pending{% else %}due{% endif %}">
+                            {% if sale.payment_status == 'paid' %}
+                                {% if current_lang == 'ur' %}ادا شدہ{% else %}Paid{% endif %}
+                            {% elif sale.payment_status == 'pending' %}
+                                {% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}
+                            {% else %}
+                                {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% if sale.notes %}
+                    <div class="mt-3">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}نوٹس{% else %}Notes{% endif %}
+                        </label>
+                        <div class="p-2 bg-light rounded">{{ sale.notes }}</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Items -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}سیل آئٹمز{% else %}Sale Items{% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>
+                                    {% if current_lang == 'ur' %}آئٹم{% else %}Item{% endif %}
+                                </th>
+                                <th class="text-center">
+                                    {% if current_lang == 'ur' %}مقدار{% else %}Qty{% endif %}
+                                </th>
+                                <th class="text-end">
+                                    {% if current_lang == 'ur' %}قیمت{% else %}Price{% endif %}
+                                </th>
+                                <th class="text-end">
+                                    {% if current_lang == 'ur' %}کل{% else %}Total{% endif %}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sale.items %}
+                                <tr>
+                                    <td>
+                                        {% if item.is_product %}
+                                            <div class="fw-semibold">{{ item.product.name }}</div>
+                                            <small class="text-muted">SKU: {{ item.product.sku }}</small>
+                                        {% else %}
+                                            <div class="fw-semibold">{{ item.service_name }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ item.quantity }}</td>
+                                    <td class="text-end">PKR {{ "%.0f"|format(item.unit_price) }}</td>
+                                    <td class="text-end fw-bold">PKR {{ "%.0f"|format(item.total_price) }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">
+                                    {% if current_lang == 'ur' %}سب ٹوٹل:{% else %}Subtotal:{% endif %}
+                                </td>
+                                <td class="text-end fw-bold">PKR {{ "%.0f"|format(sale.subtotal) }}</td>
+                            </tr>
+                            {% if sale.discount_amount > 0 %}
+                                <tr>
+                                    <td colspan="3" class="text-end text-danger">
+                                        {% if current_lang == 'ur' %}ڈسکاؤنٹ:{% else %}Discount:{% endif %}
+                                    </td>
+                                    <td class="text-end text-danger">- PKR {{ "%.0f"|format(sale.discount_amount) }}</td>
+                                </tr>
+                            {% endif %}
+                            {% if sale.tax_amount > 0 %}
+                                <tr>
+                                    <td colspan="3" class="text-end">
+                                        {% if current_lang == 'ur' %}ٹیکس:{% else %}Tax:{% endif %}
+                                    </td>
+                                    <td class="text-end">PKR {{ "%.0f"|format(sale.tax_amount) }}</td>
+                                </tr>
+                            {% endif %}
+                            {% if sale.shipping_charge > 0 %}
+                                <tr>
+                                    <td colspan="3" class="text-end">
+                                        {% if current_lang == 'ur' %}شپنگ:{% else %}Shipping:{% endif %}
+                                    </td>
+                                    <td class="text-end">PKR {{ "%.0f"|format(sale.shipping_charge) }}</td>
+                                </tr>
+                            {% endif %}
+                            <tr class="table-primary">
+                                <td colspan="3" class="text-end fw-bold h5">
+                                    {% if current_lang == 'ur' %}کل:{% else %}Total:{% endif %}
+                                </td>
+                                <td class="text-end fw-bold h5">PKR {{ "%.0f"|format(sale.total_amount) }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end text-success">
+                                    {% if current_lang == 'ur' %}ادا شدہ:{% else %}Paid:{% endif %}
+                                </td>
+                                <td class="text-end text-success">PKR {{ "%.0f"|format(sale.amount_paid) }}</td>
+                            </tr>
+                            {% if sale.due_amount > 0 %}
+                                <tr>
+                                    <td colspan="3" class="text-end text-danger fw-bold">
+                                        {% if current_lang == 'ur' %}بقایا:{% else %}Due:{% endif %}
+                                    </td>
+                                    <td class="text-end text-danger fw-bold">PKR {{ "%.0f"|format(sale.due_amount) }}</td>
+                                </tr>
+                            {% endif %}
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="fas fa-cog me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}فوری اعمال{% else %}Quick Actions{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary w-100" onclick="printReceipt({{ sale.id }})">
+                            <i class="fas fa-print me-2"></i>
+                            {% if current_lang == 'ur' %}رسیپٹ پرنٹ کریں{% else %}Print Receipt{% endif %}
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-success w-100" onclick="shareWhatsApp({{ sale.id }})">
+                            <i class="fab fa-whatsapp me-2"></i>
+                            {% if current_lang == 'ur' %}واٹس ایپ پر شیئر کریں{% else %}Share on WhatsApp{% endif %}
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('return_sale', sale_id=sale.id) }}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-undo me-2"></i>
+                            {% if current_lang == 'ur' %}واپسی{% else %}Return{% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function printReceipt(saleId) {
+        const lang = '{{ current_lang }}';
+        const printWindow = window.open(`/sale/${saleId}/receipt`, '_blank');
+        if (printWindow) {
+            printWindow.onload = function() {
+                printWindow.print();
+            };
+        } else {
+            const msg = lang === 'ur' ? 'براہ کرم رسیپٹ پرنٹ کرنے کے لیے پاپ اپس کی اجازت دیں' : 'Please allow popups to print receipts';
+            showToast(msg, 'warning');
+        }
+    }
+    
+    function shareWhatsApp(saleId) {
+        const lang = '{{ current_lang }}';
+        showToast(lang === 'ur' ? '⏳ واٹس ایپ لنڈ بن رہا ہے...' : '⏳ Generating WhatsApp link...', 'info');
+        
+        fetch('/sale/' + saleId + '/whatsapp')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.open(data.whatsapp_url, '_blank');
+                    const msg = lang === 'ur' ? '✅ واٹس ایپ کھل رہا ہے!' : '✅ WhatsApp opening!';
+                    showToast(msg, 'success');
+                }
+            })
+            .catch(error => {
+                const msg = lang === 'ur' ? '❌ خرابی: ' + error.message : '❌ Error: ' + error.message;
+                showToast(msg, 'danger');
+                console.error('Error:', error);
+            });
+    }
+</script>
+{% endblock %}

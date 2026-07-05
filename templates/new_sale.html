@@ -1,0 +1,492 @@
+<!-- templates/new_sale.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}نیا سیل - شاپ مینجمنٹ{% else %}New Sale - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-cart-plus text-primary me-2"></i>
+                {% if current_lang == 'ur' %}نیا سیل{% else %}New Sale{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}نیا سیل{% else %}New Sale{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-list me-2 text-primary"></i>
+                        {% if current_lang == 'ur' %}سیل آئٹمز{% else %}Sale Items{% endif %}
+                    </span>
+                    <button class="btn btn-sm btn-primary" onclick="addProductRow()">
+                        <i class="fas fa-plus me-1"></i>
+                        {% if current_lang == 'ur' %}پروڈکٹ شامل کریں{% else %}Add Product{% endif %}
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="saleForm" method="POST">
+                    <div class="table-container">
+                        <table class="table" id="saleItemsTable">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        {% if current_lang == 'ur' %}پروڈکٹ{% else %}Product{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if current_lang == 'ur' %}قیمت{% else %}Price{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if current_lang == 'ur' %}مقدار{% else %}Qty{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if current_lang == 'ur' %}کل{% else %}Total{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if current_lang == 'ur' %}عمل{% else %}Action{% endif %}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="saleItemsBody">
+                                <tr>
+                                    <td>
+                                        <select class="form-select product-select" name="product_id[]" onchange="updateProductPrice(this)">
+                                            <option value="">
+                                                {% if current_lang == 'ur' %}پروڈکٹ منتخب کریں{% else %}Select Product{% endif %}
+                                            </option>
+                                            {% for product in products %}
+                                                <option value="{{ product.id }}" data-price="{{ product.selling_price }}" data-stock="{{ product.stock_quantity }}">
+                                                    {{ product.name }} (Stock: {{ product.stock_quantity }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control price-input" name="price[]" step="0.01" value="0">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control quantity-input" name="quantity[]" min="1" value="1" onchange="updateRowTotal(this)">
+                                    </td>
+                                    <td>
+                                        <span class="row-total fw-bold">0.00</span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold">
+                                        {% if current_lang == 'ur' %}سب ٹوٹل:{% else %}Subtotal:{% endif %}
+                                    </td>
+                                    <td colspan="2"><span id="subtotal" class="fw-bold">0.00</span></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-calculator me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}سیل کا خلاصہ{% else %}Sale Summary{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}
+                    </label>
+                    <select class="form-select" name="customer_id" form="saleForm">
+                        <option value="">
+                            {% if current_lang == 'ur' %}واک ان کسٹمر{% else %}Walk-in Customer{% endif %}
+                        </option>
+                        {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }} - {{ customer.phone }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if current_lang == 'ur' %}سیل کی قسم{% else %}Sale Type{% endif %}
+                    </label>
+                    <select class="form-select" name="sale_type" form="saleForm">
+                        <option value="retail">
+                            {% if current_lang == 'ur' %}ریٹیل{% else %}Retail{% endif %}
+                        </option>
+                        <option value="wholesale">
+                            {% if current_lang == 'ur' %}تھوک{% else %}Wholesale{% endif %}
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if current_lang == 'ur' %}ادائیگی کا طریقہ{% else %}Payment Method{% endif %}
+                    </label>
+                    <select class="form-select" name="payment_method" form="saleForm">
+                        <option value="cash">
+                            {% if current_lang == 'ur' %}نقد{% else %}Cash{% endif %}
+                        </option>
+                        <option value="card">
+                            {% if current_lang == 'ur' %}کارڈ{% else %}Card{% endif %}
+                        </option>
+                        <option value="due">
+                            {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                        </option>
+                        <option value="online">
+                            {% if current_lang == 'ur' %}آن لائن ٹرانسفر{% else %}Online Transfer{% endif %}
+                        </option>
+                    </select>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-2 d-flex justify-content-between">
+                    <span>{% if current_lang == 'ur' %}سب ٹوٹل:{% else %}Subtotal:{% endif %}</span>
+                    <span id="subtotalDisplay" class="fw-bold">0.00</span>
+                </div>
+                
+                <div class="mb-2">
+                    <label class="form-label small">
+                        {% if current_lang == 'ur' %}ڈسکاؤنٹ{% else %}Discount{% endif %}
+                    </label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" name="discount_value" form="saleForm" value="0" onchange="updateTotals()">
+                        <select class="form-select" name="discount_type" form="saleForm" style="max-width: 100px;" onchange="updateTotals()">
+                            <option value="percentage">%</option>
+                            <option value="fixed">
+                                {% if current_lang == 'ur' %}مقررہ{% else %}Fixed{% endif %}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-2 d-flex justify-content-between">
+                    <span>{% if current_lang == 'ur' %}ڈسکاؤنٹ:{% else %}Discount:{% endif %}</span>
+                    <span id="discountDisplay" class="fw-bold text-danger">0.00</span>
+                </div>
+                
+                <div class="mb-2">
+                    <label class="form-label small">
+                        {% if current_lang == 'ur' %}ٹیکس (%){% else %}Tax (%){% endif %}
+                    </label>
+                    <input type="number" class="form-control" name="tax_rate" form="saleForm" value="0" onchange="updateTotals()">
+                </div>
+                
+                <div class="mb-2 d-flex justify-content-between">
+                    <span>{% if current_lang == 'ur' %}ٹیکس:{% else %}Tax:{% endif %}</span>
+                    <span id="taxDisplay" class="fw-bold">0.00</span>
+                </div>
+                
+                <div class="mb-2">
+                    <label class="form-label small">
+                        {% if current_lang == 'ur' %}شپنگ{% else %}Shipping{% endif %}
+                    </label>
+                    <input type="number" class="form-control" name="shipping" form="saleForm" value="0" onchange="updateTotals()">
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3 d-flex justify-content-between">
+                    <span class="h5">{% if current_lang == 'ur' %}کل:{% else %}Total:{% endif %}</span>
+                    <span class="h5 fw-bold text-primary" id="totalDisplay">0.00</span>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if current_lang == 'ur' %}نوٹس{% else %}Notes{% endif %}
+                    </label>
+                    <textarea class="form-control" name="notes" form="saleForm" rows="2" 
+                              placeholder="{% if current_lang == 'ur' %}اضافی نوٹس...{% else %}Additional notes...{% endif %}"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-success w-100 py-2" form="saleForm" id="submitSaleBtn">
+                    <i class="fas fa-check me-2"></i>
+                    {% if current_lang == 'ur' %}سیل مکمل کریں{% else %}Complete Sale{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let rowCount = 1;
+    const lang = '{{ current_lang }}';
+    
+    function addProductRow() {
+        const tbody = document.getElementById('saleItemsBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <select class="form-select product-select" name="product_id[]" onchange="updateProductPrice(this)">
+                    <option value="">${lang === 'ur' ? 'پروڈکٹ منتخب کریں' : 'Select Product'}</option>
+                    {% for product in products %}
+                        <option value="{{ product.id }}" data-price="{{ product.selling_price }}" data-stock="{{ product.stock_quantity }}">
+                            {{ product.name }} (Stock: {{ product.stock_quantity }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control price-input" name="price[]" step="0.01" value="0">
+            </td>
+            <td>
+                <input type="number" class="form-control quantity-input" name="quantity[]" min="1" value="1" onchange="updateRowTotal(this)">
+            </td>
+            <td>
+                <span class="row-total fw-bold">0.00</span>
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+        rowCount++;
+        updateTotals();
+    }
+    
+    function removeRow(btn) {
+        const tbody = document.getElementById('saleItemsBody');
+        if (tbody.children.length > 1) {
+            btn.closest('tr').remove();
+            updateTotals();
+        } else {
+            const msg = lang === 'ur' ? 'کم از کم ایک پروڈکٹ درکار ہے' : 'At least one product is required';
+            showToast(msg, 'warning');
+        }
+    }
+    
+    function updateProductPrice(select) {
+        const row = select.closest('tr');
+        const priceInput = row.querySelector('.price-input');
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption && selectedOption.dataset.price) {
+            priceInput.value = selectedOption.dataset.price;
+            updateRowTotal(priceInput);
+        }
+    }
+    
+    function updateRowTotal(element) {
+        const row = element.closest('tr');
+        const price = parseFloat(row.querySelector('.price-input').value) || 0;
+        const quantity = parseInt(row.querySelector('.quantity-input').value) || 1;
+        const total = price * quantity;
+        row.querySelector('.row-total').textContent = total.toFixed(2);
+        updateTotals();
+    }
+    
+    function updateTotals() {
+        let subtotal = 0;
+        document.querySelectorAll('.row-total').forEach(el => {
+            subtotal += parseFloat(el.textContent) || 0;
+        });
+        
+        const discountType = document.querySelector('[name="discount_type"]').value;
+        const discountValue = parseFloat(document.querySelector('[name="discount_value"]').value) || 0;
+        const taxRate = parseFloat(document.querySelector('[name="tax_rate"]').value) || 0;
+        const shipping = parseFloat(document.querySelector('[name="shipping"]').value) || 0;
+        
+        let discount = 0;
+        if (discountType === 'percentage') {
+            discount = subtotal * (discountValue / 100);
+        } else {
+            discount = discountValue;
+        }
+        
+        const afterDiscount = subtotal - discount;
+        const tax = afterDiscount * (taxRate / 100);
+        const total = afterDiscount + tax + shipping;
+        
+        document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('subtotalDisplay').textContent = subtotal.toFixed(2);
+        document.getElementById('discountDisplay').textContent = discount.toFixed(2);
+        document.getElementById('taxDisplay').textContent = tax.toFixed(2);
+        document.getElementById('totalDisplay').textContent = total.toFixed(2);
+    }
+    
+    function validateSale() {
+        const products = document.querySelectorAll('.product-select');
+        let hasProduct = false;
+        products.forEach(select => {
+            if (select.value) hasProduct = true;
+        });
+        
+        if (!hasProduct) {
+            const msg = lang === 'ur' ? 'براہ کرم کم از کم ایک پروڈکٹ شامل کریں' : 'Please add at least one product';
+            showToast(msg, 'warning');
+            return false;
+        }
+        
+        // Check stock
+        let hasError = false;
+        document.querySelectorAll('.product-select').forEach(select => {
+            if (select.value) {
+                const selectedOption = select.options[select.selectedIndex];
+                const stock = parseInt(selectedOption.dataset.stock) || 0;
+                const quantity = parseInt(select.closest('tr').querySelector('.quantity-input').value) || 0;
+                if (quantity > stock) {
+                    const msg = lang === 'ur' ? `${selectedOption.text} کے لیے اسٹاک کافی نہیں ہے۔ دستیاب: ${stock}` : `Not enough stock for ${selectedOption.text}. Available: ${stock}`;
+                    showToast(msg, 'danger');
+                    hasError = true;
+                }
+            }
+        });
+        
+        return !hasError;
+    }
+    
+    // Set initial price for first row
+    document.addEventListener('DOMContentLoaded', function() {
+        const firstSelect = document.querySelector('.product-select');
+        if (firstSelect) {
+            updateProductPrice(firstSelect);
+        }
+        updateTotals();
+    });
+
+    // ============================================
+    // OFFLINE SALE SUPPORT - Save locally when offline
+    // ============================================
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const saleForm = document.getElementById('saleForm');
+        const submitBtn = document.getElementById('submitSaleBtn');
+        
+        if (saleForm) {
+            // Remove existing submit handler and add our own
+            saleForm.addEventListener('submit', async function(e) {
+                // Validate first
+                if (!validateSale()) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Check if offline
+                if (!navigator.onLine) {
+                    e.preventDefault();
+                    
+                    // Collect form data
+                    const formData = new FormData(this);
+                    const saleData = {
+                        customer_id: formData.get('customer_id'),
+                        sale_type: formData.get('sale_type'),
+                        payment_method: formData.get('payment_method'),
+                        discount_value: formData.get('discount_value'),
+                        discount_type: formData.get('discount_type'),
+                        tax_rate: formData.get('tax_rate'),
+                        shipping: formData.get('shipping'),
+                        notes: formData.get('notes'),
+                        items: []
+                    };
+                    
+                    // Collect product items
+                    const productSelects = document.querySelectorAll('.product-select');
+                    const quantities = document.querySelectorAll('.quantity-input');
+                    const prices = document.querySelectorAll('.price-input');
+                    
+                    productSelects.forEach((select, index) => {
+                        if (select.value) {
+                            saleData.items.push({
+                                product_id: select.value,
+                                quantity: quantities[index]?.value || 1,
+                                price: prices[index]?.value || 0
+                            });
+                        }
+                    });
+                    
+                    // Calculate totals
+                    let subtotal = 0;
+                    saleData.items.forEach(item => {
+                        subtotal += parseFloat(item.price) * parseInt(item.quantity);
+                    });
+                    saleData.subtotal = subtotal;
+                    saleData.total_amount = document.getElementById('totalDisplay')?.textContent || subtotal;
+                    
+                    // Save to offline database
+                    if (typeof offlineDB !== 'undefined') {
+                        try {
+                            // Save sale
+                            await offlineDB.saveData('sales', saleData);
+                            // Save pending sync
+                            await offlineDB.savePendingSync({
+                                type: 'sale',
+                                data: saleData,
+                                timestamp: new Date().toISOString()
+                            });
+                            
+                            // Show success message
+                            showToast('📱 Sale saved offline! Will sync when online.', 'success');
+                            
+                            // Disable button to prevent double click
+                            if (submitBtn) {
+                                submitBtn.disabled = true;
+                                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saved!';
+                            }
+                            
+                            // Redirect after 2 seconds
+                            setTimeout(() => {
+                                window.location.href = '/sales';
+                            }, 2000);
+                            
+                        } catch (error) {
+                            console.error('Offline save error:', error);
+                            showToast('❌ Error saving sale offline. Please try again.', 'danger');
+                        }
+                    } else {
+                        showToast('⚠️ Offline database not available. Please check connection.', 'warning');
+                    }
+                    
+                    return;
+                }
+                
+                // Online: let the form submit normally
+                // The form will submit via POST
+            });
+        }
+    });
+
+    // Manual sync function (for testing)
+    async function syncNow() {
+        if (typeof offlineDB !== 'undefined') {
+            try {
+                await offlineDB.syncPending();
+                showToast('🔄 Sync completed!', 'success');
+            } catch (error) {
+                showToast('❌ Sync failed: ' + error.message, 'danger');
+            }
+        } else {
+            showToast('⚠️ Offline database not available.', 'warning');
+        }
+    }
+    
+    console.log('✅ New Sale page loaded with offline support!');
+</script>
+{% endblock %}

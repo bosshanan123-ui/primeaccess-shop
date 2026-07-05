@@ -1,0 +1,235 @@
+<!-- templates/update_product.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}پروڈکٹ اپ ڈیٹ کریں - شاپ مینجمنٹ{% else %}Update Product - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-edit text-primary me-2"></i>
+                {% if current_lang == 'ur' %}پروڈکٹ اپ ڈیٹ کریں{% else %}Update Product{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('products') }}">
+                        {% if current_lang == 'ur' %}پروڈکٹس{% else %}Products{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}اپ ڈیٹ{% else %}Update{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}پروڈکٹ کا نام{% else %}Product Name{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" name="name" required value="{{ product.name }}">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}زمرہ{% else %}Category{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" name="category" required value="{{ product.category }}">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}ذیلی زمرہ{% else %}Sub Category{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="sub_category" value="{{ product.sub_category or '' }}">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}بارکوڈ{% else %}Barcode{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="barcode" value="{{ product.barcode or '' }}">
+                            <small class="text-muted">SKU: {{ product.sku }}</small>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}برانڈ{% else %}Brand{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="brand" value="{{ product.brand or '' }}">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}ماڈل{% else %}Model{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="model" value="{{ product.model or '' }}">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}رنگ{% else %}Color{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="color" value="{{ product.color or '' }}">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}خرید قیمت{% else %}Purchase Price{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">PKR</span>
+                                <input type="number" class="form-control" name="purchase_price" required step="0.01" min="0" value="{{ product.purchase_price }}">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}فروخت قیمت{% else %}Selling Price{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">PKR</span>
+                                <input type="number" class="form-control" name="selling_price" required step="0.01" min="0" value="{{ product.selling_price }}">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}تھوک قیمت{% else %}Wholesale Price{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">PKR</span>
+                                <input type="number" class="form-control" name="wholesale_price" step="0.01" min="0" value="{{ product.wholesale_price or '' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}یونٹ{% else %}Unit{% endif %}
+                            </label>
+                            <select class="form-select" name="unit">
+                                <option value="piece" {% if product.unit == 'piece' %}selected{% endif %}>
+                                    {% if current_lang == 'ur' %}ٹکڑا{% else %}Piece{% endif %}
+                                </option>
+                                <option value="box" {% if product.unit == 'box' %}selected{% endif %}>
+                                    {% if current_lang == 'ur' %}باکس{% else %}Box{% endif %}
+                                </option>
+                                <option value="pack" {% if product.unit == 'pack' %}selected{% endif %}>
+                                    {% if current_lang == 'ur' %}پیک{% else %}Pack{% endif %}
+                                </option>
+                                <option value="set" {% if product.unit == 'set' %}selected{% endif %}>
+                                    {% if current_lang == 'ur' %}سیٹ{% else %}Set{% endif %}
+                                </option>
+                                <option value="roll" {% if product.unit == 'roll' %}selected{% endif %}>
+                                    {% if current_lang == 'ur' %}رول{% else %}Roll{% endif %}
+                                </option>
+                                <option value="meter" {% if product.unit == 'meter' %}selected{% endif %}>
+                                    {% if current_lang == 'ur' %}میٹر{% else %}Meter{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}اسٹاک کی مقدار{% else %}Stock Quantity{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" name="stock_quantity" required min="0" value="{{ product.stock_quantity }}">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}کم اسٹاک لیول{% else %}Min Stock Level{% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="min_stock_level" min="0" value="{{ product.min_stock_level }}">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}زیادہ اسٹاک لیول{% else %}Max Stock Level{% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="max_stock_level" min="0" value="{{ product.max_stock_level }}">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}وزن (کلوگرام){% else %}Weight (kg){% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="weight" step="0.01" min="0" value="{{ product.weight or '' }}">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}سپلائر{% else %}Supplier{% endif %}
+                            </label>
+                            <select class="form-select" name="supplier_id">
+                                <option value="">
+                                    {% if current_lang == 'ur' %}سپلائر منتخب کریں{% else %}Select Supplier{% endif %}
+                                </option>
+                                {% for supplier in suppliers %}
+                                    <option value="{{ supplier.id }}" {% if product.supplier_id == supplier.id %}selected{% endif %}>
+                                        {{ supplier.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}گودام کا مقام{% else %}Warehouse Location{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="warehouse_location" value="{{ product.warehouse_location or '' }}">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}تفصیل{% else %}Description{% endif %}
+                            </label>
+                            <textarea class="form-control" name="description" rows="3">{{ product.description or '' }}</textarea>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_featured" id="isFeatured" {% if product.is_featured %}checked{% endif %}>
+                                <label class="form-check-label" for="isFeatured">
+                                    {% if current_lang == 'ur' %}فیچرڈ پروڈکٹ{% else %}Featured Product{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fas fa-save me-2"></i>
+                                    {% if current_lang == 'ur' %}پروڈکٹ اپ ڈیٹ کریں{% else %}Update Product{% endif %}
+                                </button>
+                                <a href="{{ url_for('products') }}" class="btn btn-secondary px-4">
+                                    <i class="fas fa-times me-2"></i>
+                                    {% if current_lang == 'ur' %}منسوخ کریں{% else %}Cancel{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

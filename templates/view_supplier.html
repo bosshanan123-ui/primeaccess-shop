@@ -1,0 +1,220 @@
+<!-- templates/view_supplier.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}{{ supplier.name }} - سپلائر کی تفصیلات{% else %}{{ supplier.name }} - Supplier Details{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-handshake text-primary me-2"></i>{{ supplier.name }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('suppliers') }}">
+                        {% if current_lang == 'ur' %}سپلائرز{% else %}Suppliers{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">{{ supplier.name }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="window.location.href='{{ url_for('new_purchase') }}?supplier={{ supplier.id }}'">
+                    <i class="fas fa-truck me-2"></i>
+                    {% if current_lang == 'ur' %}نیا پرچیز{% else %}New Purchase{% endif %}
+                </button>
+                <button class="btn btn-success" onclick="window.location.href='{{ url_for('add_product') }}?supplier={{ supplier.id }}'">
+                    <i class="fas fa-plus me-2"></i>
+                    {% if current_lang == 'ur' %}پروڈکٹ شامل کریں{% else %}Add Product{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Supplier Info -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 2.5rem; color: white;">
+                        <i class="fas fa-store"></i>
+                    </div>
+                </div>
+                <h4 class="text-center fw-bold">{{ supplier.name }}</h4>
+                <p class="text-center text-muted">{{ supplier.shop_name or 'No shop name' }}</p>
+                
+                <hr>
+                
+                <div class="text-start">
+                    <p><i class="fas fa-user me-2 text-primary"></i> 
+                        {% if current_lang == 'ur' %}رابطہ:{% else %}Contact:{% endif %} 
+                        {{ supplier.contact_person or 'N/A' }}
+                    </p>
+                    <p><i class="fas fa-phone me-2 text-primary"></i> {{ supplier.phone }}</p>
+                    {% if supplier.phone_secondary %}
+                        <p><i class="fas fa-phone me-2 text-primary"></i> {{ supplier.phone_secondary }}</p>
+                    {% endif %}
+                    {% if supplier.email %}
+                        <p><i class="fas fa-envelope me-2 text-primary"></i> {{ supplier.email }}</p>
+                    {% endif %}
+                    {% if supplier.address %}
+                        <p><i class="fas fa-map-marker-alt me-2 text-primary"></i> {{ supplier.address }}</p>
+                    {% endif %}
+                    <p><i class="fas fa-building me-2 text-primary"></i> {{ supplier.area or 'N/A' }}, {{ supplier.city or 'N/A' }}</p>
+                </div>
+                
+                <hr>
+                
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <div class="text-muted small">
+                                {% if current_lang == 'ur' %}کل پرچیزز{% else %}Total Purchases{% endif %}
+                            </div>
+                            <div class="fw-bold">PKR {{ "%.0f"|format(supplier.total_purchases) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <div class="text-muted small">
+                                {% if current_lang == 'ur' %}کل بقایا{% else %}Total Due{% endif %}
+                            </div>
+                            <div class="fw-bold {% if supplier.total_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                PKR {{ "%.0f"|format(supplier.total_due) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if supplier.notes %}
+                    <div class="mt-3">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}نوٹس{% else %}Notes{% endif %}
+                        </label>
+                        <div class="p-2 bg-light rounded">{{ supplier.notes }}</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <!-- Products -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-box me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}اس سپلائر سے پروڈکٹس{% else %}Products from this Supplier{% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>
+                                    {% if current_lang == 'ur' %}پروڈکٹ{% else %}Product{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}زمرہ{% else %}Category{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}قیمت{% else %}Price{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}اسٹاک{% else %}Stock{% endif %}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                                <tr>
+                                    <td>{{ product.name }}</td>
+                                    <td><span class="badge bg-info">{{ product.category }}</span></td>
+                                    <td>PKR {{ "%.0f"|format(product.selling_price) }}</td>
+                                    <td>
+                                        <span class="badge {% if product.stock_quantity <= 0 %}bg-danger{% elif product.stock_quantity <= product.min_stock_level %}bg-warning{% else %}bg-success{% endif %}">
+                                            {{ product.stock_quantity }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">
+                                        {% if current_lang == 'ur' %}اس سپلائر سے کوئی پروڈکٹ نہیں{% else %}No products from this supplier{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Purchase History -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="fas fa-file-invoice me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}پرچیز ہسٹری{% else %}Purchase History{% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>
+                                    {% if current_lang == 'ur' %}پی او #{% else %}PO #{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}آئٹمز{% else %}Items{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}کل{% else %}Total{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for purchase in purchases %}
+                                <tr>
+                                    <td><span class="badge bg-primary">{{ purchase.purchase_number }}</span></td>
+                                    <td>{{ purchase.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ purchase.items|length }}</td>
+                                    <td>PKR {{ "%.0f"|format(purchase.total_amount) }}</td>
+                                    <td>
+                                        <span class="badge-status {% if purchase.payment_status == 'paid' %}paid{% elif purchase.payment_status == 'pending' %}pending{% else %}due{% endif %}">
+                                            {% if purchase.payment_status == 'paid' %}
+                                                {% if current_lang == 'ur' %}ادا شدہ{% else %}Paid{% endif %}
+                                            {% elif purchase.payment_status == 'pending' %}
+                                                {% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}
+                                            {% else %}
+                                                {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-3">
+                                        {% if current_lang == 'ur' %}اس سپلائر سے کوئی پرچیز نہیں{% else %}No purchases from this supplier{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

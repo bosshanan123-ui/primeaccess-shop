@@ -1,0 +1,792 @@
+<!-- templates/settings.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}ترتیبات - شاپ مینجمنٹ{% else %}Settings - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-cog text-primary me-2"></i>
+                {% if current_lang == 'ur' %}ترتیبات{% else %}Settings{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}ترتیبات{% else %}Settings{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Sidebar -->
+    <div class="col-md-3">
+        <div class="list-group" id="settingsTabs">
+            <a href="#general" class="list-group-item list-group-item-action active" data-bs-toggle="tab">
+                <i class="fas fa-sliders-h me-2"></i>
+                {% if current_lang == 'ur' %}عمومی{% else %}General{% endif %}
+            </a>
+            <a href="#profile" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                <i class="fas fa-user me-2"></i>
+                {% if current_lang == 'ur' %}پروفائل{% else %}Profile{% endif %}
+            </a>
+            <a href="#invoice" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                <i class="fas fa-receipt me-2"></i>
+                {% if current_lang == 'ur' %}انوائس{% else %}Invoice{% endif %}
+            </a>
+            <a href="#payments" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                <i class="fas fa-credit-card me-2"></i>
+                {% if current_lang == 'ur' %}ادائیگیاں{% else %}Payments{% endif %}
+            </a>
+            <a href="#backup" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                <i class="fas fa-database me-2"></i>
+                {% if current_lang == 'ur' %}بیک اپ{% else %}Backup{% endif %}
+            </a>
+            <a href="#users" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                <i class="fas fa-users-cog me-2"></i>
+                {% if current_lang == 'ur' %}صارفین{% else %}Users{% endif %}
+            </a>
+            <a href="#theme" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                <i class="fas fa-palette me-2"></i>
+                {% if current_lang == 'ur' %}تھیم{% else %}Theme{% endif %}
+            </a>
+        </div>
+    </div>
+    
+    <!-- Content -->
+    <div class="col-md-9">
+        <div class="tab-content">
+            
+            <!-- ===== GENERAL SETTINGS ===== -->
+            <div class="tab-pane fade show active" id="general">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-sliders-h me-2 text-primary"></i>
+                        {% if current_lang == 'ur' %}عمومی ترتیبات{% else %}General Settings{% endif %}
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('settings_general') }}">
+                            <div class="row g-3">
+                                <!-- Shop Name -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}دکان کا نام{% else %}Shop Name{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="shop_name" 
+                                           value="{{ settings.shop_name or 'PRIMEACCESS' }}" 
+                                           placeholder="{% if current_lang == 'ur' %}دکان کا نام درج کریں{% else %}Enter shop name{% endif %}">
+                                    <small class="text-muted">
+                                        {% if current_lang == 'ur' %}یہ انوائس اور رسیدوں پر ظاہر ہو گا{% else %}This will appear on invoices and receipts{% endif %}
+                                    </small>
+                                </div>
+                                
+                                <!-- Shop Address -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}دکان کا پتہ{% else %}Shop Address{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="shop_address" 
+                                           value="{{ settings.shop_address or 'Data Nagar, Lahore' }}" 
+                                           placeholder="{% if current_lang == 'ur' %}دکان کا پتہ درج کریں{% else %}Enter shop address{% endif %}">
+                                </div>
+                                
+                                <!-- Shop Phone -->
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}فون نمبر{% else %}Phone Number{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="shop_phone" 
+                                           value="{{ settings.shop_phone or '0325-7230326' }}" 
+                                           placeholder="03XX-XXXXXXX">
+                                </div>
+                                
+                                <!-- Shop Email -->
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}ای میل{% else %}Email{% endif %}
+                                    </label>
+                                    <input type="email" class="form-control" name="shop_email" 
+                                           value="{{ settings.shop_email or 'info@primeaccess.com' }}" 
+                                           placeholder="shop@email.com">
+                                </div>
+                                
+                                <!-- GST Number -->
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}جی ایس ٹی / این ٹی این نمبر{% else %}GST / NTN Number{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="gst_number" 
+                                           value="{{ settings.gst_number or 'XX-XXXXXXX-X' }}" 
+                                           placeholder="GST-XXXXX">
+                                </div>
+                                
+                                <!-- Currency -->
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}کرنسی{% else %}Currency{% endif %}
+                                    </label>
+                                    <select class="form-select" name="currency">
+                                        <option value="PKR" {% if settings.currency == 'PKR' %}selected{% endif %}>PKR (₨)</option>
+                                        <option value="USD" {% if settings.currency == 'USD' %}selected{% endif %}>USD ($)</option>
+                                        <option value="EUR" {% if settings.currency == 'EUR' %}selected{% endif %}>EUR (€)</option>
+                                        <option value="GBP" {% if settings.currency == 'GBP' %}selected{% endif %}>GBP (£)</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Date Format -->
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}تاریخ کا فارمیٹ{% else %}Date Format{% endif %}
+                                    </label>
+                                    <select class="form-select" name="date_format">
+                                        <option value="dd/mm/yyyy" {% if settings.date_format == 'dd/mm/yyyy' %}selected{% endif %}>DD/MM/YYYY</option>
+                                        <option value="mm/dd/yyyy" {% if settings.date_format == 'mm/dd/yyyy' %}selected{% endif %}>MM/DD/YYYY</option>
+                                        <option value="yyyy/mm/dd" {% if settings.date_format == 'yyyy/mm/dd' %}selected{% endif %}>YYYY/MM/DD</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Time Format -->
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}وقت کا فارمیٹ{% else %}Time Format{% endif %}
+                                    </label>
+                                    <select class="form-select" name="time_format">
+                                        <option value="12" {% if settings.time_format == '12' %}selected{% endif %}>12-Hour (AM/PM)</option>
+                                        <option value="24" {% if settings.time_format == '24' %}selected{% endif %}>24-Hour</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Language -->
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}زبان{% else %}Language{% endif %}
+                                    </label>
+                                    <select class="form-select" name="language">
+                                        <option value="en" {% if settings.language == 'en' %}selected{% endif %}>English</option>
+                                        <option value="ur" {% if settings.language == 'ur' %}selected{% endif %}>Urdu</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <hr>
+                                    <h6 class="fw-semibold">
+                                        {% if current_lang == 'ur' %}کاروباری ترتیبات{% else %}Business Settings{% endif %}
+                                    </h6>
+                                </div>
+                                
+                                <!-- Tax Rate -->
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}ڈیفالٹ ٹیکس ریٹ (%){% else %}Default Tax Rate (%){% endif %}
+                                    </label>
+                                    <input type="number" class="form-control" name="tax_rate" 
+                                           value="{{ settings.tax_rate or '0' }}" 
+                                           step="0.5" min="0" max="100">
+                                </div>
+                                
+                                <!-- Discount -->
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}ڈیفالٹ ڈسکاؤنٹ (%){% else %}Default Discount (%){% endif %}
+                                    </label>
+                                    <input type="number" class="form-control" name="discount_rate" 
+                                           value="{{ settings.discount_rate or '0' }}" 
+                                           step="0.5" min="0" max="100">
+                                </div>
+                                
+                                <!-- Shipping -->
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}ڈیفالٹ شپنگ (PKR){% else %}Default Shipping (PKR){% endif %}
+                                    </label>
+                                    <input type="number" class="form-control" name="shipping_charge" 
+                                           value="{{ settings.shipping_charge or '0' }}" 
+                                           step="0.5" min="0">
+                                </div>
+                                
+                                <!-- Footer Text -->
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}انوائس فوٹر ٹیکسٹ{% else %}Invoice Footer Text{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="footer_text" 
+                                           value="{{ settings.footer_text or 'Thank you for shopping with us!' }}" 
+                                           placeholder="{% if current_lang == 'ur' %}فوٹر ٹیکسٹ درج کریں{% else %}Footer text on invoices{% endif %}">
+                                </div>
+                                
+                                <!-- Maintenance Mode -->
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="maintenance_mode" 
+                                               id="maintenanceMode" {% if settings.maintenance_mode == 'true' %}checked{% endif %}>
+                                        <label class="form-check-label fw-semibold" for="maintenanceMode">
+                                            {% if current_lang == 'ur' %}مینٹیننس موڈ{% else %}Maintenance Mode{% endif %}
+                                        </label>
+                                        <small class="text-muted d-block">
+                                            {% if current_lang == 'ur' %}غیر ایڈمن صارفین کو مینٹیننس پیج دکھانے کے لیے فعال کریں{% else %}Enable to show maintenance page to non-admin users{% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <hr>
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class="fas fa-save me-2"></i>
+                                        {% if current_lang == 'ur' %}عمومی ترتیبات محفوظ کریں{% else %}Save General Settings{% endif %}
+                                    </button>
+                                    <button type="reset" class="btn btn-secondary px-4 ms-2" onclick="resetDefaults()">
+                                        <i class="fas fa-undo me-2"></i>
+                                        {% if current_lang == 'ur' %}ڈیفالٹس ری سیٹ کریں{% else %}Reset Defaults{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== PROFILE SETTINGS ===== -->
+            <div class="tab-pane fade" id="profile">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-user-edit me-2 text-primary"></i>
+                        {% if current_lang == 'ur' %}پروفائل ترتیبات{% else %}Profile Settings{% endif %}
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('settings_profile') }}">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}پورا نام{% else %}Full Name{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="full_name" 
+                                           value="{{ current_user.full_name or '' }}" 
+                                           placeholder="{% if current_lang == 'ur' %}پورا نام درج کریں{% else %}Enter full name{% endif %}">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}صارف نام{% else %}Username{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" value="{{ current_user.username }}" disabled>
+                                    <small class="text-muted">
+                                        {% if current_lang == 'ur' %}صارف نام تبدیل نہیں کیا جا سکتا{% else %}Username cannot be changed{% endif %}
+                                    </small>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}ای میل{% else %}Email{% endif %}
+                                    </label>
+                                    <input type="email" class="form-control" name="email" 
+                                           value="{{ current_user.email }}" 
+                                           placeholder="{% if current_lang == 'ur' %}ای میل درج کریں{% else %}Enter email{% endif %}">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}کردار{% else %}Role{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" value="{{ current_user.role|title }}" disabled>
+                                    <small class="text-muted">
+                                        {% if current_lang == 'ur' %}کردار منتظم کے ذریعے منظم کیا جاتا ہے{% else %}Role managed by administrator{% endif %}
+                                    </small>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <hr>
+                                    <h6 class="fw-semibold">
+                                        {% if current_lang == 'ur' %}پاس ورڈ تبدیل کریں{% else %}Change Password{% endif %}
+                                    </h6>
+                                    <p class="text-muted small">
+                                        {% if current_lang == 'ur' %}اگر پاس ورڈ تبدیل نہیں کرنا تو خالی چھوڑ دیں{% else %}Leave blank if you don't want to change password{% endif %}
+                                    </p>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}نیا پاس ورڈ{% else %}New Password{% endif %}
+                                    </label>
+                                    <input type="password" class="form-control" name="password" 
+                                           placeholder="{% if current_lang == 'ur' %}نیا پاس ورڈ درج کریں{% else %}Enter new password{% endif %}" minlength="6">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}پاس ورڈ کی تصدیق کریں{% else %}Confirm Password{% endif %}
+                                    </label>
+                                    <input type="password" class="form-control" name="confirm_password" 
+                                           placeholder="{% if current_lang == 'ur' %}پاس ورڈ کی تصدیق کریں{% else %}Confirm new password{% endif %}">
+                                </div>
+                                
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class="fas fa-save me-2"></i>
+                                        {% if current_lang == 'ur' %}پروفائل اپ ڈیٹ کریں{% else %}Update Profile{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== INVOICE SETTINGS ===== -->
+            <div class="tab-pane fade" id="invoice">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-receipt me-2 text-primary"></i>
+                        {% if current_lang == 'ur' %}انوائس ترتیبات{% else %}Invoice Settings{% endif %}
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('settings_invoice') }}">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}انوائس کا سابقہ{% else %}Invoice Prefix{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="invoice_prefix" 
+                                           value="{{ settings.invoice_prefix or 'INV-' }}" 
+                                           placeholder="{% if current_lang == 'ur' %}مثال: INV-{% else %}e.g., INV-{% endif %}">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}اگلا انوائس نمبر{% else %}Next Invoice Number{% endif %}
+                                    </label>
+                                    <input type="number" class="form-control" name="next_invoice" 
+                                           value="{{ settings.next_invoice or '1001' }}" min="1">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}لوگو کی پوزیشن{% else %}Logo Position{% endif %}
+                                    </label>
+                                    <select class="form-select" name="logo_position">
+                                        <option value="left" {% if settings.logo_position == 'left' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}بائیں{% else %}Left{% endif %}
+                                        </option>
+                                        <option value="center" {% if settings.logo_position == 'center' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}مرکز{% else %}Center{% endif %}
+                                        </option>
+                                        <option value="right" {% if settings.logo_position == 'right' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}دائیں{% else %}Right{% endif %}
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}رسیپٹ فوٹر پیغام{% else %}Receipt Footer Message{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="receipt_footer" 
+                                           value="{{ settings.receipt_footer or 'Thank you for shopping!' }}" 
+                                           placeholder="{% if current_lang == 'ur' %}فوٹر پیغام درج کریں{% else %}Footer message{% endif %}">
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="show_barcode" 
+                                               id="showBarcode" {% if settings.show_barcode != 'false' %}checked{% endif %}>
+                                        <label class="form-check-label fw-semibold" for="showBarcode">
+                                            {% if current_lang == 'ur' %}رسیپٹس پر بارکوڈ دکھائیں{% else %}Show Barcode on Receipts{% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class="fas fa-save me-2"></i>
+                                        {% if current_lang == 'ur' %}انوائس ترتیبات محفوظ کریں{% else %}Save Invoice Settings{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== PAYMENT SETTINGS ===== -->
+            <div class="tab-pane fade" id="payments">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-credit-card me-2 text-primary"></i>
+                        {% if current_lang == 'ur' %}ادائیگی ترتیبات{% else %}Payment Settings{% endif %}
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('settings_payments') }}">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}ڈیفالٹ ادائیگی کا طریقہ{% else %}Default Payment Method{% endif %}
+                                    </label>
+                                    <select class="form-select" name="default_payment">
+                                        <option value="cash" {% if settings.default_payment == 'cash' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}نقد{% else %}Cash{% endif %}
+                                        </option>
+                                        <option value="card" {% if settings.default_payment == 'card' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}کارڈ{% else %}Card{% endif %}
+                                        </option>
+                                        <option value="online" {% if settings.default_payment == 'online' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}آن لائن ٹرانسفر{% else %}Online Transfer{% endif %}
+                                        </option>
+                                        <option value="due" {% if settings.default_payment == 'due' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}ادائیگی کی مقررہ دن{% else %}Payment Due Days{% endif %}
+                                    </label>
+                                    <input type="number" class="form-control" name="due_days" 
+                                           value="{{ settings.due_days or '30' }}" min="1" max="365">
+                                    <small class="text-muted">
+                                        {% if current_lang == 'ur' %}ادائیگی کی مقررہ تاریخ سے پہلے ڈیفالٹ دن{% else %}Default days before payment becomes overdue{% endif %}
+                                    </small>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <hr>
+                                    <h6 class="fw-semibold">
+                                        {% if current_lang == 'ur' %}موبائل والیٹ ترتیبات{% else %}Mobile Wallet Settings{% endif %}
+                                    </h6>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}جازکیش نمبر{% else %}JazzCash Number{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="jazzcash_number" 
+                                           value="{{ settings.jazzcash_number or '' }}" placeholder="03XX-XXXXXXX">
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}ایزی پیسہ نمبر{% else %}EasyPaisa Number{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="easypaisa_number" 
+                                           value="{{ settings.easypaisa_number or '' }}" placeholder="03XX-XXXXXXX">
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}بینک اکاؤنٹ{% else %}Bank Account{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="bank_account" 
+                                           value="{{ settings.bank_account or '' }}" 
+                                           placeholder="{% if current_lang == 'ur' %}اکاؤنٹ نمبر{% else %}Account #{% endif %}">
+                                </div>
+                                
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class="fas fa-save me-2"></i>
+                                        {% if current_lang == 'ur' %}ادائیگی ترتیبات محفوظ کریں{% else %}Save Payment Settings{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== BACKUP SETTINGS ===== -->
+            <div class="tab-pane fade" id="backup">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-database me-2 text-primary"></i>
+                        {% if current_lang == 'ur' %}بیک اپ ترتیبات{% else %}Backup Settings{% endif %}
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('settings_backup') }}">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}خودکار بیک اپ فریکوئنسی{% else %}Auto Backup Frequency{% endif %}
+                                    </label>
+                                    <select class="form-select" name="backup_frequency">
+                                        <option value="daily" {% if settings.backup_frequency == 'daily' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}روزانہ{% else %}Daily{% endif %}
+                                        </option>
+                                        <option value="weekly" {% if settings.backup_frequency == 'weekly' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}ہفتہ وار{% else %}Weekly{% endif %}
+                                        </option>
+                                        <option value="monthly" {% if settings.backup_frequency == 'monthly' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}ماہانہ{% else %}Monthly{% endif %}
+                                        </option>
+                                        <option value="disabled" {% if settings.backup_frequency == 'disabled' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}غیر فعال{% else %}Disabled{% endif %}
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}بیک اپ کا وقت{% else %}Backup Time{% endif %}
+                                    </label>
+                                    <input type="time" class="form-control" name="backup_time" 
+                                           value="{{ settings.backup_time or '02:00' }}">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}بیک اپ رکھیں{% else %}Keep Backups{% endif %}
+                                    </label>
+                                    <select class="form-select" name="keep_backups">
+                                        <option value="5" {% if settings.keep_backups == '5' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}آخری 5{% else %}Last 5{% endif %}
+                                        </option>
+                                        <option value="10" {% if settings.keep_backups == '10' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}آخری 10{% else %}Last 10{% endif %}
+                                        </option>
+                                        <option value="20" {% if settings.keep_backups == '20' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}آخری 20{% else %}Last 20{% endif %}
+                                        </option>
+                                        <option value="50" {% if settings.keep_backups == '50' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}آخری 50{% else %}Last 50{% endif %}
+                                        </option>
+                                        <option value="0" {% if settings.keep_backups == '0' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}سب رکھیں{% else %}Keep All{% endif %}
+                                        </option>
+                                    </select>
+                                    <small class="text-muted">
+                                        {% if current_lang == 'ur' %}خودکار بیک اپ رکھیں (پرانی ڈیلیٹ ہو جائیں گی){% else %}Auto backups to keep (older will be deleted){% endif %}
+                                    </small>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="auto_export_excel" 
+                                               id="autoExport" {% if settings.auto_export_excel == 'true' %}checked{% endif %}>
+                                        <label class="form-check-label fw-semibold" for="autoExport">
+                                            {% if current_lang == 'ur' %}بیک اپ پر خودکار ایکسل ایکسپورٹ{% else %}Auto Export to Excel on Backup{% endif %}
+                                        </label>
+                                        <small class="text-muted d-block">
+                                            {% if current_lang == 'ur' %}بیک اپ بننے پر خودکار طور پر ایکسل فائل بنائیں{% else %}Automatically create Excel file when backup is created{% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class="fas fa-save me-2"></i>
+                                        {% if current_lang == 'ur' %}بیک اپ ترتیبات محفوظ کریں{% else %}Save Backup Settings{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== USERS SETTINGS ===== -->
+            <div class="tab-pane fade" id="users">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-users-cog me-2 text-primary"></i>
+                                {% if current_lang == 'ur' %}صارفین کا انتظام{% else %}User Management{% endif %}
+                            </span>
+                            <button class="btn btn-sm btn-primary" onclick="addUser()">
+                                <i class="fas fa-plus me-1"></i>
+                                {% if current_lang == 'ur' %}صارف شامل کریں{% else %}Add User{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th>{% if current_lang == 'ur' %}صارف نام{% else %}Username{% endif %}</th>
+                                        <th>{% if current_lang == 'ur' %}پورا نام{% else %}Full Name{% endif %}</th>
+                                        <th>{% if current_lang == 'ur' %}ای میل{% else %}Email{% endif %}</th>
+                                        <th>{% if current_lang == 'ur' %}کردار{% else %}Role{% endif %}</th>
+                                        <th>{% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}</th>
+                                        <th>{% if current_lang == 'ur' %}آخری لاگ ان{% else %}Last Login{% endif %}</th>
+                                        <th>{% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                        <tr>
+                                            <td><span class="fw-semibold">{{ user.username }}</span></td>
+                                            <td>{{ user.full_name or '-' }}</td>
+                                            <td>{{ user.email }}</td>
+                                            <td>
+                                                <span class="badge {% if user.role == 'admin' %}bg-danger{% elif user.role == 'manager' %}bg-warning{% else %}bg-info{% endif %}">
+                                                    {{ user.role|title }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if user.is_active %}
+                                                    <span class="badge bg-success">{% if current_lang == 'ur' %}فعال{% else %}Active{% endif %}</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">{% if current_lang == 'ur' %}غیر فعال{% else %}Inactive{% endif %}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ user.last_login.strftime('%d/%m/%Y') if user.last_login else 'Never' }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="editUser({{ user.id }})">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                {% if user.id != current_user.id %}
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser({{ user.id }})">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== THEME SETTINGS ===== -->
+            <div class="tab-pane fade" id="theme">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-palette me-2 text-primary"></i>
+                        {% if current_lang == 'ur' %}تھیم ترتیبات{% else %}Theme Settings{% endif %}
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('settings_preferences') }}">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}تھیم موڈ{% else %}Theme Mode{% endif %}
+                                    </label>
+                                    <select class="form-select" name="theme">
+                                        <option value="light" {% if session.get('theme') == 'light' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}روشن{% else %}Light{% endif %}
+                                        </option>
+                                        <option value="dark" {% if session.get('theme') == 'dark' %}selected{% endif %}>
+                                            {% if current_lang == 'ur' %}اندھیرا{% else %}Dark{% endif %}
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {% if current_lang == 'ur' %}رنگ تھیم{% else %}Color Theme{% endif %}
+                                    </label>
+                                    <div class="d-flex gap-2 mt-2">
+                                        <button type="button" class="btn btn-sm" style="background:#2563EB;color:white;border-radius:50%;width:35px;height:35px;" onclick="setColorTheme('default')">B</button>
+                                        <button type="button" class="btn btn-sm" style="background:#7C3AED;color:white;border-radius:50%;width:35px;height:35px;" onclick="setColorTheme('purple')">P</button>
+                                        <button type="button" class="btn btn-sm" style="background:#475569;color:white;border-radius:50%;width:35px;height:35px;" onclick="setColorTheme('slate')">S</button>
+                                        <button type="button" class="btn btn-sm" style="background:#0F172A;color:white;border-radius:50%;width:35px;height:35px;" onclick="setColorTheme('black')">B</button>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">
+                                        {% if current_lang == 'ur' %}رنگ تھیم تبدیل کرنے کے لیے کلک کریں{% else %}Click to change color theme{% endif %}
+                                    </small>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class="fas fa-save me-2"></i>
+                                        {% if current_lang == 'ur' %}تھیم محفوظ کریں{% else %}Save Theme{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // DataTable for users
+        $('#usersTable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[0, 'asc']]
+        });
+        
+        // Tabs persistence
+        $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+            localStorage.setItem('activeSettingsTab', $(e.target).attr('href'));
+        });
+        
+        var activeTab = localStorage.getItem('activeSettingsTab');
+        if (activeTab) {
+            $('a[data-bs-toggle="tab"][href="' + activeTab + '"]').tab('show');
+        }
+    });
+    
+    function setColorTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        showToast('🎨 Theme changed to ' + theme, 'success');
+    }
+    
+    function resetDefaults() {
+        Swal.fire({
+            title: 'Reset to Defaults?',
+            text: 'This will reset all general settings to default values.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e17055',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, reset!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.querySelector('input[name="shop_name"]').value = 'PRIMEACCESS';
+                document.querySelector('input[name="shop_address"]').value = 'Data Nagar, Lahore';
+                document.querySelector('input[name="shop_phone"]').value = '0325-7230326';
+                document.querySelector('input[name="shop_email"]').value = 'info@primeaccess.com';
+                document.querySelector('input[name="gst_number"]').value = 'XX-XXXXXXX-X';
+                document.querySelector('select[name="currency"]').value = 'PKR';
+                document.querySelector('select[name="date_format"]').value = 'dd/mm/yyyy';
+                document.querySelector('select[name="time_format"]').value = '12';
+                document.querySelector('input[name="tax_rate"]').value = '0';
+                document.querySelector('input[name="discount_rate"]').value = '0';
+                document.querySelector('input[name="shipping_charge"]').value = '0';
+                document.querySelector('input[name="footer_text"]').value = 'Thank you for shopping with us!';
+                showToast('✅ Settings reset to defaults', 'success');
+            }
+        });
+    }
+    
+    function addUser() {
+        showToast('Add user form coming soon!', 'info');
+    }
+    
+    function editUser(id) {
+        showToast('Edit user feature coming soon!', 'info');
+    }
+    
+    function deleteUser(id) {
+        Swal.fire({
+            title: 'Delete User?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e17055',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showToast('User deleted successfully', 'success');
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,645 @@
+<!-- templates/sale_receipt.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt - {{ sale.invoice_number }}</title>
+    <style>
+        @media print {
+            .no-print { display: none; }
+            body { margin: 0; padding: 10px; }
+            .receipt-container { max-width: 80mm; margin: 0 auto; }
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .receipt-container {
+            max-width: 80mm;
+            margin: 0 auto;
+            background: white;
+            padding: 15px 15px 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .receipt-header .shop-logo {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 5px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f0f4fa;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .receipt-header .shop-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .receipt-header h2 {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            margin: 2px 0;
+            font-weight: 800;
+            color: #1A2332;
+        }
+        .receipt-header .tagline {
+            font-size: 0.6rem;
+            color: #666;
+            letter-spacing: 1px;
+        }
+        .receipt-header .contact {
+            font-size: 0.55rem;
+            color: #888;
+            margin-top: 2px;
+        }
+        .receipt-header .divider {
+            border: none;
+            border-top: 2px dashed #ddd;
+            margin: 6px 0;
+        }
+        .receipt-info {
+            font-size: 0.65rem;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #ddd;
+            padding-bottom: 6px;
+        }
+        .receipt-info .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+        .receipt-info .label { color: #888; }
+        .receipt-info .value { font-weight: 600; }
+        .receipt-info .value.paid { color: #00B894; }
+        .receipt-info .value.due { color: #E11D48; }
+
+        .receipt-items {
+            width: 100%;
+            font-size: 0.6rem;
+            border-collapse: collapse;
+            margin: 6px 0;
+        }
+        .receipt-items th {
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            padding: 4px 2px;
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            color: #666;
+            letter-spacing: 0.5px;
+        }
+        .receipt-items td {
+            padding: 4px 2px;
+            border-bottom: 1px dotted #eee;
+        }
+        .receipt-items .text-right { text-align: right; }
+        .receipt-items .text-center { text-align: center; }
+        .receipt-items .item-name { font-size: 0.6rem; font-weight: 500; }
+        .receipt-items .item-sku { font-size: 0.45rem; color: #aaa; }
+
+        .receipt-total {
+            border-top: 2px dashed #000;
+            margin-top: 6px;
+            padding-top: 8px;
+            font-size: 0.65rem;
+        }
+        .receipt-total .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+        .receipt-total .grand-total {
+            font-size: 1rem;
+            font-weight: 800;
+            border-top: 2px solid #000;
+            padding-top: 5px;
+            margin-top: 3px;
+            color: #1A2332;
+        }
+        .receipt-total .paid { color: #00B894; font-weight: 700; }
+        .receipt-total .due { color: #E11D48; font-weight: 700; }
+
+        .receipt-footer {
+            text-align: center;
+            border-top: 2px dashed #000;
+            margin-top: 10px;
+            padding-top: 8px;
+            font-size: 0.5rem;
+            color: #888;
+        }
+        .receipt-footer .thankyou {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .receipt-footer .return-policy {
+            font-size: 0.45rem;
+            color: #aaa;
+            margin-top: 2px;
+        }
+        .receipt-footer .brand-line {
+            font-size: 0.45rem;
+            color: #ccc;
+            margin-top: 3px;
+            letter-spacing: 1px;
+        }
+
+        .barcode {
+            text-align: center;
+            margin: 6px 0;
+            padding: 4px 0;
+            border-top: 1px dashed #ddd;
+            border-bottom: 1px dashed #ddd;
+        }
+        .barcode .barcode-text {
+            font-size: 0.5rem;
+            color: #888;
+            letter-spacing: 3px;
+            font-weight: 600;
+        }
+
+        .dashed-divider {
+            border: none;
+            border-top: 1px dashed #ddd;
+            margin: 4px 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .action-buttons .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .action-buttons .btn-print {
+            background: #2563EB;
+            color: white;
+        }
+        .action-buttons .btn-print:hover {
+            background: #1D4ED8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .action-buttons .btn-pdf {
+            background: #E11D48;
+            color: white;
+        }
+        .action-buttons .btn-pdf:hover {
+            background: #BE123C;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
+        }
+        .action-buttons .btn-whatsapp {
+            background: #25D366;
+            color: white;
+        }
+        .action-buttons .btn-whatsapp:hover {
+            background: #1DA851;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        }
+        .action-buttons .btn-whatsapp:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .action-buttons .btn-close {
+            background: #6c757d;
+            color: white;
+        }
+        .action-buttons .btn-close:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        .action-buttons .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 380px;
+            width: 100%;
+        }
+        .toast-custom {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-left: 3px solid #2563EB;
+            animation: slideInRight 0.3s ease;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        .toast-custom .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: #2563EB;
+            animation: shrink 5s linear forwards;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes shrink {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 400px) {
+            .receipt-container { padding: 10px; }
+            .action-buttons .btn { font-size: 0.55rem; padding: 4px 10px; }
+            .receipt-header .shop-logo { width: 50px; height: 50px; }
+            .receipt-header h2 { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="receipt-container" id="receiptContainer">
+    <div class="receipt-header">
+        <div class="shop-logo">
+            <img src="{{ url_for('static', filename='img/logo1.png') }}" alt="PrimeAccess Logo">
+        </div>
+        <h2>PRIMEACCESS</h2>
+        <div class="tagline">Premium Mobile Accessories</div>
+        <hr class="divider">
+        <div class="contact">📞 0325-7230326</div>
+        <div class="contact">📍 Data Nagar, Lahore</div>
+        <div class="contact" style="font-size:0.5rem;">GST: XX-XXXXXXX-X</div>
+    </div>
+
+    <div class="receipt-info">
+        <div class="row">
+            <span class="label">Invoice #</span>
+            <span class="value">{{ sale.invoice_number }}</span>
+        </div>
+        <div class="row">
+            <span class="label">Date</span>
+            <span class="value">{{ sale.created_at.strftime('%d/%m/%Y %I:%M %p') }}</span>
+        </div>
+        <div class="row">
+            <span class="label">Customer</span>
+            <span class="value">{{ sale.customer.name if sale.customer else 'Walk-in' }}</span>
+        </div>
+        <div class="row">
+            <span class="label">Payment</span>
+            <span class="value">{{ sale.payment_method|title }}</span>
+        </div>
+        <div class="row">
+            <span class="label">Status</span>
+            <span class="value {% if sale.payment_status == 'paid' %}paid{% else %}due{% endif %}">
+                {{ sale.payment_status|title }}
+            </span>
+        </div>
+        {% if sale.customer and sale.customer.phone %}
+        <div class="row">
+            <span class="label">Phone</span>
+            <span class="value">{{ sale.customer.phone }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <table class="receipt-items">
+        <thead>
+            <tr>
+                <th style="width:50%;">Item</th>
+                <th class="text-center" style="width:15%;">Qty</th>
+                <th class="text-right" style="width:17%;">Price</th>
+                <th class="text-right" style="width:18%;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sale.items %}
+            <tr>
+                <td class="item-name">
+                    {% if item.is_product %}
+                        {{ item.product.name }}
+                        <div class="item-sku">SKU: {{ item.product.sku }}</div>
+                    {% else %}
+                        {{ item.service_name }}
+                    {% endif %}
+                </td>
+                <td class="text-center">{{ item.quantity }}</td>
+                <td class="text-right">{{ "%.0f"|format(item.unit_price) }}</td>
+                <td class="text-right">{{ "%.0f"|format(item.total_price) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="receipt-total">
+        <div class="row">
+            <span>Subtotal</span>
+            <span>PKR {{ "%.0f"|format(sale.subtotal) }}</span>
+        </div>
+        {% if sale.discount_amount > 0 %}
+        <div class="row">
+            <span>Discount</span>
+            <span style="color:#E11D48;">- PKR {{ "%.0f"|format(sale.discount_amount) }}</span>
+        </div>
+        {% endif %}
+        {% if sale.tax_amount > 0 %}
+        <div class="row">
+            <span>Tax</span>
+            <span>PKR {{ "%.0f"|format(sale.tax_amount) }}</span>
+        </div>
+        {% endif %}
+        {% if sale.shipping_charge > 0 %}
+        <div class="row">
+            <span>Shipping</span>
+            <span>PKR {{ "%.0f"|format(sale.shipping_charge) }}</span>
+        </div>
+        {% endif %}
+        <hr class="dashed-divider">
+        <div class="row grand-total">
+            <span>TOTAL</span>
+            <span>PKR {{ "%.0f"|format(sale.total_amount) }}</span>
+        </div>
+        <div class="row">
+            <span>Paid</span>
+            <span class="paid">PKR {{ "%.0f"|format(sale.amount_paid) }}</span>
+        </div>
+        {% if sale.due_amount > 0 %}
+        <div class="row">
+            <span>Due</span>
+            <span class="due">PKR {{ "%.0f"|format(sale.due_amount) }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="barcode">
+        <div class="barcode-text">• {{ sale.invoice_number }} •</div>
+    </div>
+
+    <div class="receipt-footer">
+        <div class="thankyou">✨ Thank You! ✨</div>
+        <div class="return-policy">Returns accepted within 7 days with original receipt</div>
+        <div class="brand-line">— Prime Access — The Name of Trust —</div>
+        <div style="margin-top:4px; font-size:0.4rem; color:#ccc;">
+            {{ sale.created_at.strftime('%d/%m/%Y %I:%M %p') }}
+        </div>
+    </div>
+</div>
+
+<div class="action-buttons no-print">
+    <button class="btn btn-print" onclick="printReceipt()">
+        <i class="fas fa-print"></i> Print
+    </button>
+    <button class="btn btn-pdf" id="pdfBtn" onclick="downloadPDF()">
+        <i class="fas fa-file-pdf"></i> PDF
+    </button>
+    <button class="btn btn-whatsapp" id="whatsappBtn" onclick="shareWhatsApp()">
+        <i class="fab fa-whatsapp"></i> WhatsApp
+    </button>
+    <button class="btn btn-close" onclick="window.close()">
+        <i class="fas fa-times"></i> Close
+    </button>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    // ============================================
+    // WHATSAPP SHARE - PDF DOWNLOAD + WHATSAPP TEXT
+    // ============================================
+    function shareWhatsApp() {
+        const saleId = {{ sale.id }};
+        const btn = document.getElementById('whatsappBtn');
+        const invoiceNo = "{{ sale.invoice_number }}";
+        const customerName = "{{ sale.customer.name if sale.customer else 'Walk-in Customer' }}";
+        const totalAmount = "{{ '%.0f'|format(sale.total_amount) }}";
+        const customerPhone = "{{ sale.customer.phone if sale.customer and sale.customer.phone else '' }}";
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+        
+        showLoading('Generating PDF invoice...');
+        
+        fetch(`/sale/${saleId}/pdf`)
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`PDF generation failed: ${text.substring(0, 100)}`);
+                    });
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                hideLoading();
+                
+                // PDF download karein
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `Invoice_${invoiceNo}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                setTimeout(() => {
+                    URL.revokeObjectURL(link.href);
+                }, 5000);
+                
+                // WhatsApp message
+                const message = `🧾 *PRIMEACCESS* - Invoice\n\n` +
+                               `📋 Invoice: ${invoiceNo}\n` +
+                               `👤 Customer: ${customerName}\n` +
+                               `💰 Total: PKR ${totalAmount}\n` +
+                               `📅 Date: {{ sale.created_at.strftime('%d/%m/%Y %I:%M %p') }}\n\n` +
+                               `📎 Please attach the downloaded PDF invoice.\n\n` +
+                               `Thank you for shopping!\n` +
+                               `📞 0325-7230326\n` +
+                               `📍 Data Nagar, Lahore`;
+                
+                let whatsappUrl = 'https://wa.me/?text=' + encodeURIComponent(message);
+                
+                if (customerPhone) {
+                    const phone = customerPhone.replace(/[^0-9]/g, '');
+                    if (phone.length >= 10) {
+                        whatsappUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
+                    }
+                }
+                
+                window.open(whatsappUrl, '_blank');
+                
+                showToast('✅ PDF downloaded! Please attach in WhatsApp.', 'success');
+            })
+            .catch(error => {
+                hideLoading();
+                showToast('❌ Error: ' + error.message, 'danger');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fab fa-whatsapp"></i> WhatsApp';
+            });
+    }
+    
+    // ============================================
+    // DOWNLOAD PDF
+    // ============================================
+    function downloadPDF() {
+        const saleId = {{ sale.id }};
+        const btn = document.getElementById('pdfBtn');
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        showLoading('Generating PDF...');
+        
+        fetch(`/sale/${saleId}/pdf`)
+            .then(response => {
+                if (!response.ok) throw new Error('PDF generation failed');
+                return response.blob();
+            })
+            .then(blob => {
+                hideLoading();
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `Invoice_${saleId}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+                showToast('✅ PDF downloaded successfully!', 'success');
+            })
+            .catch(error => {
+                hideLoading();
+                showToast('❌ Error: ' + error.message, 'danger');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-file-pdf"></i> PDF';
+            });
+    }
+    
+    // ============================================
+    // PRINT RECEIPT
+    // ============================================
+    function printReceipt() {
+        window.print();
+    }
+    
+    // ============================================
+    // LOADING FUNCTIONS
+    // ============================================
+    function showLoading(message = 'Loading...') {
+        if (typeof Swal !== 'undefined' && Swal.fire) {
+            Swal.fire({
+                title: message,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        } else {
+            let loader = document.getElementById('customLoader');
+            if (!loader) {
+                loader = document.createElement('div');
+                loader.id = 'customLoader';
+                loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+                loader.innerHTML = `
+                    <div style="background:white;padding:30px 40px;border-radius:12px;text-align:center;">
+                        <div style="width:40px;height:40px;border:4px solid #e0e0e0;border-top:4px solid #2563EB;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 10px;"></div>
+                        <p>${message}</p>
+                    </div>
+                `;
+                document.body.appendChild(loader);
+            }
+        }
+    }
+    
+    function hideLoading() {
+        if (typeof Swal !== 'undefined' && Swal.close) {
+            Swal.close();
+        } else {
+            const loader = document.getElementById('customLoader');
+            if (loader) loader.remove();
+        }
+    }
+    
+    // ============================================
+    // TOAST NOTIFICATION
+    // ============================================
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        
+        const toast = document.createElement('div');
+        toast.className = 'toast-custom';
+        const colors = { success: '#00B894', danger: '#E11D48', warning: '#FFB800', info: '#2563EB' };
+        const icons = { success: 'fa-check-circle', danger: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+        const color = colors[type] || colors.info;
+        const icon = icons[type] || icons.info;
+        
+        toast.style.borderLeftColor = color;
+        toast.innerHTML = `
+            <i class="fas ${icon}" style="color: ${color};"></i>
+            <span style="flex:1;">${message}</span>
+            <button onclick="this.closest('.toast-custom').remove()" style="background:none; border:none; color: #888; cursor:pointer; font-size:0.8rem;">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="toast-progress" style="background:${color};"></div>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => {
+                    if (toast.parentNode) toast.remove();
+                }, 300);
+            }
+        }, 5000);
+    }
+    
+    console.log('🧾 Receipt loaded successfully!');
+    console.log('📋 Invoice: {{ sale.invoice_number }}');
+</script>
+
+</body>
+</html>

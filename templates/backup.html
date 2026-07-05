@@ -1,0 +1,491 @@
+<!-- templates/backup.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}بیک اپ - شاپ مینجمنٹ{% else %}Backup - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-database text-primary me-2"></i>
+                {% if current_lang == 'ur' %}بیک اپ{% else %}Backup{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}بیک اپ{% else %}Backup{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <form method="POST" class="d-inline">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-2"></i>
+                    {% if current_lang == 'ur' %}بیک اپ بنائیں{% else %}Create Backup{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== FILTERS ===== -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-filter me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}بیک اپ فلٹر کریں{% else %}Filter Backups{% endif %}
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <!-- Quick Filters -->
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">
+                    {% if current_lang == 'ur' %}فوری فلٹر{% else %}Quick Filter{% endif %}
+                </label>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-outline-primary btn-sm filter-btn active" data-filter="all" onclick="applyFilter('all')">
+                        <i class="fas fa-list me-1"></i>
+                        {% if current_lang == 'ur' %}سب{% else %}All{% endif %}
+                    </button>
+                    <button class="btn btn-outline-success btn-sm filter-btn" data-filter="today" onclick="applyFilter('today')">
+                        <i class="fas fa-calendar-day me-1"></i>
+                        {% if current_lang == 'ur' %}آج{% else %}Today{% endif %}
+                    </button>
+                    <button class="btn btn-outline-warning btn-sm filter-btn" data-filter="week" onclick="applyFilter('week')">
+                        <i class="fas fa-calendar-week me-1"></i>
+                        {% if current_lang == 'ur' %}اس ہفتے{% else %}This Week{% endif %}
+                    </button>
+                    <button class="btn btn-outline-info btn-sm filter-btn" data-filter="month" onclick="applyFilter('month')">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        {% if current_lang == 'ur' %}اس مہینے{% else %}This Month{% endif %}
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Custom Date Range -->
+            <div class="col-md-5">
+                <label class="form-label fw-semibold">
+                    {% if current_lang == 'ur' %}اپنی تاریخ{% else %}Custom Date Range{% endif %}
+                </label>
+                <div class="d-flex gap-2">
+                    <input type="date" class="form-control form-control-sm" id="dateFrom">
+                    <span class="align-self-center">
+                        {% if current_lang == 'ur' %}تک{% else %}to{% endif %}
+                    </span>
+                    <input type="date" class="form-control form-control-sm" id="dateTo">
+                    <button class="btn btn-primary btn-sm" onclick="applyCustomDate()">
+                        <i class="fas fa-search me-1"></i>
+                        {% if current_lang == 'ur' %}لگائیں{% else %}Apply{% endif %}
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="clearFilters()">
+                        <i class="fas fa-times me-1"></i>
+                        {% if current_lang == 'ur' %}صاف کریں{% else %}Clear{% endif %}
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">
+                    {% if current_lang == 'ur' %}بیک اپ کے اعداد و شمار{% else %}Backup Stats{% endif %}
+                </label>
+                <div class="d-flex gap-2">
+                    <div class="p-2 bg-light rounded text-center flex-fill">
+                        <div class="small text-muted">
+                            {% if current_lang == 'ur' %}کل{% else %}Total{% endif %}
+                        </div>
+                        <div class="fw-bold" id="totalCount">{{ backups|length }}</div>
+                    </div>
+                    <div class="p-2 bg-light rounded text-center flex-fill">
+                        <div class="small text-muted">
+                            {% if current_lang == 'ur' %}دستی{% else %}Manual{% endif %}
+                        </div>
+                        <div class="fw-bold" id="manualCount">{{ backups|selectattr('type', 'equalto', 'manual')|list|length }}</div>
+                    </div>
+                    <div class="p-2 bg-light rounded text-center flex-fill">
+                        <div class="small text-muted">
+                            {% if current_lang == 'ur' %}خودکار{% else %}Auto{% endif %}
+                        </div>
+                        <div class="fw-bold" id="autoCount">{{ backups|selectattr('type', 'equalto', 'auto')|list|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filter Info -->
+        <div class="mt-2">
+            <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                {% if current_lang == 'ur' %}دکھا رہا ہے:{% else %}Showing:{% endif %} 
+                <span id="filterInfo">
+                    {% if current_lang == 'ur' %}تمام بیک اپ{% else %}All backups{% endif %} ({{ backups|length }})
+                </span>
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- ===== BACKUP LIST ===== -->
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-list me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}بیک اپ کی تاریخ{% else %}Backup History{% endif %}
+            </span>
+            <span class="badge bg-success">
+                {% if current_lang == 'ur' %}ایکسل ایکسپورٹ دستیاب{% else %}Excel Export Available{% endif %}
+            </span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="backupTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>
+                            {% if current_lang == 'ur' %}فائل کا نام{% else %}Filename{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}سائز{% else %}Size{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}بنایا{% else %}Created By{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="backupTableBody">
+                    {% for backup in backups %}
+                        <tr data-id="{{ backup.id }}" data-date="{{ backup.backup_date.strftime('%Y-%m-%d') }}" data-type="{{ backup.type or 'manual' }}">
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <i class="fas fa-file-archive me-2 text-warning"></i>
+                                {{ backup.filename }}
+                            </td>
+                            <td>
+                                {% if backup.type == 'auto' %}
+                                    <span class="badge bg-info">
+                                        {% if current_lang == 'ur' %}خودکار{% else %}Auto{% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success">
+                                        {% if current_lang == 'ur' %}دستی{% else %}Manual{% endif %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ backup.backup_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                {% if backup.size %}
+                                    {{ (backup.size / 1024)|round(1) }} KB
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ backup.created_by or 'System' }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <!-- Excel Export -->
+                                    <a href="{{ url_for('export_backup_excel', backup_id=backup.id) }}" 
+                                       class="btn btn-success" 
+                                       title="{% if current_lang == 'ur' %}ایکسل کے طور پر ایکسپورٹ کریں{% else %}Export as Excel{% endif %}">
+                                        <i class="fas fa-file-excel me-1"></i> 
+                                        {% if current_lang == 'ur' %}ایکسل{% else %}Excel{% endif %}
+                                    </a>
+                                    
+                                    <!-- Download DB -->
+                                    <a href="{{ url_for('download_backup', backup_id=backup.id) }}" 
+                                       class="btn btn-outline-secondary" 
+                                       title="{% if current_lang == 'ur' %}ڈی بی فائل ڈاؤن لوڈ کریں{% else %}Download DB{% endif %}">
+                                        <i class="fas fa-database"></i>
+                                    </a>
+                                    
+                                    <!-- Delete -->
+                                    <button class="btn btn-outline-danger" 
+                                            onclick="deleteBackup({{ backup.id }})" 
+                                            title="{% if current_lang == 'ur' %}بیک اپ حذف کریں{% else %}Delete Backup{% endif %}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr id="noDataRow">
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-database fa-3x d-block mb-3"></i>
+                                <h5>
+                                    {% if current_lang == 'ur' %}کوئی بیک اپ نہیں ملا{% else %}No backups found{% endif %}
+                                </h5>
+                                <p>
+                                    {% if current_lang == 'ur' %}اپنا پہلا بیک اپ بنانے کے لیے "بیک اپ بنائیں" پر کلک کریں۔{% else %}Click "Create Backup" to create your first backup.{% endif %}
+                                </p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // DataTable initialize
+        $('#backupTable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[3, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [6] }
+            ]
+        });
+    });
+    
+    // ===== FILTER FUNCTIONS =====
+    
+    function applyFilter(filterType) {
+        // Update active button
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`.filter-btn[data-filter="${filterType}"]`)?.classList.add('active');
+        
+        // Clear custom date inputs
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        
+        // Show loading
+        const lang = '{{ current_lang }}';
+        const msg = lang === 'ur' ? '⏳ بیک اپ لوڈ ہو رہے ہیں...' : '⏳ Loading backups...';
+        showToast(msg, 'info');
+        
+        // API call
+        $.ajax({
+            url: '/api/backup/filter',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                filter_type: filterType
+            }),
+            success: function(data) {
+                if (data.status === 'success') {
+                    updateTable(data.backups);
+                    const label = getFilterLabel(filterType, lang);
+                    const infoMsg = lang === 'ur' ? 'دکھا رہا ہے: ' + data.count + ' بیک اپ' : 'Showing ' + data.count + ' backups';
+                    document.getElementById('filterInfo').textContent = label + ' (' + data.count + ' ' + (lang === 'ur' ? 'بیک اپ' : 'backups') + ')';
+                    document.getElementById('totalCount').textContent = data.count;
+                    const successMsg = lang === 'ur' ? '✅ ' + data.count + ' بیک اپ دکھا رہا ہے' : '✅ Showing ' + data.count + ' backups';
+                    showToast(successMsg, 'success');
+                }
+            },
+            error: function() {
+                const errorMsg = '{{ current_lang }}' === 'ur' ? '❌ بیک اپ لوڈ کرنے میں خرابی' : '❌ Error loading backups';
+                showToast(errorMsg, 'danger');
+            }
+        });
+    }
+    
+    function applyCustomDate() {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        const lang = '{{ current_lang }}';
+        
+        if (!dateFrom && !dateTo) {
+            const msg = lang === 'ur' ? 'براہ کرم تاریخ کی حد منتخب کریں' : 'Please select a date range';
+            showToast(msg, 'warning');
+            return;
+        }
+        
+        // Clear active filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        const loadingMsg = lang === 'ur' ? '⏳ بیک اپ لوڈ ہو رہے ہیں...' : '⏳ Loading backups...';
+        showToast(loadingMsg, 'info');
+        
+        $.ajax({
+            url: '/api/backup/filter',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                filter_type: 'custom',
+                date_from: dateFrom,
+                date_to: dateTo
+            }),
+            success: function(data) {
+                if (data.status === 'success') {
+                    updateTable(data.backups);
+                    let label = lang === 'ur' ? 'اپنی تاریخ' : 'Custom range';
+                    if (dateFrom && dateTo) {
+                        label = dateFrom + ' ' + (lang === 'ur' ? 'سے' : 'to') + ' ' + dateTo;
+                    } else if (dateFrom) {
+                        label = (lang === 'ur' ? 'سے' : 'From') + ' ' + dateFrom;
+                    } else if (dateTo) {
+                        label = (lang === 'ur' ? 'تک' : 'Until') + ' ' + dateTo;
+                    }
+                    document.getElementById('filterInfo').textContent = label + ' (' + data.count + ' ' + (lang === 'ur' ? 'بیک اپ' : 'backups') + ')';
+                    document.getElementById('totalCount').textContent = data.count;
+                    const successMsg = lang === 'ur' ? '✅ ' + data.count + ' بیک اپ دکھا رہا ہے' : '✅ Showing ' + data.count + ' backups';
+                    showToast(successMsg, 'success');
+                }
+            },
+            error: function() {
+                const errorMsg = lang === 'ur' ? '❌ بیک اپ لوڈ کرنے میں خرابی' : '❌ Error loading backups';
+                showToast(errorMsg, 'danger');
+            }
+        });
+    }
+    
+    function clearFilters() {
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector('.filter-btn[data-filter="all"]')?.classList.add('active');
+        
+        applyFilter('all');
+    }
+    
+    function getFilterLabel(filterType, lang) {
+        const labels = {
+            'all': lang === 'ur' ? 'تمام بیک اپ' : 'All backups',
+            'today': lang === 'ur' ? 'آج کے بیک اپ' : 'Today\'s backups',
+            'week': lang === 'ur' ? 'اس ہفتے کے بیک اپ' : 'This week\'s backups',
+            'month': lang === 'ur' ? 'اس مہینے کے بیک اپ' : 'This month\'s backups'
+        };
+        return labels[filterType] || filterType;
+    }
+    
+    function updateTable(backups) {
+        const tbody = document.getElementById('backupTableBody');
+        const lang = '{{ current_lang }}';
+        tbody.innerHTML = '';
+        
+        if (backups.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-database fa-3x d-block mb-3"></i>
+                        <h5>${lang === 'ur' ? 'کوئی بیک اپ نہیں ملا' : 'No backups found'}</h5>
+                        <p>${lang === 'ur' ? 'اپنے فلٹر کی ترتیبات تبدیل کریں۔' : 'Try changing your filter settings.'}</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        backups.forEach((backup, index) => {
+            const typeBadge = backup.type === 'auto' 
+                ? `<span class="badge bg-info">${lang === 'ur' ? 'خودکار' : 'Auto'}</span>` 
+                : `<span class="badge bg-success">${lang === 'ur' ? 'دستی' : 'Manual'}</span>`;
+            
+            const tr = document.createElement('tr');
+            tr.dataset.id = backup.id;
+            tr.dataset.date = backup.backup_date.split(' ')[0];
+            tr.dataset.type = backup.type || 'manual';
+            
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td>
+                    <i class="fas fa-file-archive me-2 text-warning"></i>
+                    ${backup.filename}
+                </td>
+                <td>${typeBadge}</td>
+                <td>${backup.backup_date}</td>
+                <td>${backup.size_kb > 0 ? backup.size_kb + ' KB' : '-'}</td>
+                <td>${backup.created_by}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="/backup/export_excel/${backup.id}" 
+                           class="btn btn-success" 
+                           title="${lang === 'ur' ? 'ایکسل کے طور پر ایکسپورٹ کریں' : 'Export as Excel'}">
+                            <i class="fas fa-file-excel me-1"></i> ${lang === 'ur' ? 'ایکسل' : 'Excel'}
+                        </a>
+                        <a href="/backup/download/${backup.id}" 
+                           class="btn btn-outline-secondary" 
+                           title="${lang === 'ur' ? 'ڈی بی فائل ڈاؤن لوڈ کریں' : 'Download DB'}">
+                            <i class="fas fa-database"></i>
+                        </a>
+                        <button class="btn btn-outline-danger" 
+                                onclick="deleteBackup(${backup.id})" 
+                                title="${lang === 'ur' ? 'بیک اپ حذف کریں' : 'Delete Backup'}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        // Reinitialize DataTable
+        if ($.fn.DataTable.isDataTable('#backupTable')) {
+            $('#backupTable').DataTable().destroy();
+        }
+        $('#backupTable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[3, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [6] }
+            ]
+        });
+    }
+    
+    // ===== DELETE BACKUP =====
+    
+    function deleteBackup(id) {
+        const lang = '{{ current_lang }}';
+        Swal.fire({
+            title: lang === 'ur' ? 'بیک اپ حذف کریں؟' : 'Delete Backup?',
+            text: lang === 'ur' ? 'یہ عمل واپس نہیں کیا جا سکتا۔ فائل مستقل طور پر حذف ہو جائے گی۔' : 'This action cannot be undone. The file will be permanently deleted.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e17055',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: lang === 'ur' ? 'ہاں، حذف کریں!' : 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/api/backup/delete/' + id,
+                    method: 'DELETE',
+                    success: function(data) {
+                        if (data.status === 'success') {
+                            const msg = lang === 'ur' ? '✅ بیک اپ کامیابی سے حذف ہو گیا' : '✅ Backup deleted successfully';
+                            showToast(msg, 'success');
+                            // Reload current filter
+                            const activeFilter = document.querySelector('.filter-btn.active');
+                            if (activeFilter) {
+                                applyFilter(activeFilter.dataset.filter);
+                            } else {
+                                location.reload();
+                            }
+                        }
+                    },
+                    error: function() {
+                        const msg = lang === 'ur' ? '❌ بیک اپ حذف کرنے میں خرابی' : '❌ Error deleting backup';
+                        showToast(msg, 'danger');
+                    }
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

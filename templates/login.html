@@ -1,0 +1,516 @@
+<!-- templates/login.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}لاگ ان - PRIMEACCESS{% else %}Login - PRIMEACCESS{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================= */
+    /*  LOGIN PAGE - ANIMATED BACKGROUND + BRAND    */
+    /* ============================================= */
+
+    .login-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-body);
+        position: relative;
+        overflow: hidden;
+        padding: 20px;
+    }
+
+    /* ===== ANIMATED CIRCLES BACKGROUND ===== */
+    .login-bg-circles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .login-bg-circles .circle {
+        position: absolute;
+        border-radius: 50%;
+        animation: floatCircle linear infinite alternate;
+    }
+    .login-bg-circles .circle:nth-child(1) {
+        width: 500px;
+        height: 500px;
+        top: -200px;
+        right: -150px;
+        background: radial-gradient(circle, #0088FF, transparent 70%);
+        animation-duration: 20s;
+        opacity: 0.35;
+    }
+    .login-bg-circles .circle:nth-child(2) {
+        width: 400px;
+        height: 400px;
+        bottom: -150px;
+        left: -100px;
+        background: radial-gradient(circle, #6C63FF, transparent 70%);
+        animation-duration: 25s;
+        animation-delay: 2s;
+        opacity: 0.30;
+    }
+    .login-bg-circles .circle:nth-child(3) {
+        width: 300px;
+        height: 300px;
+        top: 30%;
+        left: 40%;
+        background: radial-gradient(circle, #00CCFF, transparent 70%);
+        animation-duration: 18s;
+        animation-delay: 4s;
+        opacity: 0.25;
+    }
+    .login-bg-circles .circle:nth-child(4) {
+        width: 200px;
+        height: 200px;
+        bottom: 20%;
+        right: 20%;
+        background: radial-gradient(circle, #0088FF, transparent 70%);
+        animation-duration: 15s;
+        animation-delay: 1s;
+        opacity: 0.40;
+    }
+    .login-bg-circles .circle:nth-child(5) {
+        width: 150px;
+        height: 150px;
+        top: 10%;
+        left: 20%;
+        background: radial-gradient(circle, #6C63FF, transparent 70%);
+        animation-duration: 22s;
+        animation-delay: 3s;
+        opacity: 0.30;
+    }
+
+    @keyframes floatCircle {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -40px) scale(1.05); }
+        66% { transform: translate(-20px, 30px) scale(0.95); }
+        100% { transform: translate(15px, -20px) scale(1.02); }
+    }
+
+    /* ===== GLOW ORB ===== */
+    .login-glow {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0, 136, 255, 0.06), transparent 70%);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 0;
+        pointer-events: none;
+        animation: pulseGlow 4s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+        50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    }
+
+    /* ===== LOGIN CARD ===== */
+    .login-card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        padding: 40px 40px 32px;
+        max-width: 420px;
+        width: 100%;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-lg);
+        animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        opacity: 0;
+        transform: translateY(30px);
+        position: relative;
+        z-index: 1;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== BRAND SECTION - LOGO BADA ===== */
+    .login-brand {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+    .login-brand .brand-logo-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        margin-bottom: 4px;
+    }
+    .login-brand .brand-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+        flex-shrink: 0;
+        transition: transform 0.3s ease;
+        overflow: hidden;
+    }
+    .login-brand .brand-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 14px;
+    }
+    .login-brand .brand-icon:hover {
+        transform: scale(1.04) rotate(-2deg);
+    }
+    .login-brand .brand-text {
+        text-align: left;
+    }
+    .login-brand .brand-text h2 {
+        font-weight: 800;
+        font-size: 1.6rem;
+        letter-spacing: -0.5px;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1.1;
+    }
+    .login-brand .brand-text h2 span {
+        background: var(--brand-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .login-brand .brand-text .subtitle {
+        color: var(--text-muted);
+        font-size: 0.65rem;
+        font-weight: 500;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin: 0;
+    }
+    .login-brand .brand-tagline {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        margin: 6px 0 0;
+        opacity: 0.5;
+    }
+
+    /* ===== FORM ===== */
+    .login-card .form-group {
+        margin-bottom: 16px;
+    }
+    .login-card .form-group label {
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .login-card .input-group {
+        border-radius: 10px;
+        border: 1.5px solid var(--border-color);
+        transition: all 0.3s ease;
+        background: var(--bg-input);
+    }
+    .login-card .input-group:focus-within {
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 4px rgba(0, 136, 255, 0.06), 0 0 20px rgba(0, 136, 255, 0.03);
+    }
+    .login-card .input-group-text {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        padding: 10px 14px 10px 16px;
+        font-size: 0.85rem;
+    }
+    .login-card .form-control {
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        padding: 10px 16px 10px 0;
+        font-size: 0.9rem;
+        font-family: 'Inter', sans-serif;
+    }
+    .login-card .form-control::placeholder {
+        color: var(--text-muted);
+        opacity: 0.4;
+    }
+    .login-card .form-control:focus {
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .login-card .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 14px 0 22px;
+    }
+    .login-card .form-check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        cursor: pointer;
+    }
+    .login-card .form-check-input {
+        width: 15px;
+        height: 15px;
+        border-radius: 4px;
+        border: 1.5px solid var(--border-color);
+        cursor: pointer;
+        accent-color: var(--brand-primary);
+    }
+    .login-card .forgot-link {
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    .login-card .forgot-link:hover {
+        color: var(--brand-primary);
+    }
+
+    .login-btn {
+        width: 100%;
+        padding: 13px;
+        border: none;
+        border-radius: 10px;
+        background: var(--brand-gradient);
+        color: white;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Inter', sans-serif;
+        position: relative;
+        overflow: hidden;
+    }
+    .login-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+        transition: left 0.6s ease;
+    }
+    .login-btn:hover::before {
+        left: 100%;
+    }
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(0, 136, 255, 0.3);
+    }
+
+    .login-divider {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 20px 0 16px;
+    }
+    .login-divider::before,
+    .login-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border-color);
+    }
+    .login-divider span {
+        color: var(--text-muted);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.5;
+    }
+
+    .login-footer {
+        text-align: center;
+        margin-top: 14px;
+    }
+    .login-footer p {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin: 0;
+    }
+    .login-footer a {
+        color: var(--brand-primary);
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .login-footer a:hover {
+        text-decoration: underline;
+    }
+    .login-footer .demo-cred {
+        display: inline-block;
+        color: var(--text-muted);
+        font-size: 0.6rem;
+        margin-top: 6px;
+        opacity: 0.35;
+        padding: 3px 12px;
+        border-radius: 20px;
+        background: var(--bg-card-hover);
+        border: 1px solid var(--border-color);
+    }
+
+    /* ===== DARK THEME ===== */
+    [data-bs-theme="dark"] .login-card {
+        background: rgba(18, 24, 40, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+    [data-bs-theme="dark"] .login-bg-circles .circle {
+        opacity: 0.25;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+        .login-card {
+            padding: 28px 20px 24px;
+            margin: 10px;
+            border-radius: 16px;
+        }
+        .login-brand .brand-logo-wrapper {
+            gap: 12px;
+        }
+        .login-brand .brand-icon {
+            width: 64px;
+            height: 64px;
+            padding: 3px;
+        }
+        .login-brand .brand-text h2 {
+            font-size: 1.2rem;
+        }
+        .login-bg-circles .circle:nth-child(1) { width: 300px; height: 300px; }
+        .login-bg-circles .circle:nth-child(2) { width: 250px; height: 250px; }
+        .login-bg-circles .circle:nth-child(3) { width: 200px; height: 200px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <!-- Animated Circles Background -->
+    <div class="login-bg-circles">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+
+    <!-- Glow Light Effect -->
+    <div class="login-glow"></div>
+
+    <!-- Login Card -->
+    <div class="login-card">
+        <!-- Brand -->
+        <div class="login-brand">
+            <div class="brand-logo-wrapper">
+                <div class="brand-icon">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="PRIMEACCESS">
+                </div>
+                <div class="brand-text">
+                    <h2><span>PRIMEACCESS</span></h2>
+                    <p class="subtitle">
+                        {% if current_lang == 'ur' %}پرییمیم لوازمات{% else %}Premium Accessories{% endif %}
+                    </p>
+                </div>
+            </div>
+            <p class="brand-tagline">
+                {% if current_lang == 'ur' %}موبائل اور کمپیوٹر لوازمات{% else %}Mobile &amp; Computer Accessories{% endif %}
+            </p>
+        </div>
+
+        <!-- Form -->
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group">
+                <label><i class="fas fa-user me-1"></i> 
+                    {% if current_lang == 'ur' %}صارف نام{% else %}Username{% endif %}
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    <input type="text" class="form-control" name="username" 
+                           placeholder="{% if current_lang == 'ur' %}صارف نام درج کریں{% else %}Enter username{% endif %}" required autofocus>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-lock me-1"></i> 
+                    {% if current_lang == 'ur' %}پاس ورڈ{% else %}Password{% endif %}
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    <input type="password" class="form-control" name="password" 
+                           placeholder="{% if current_lang == 'ur' %}پاس ورڈ درج کریں{% else %}Enter password{% endif %}" required>
+                    <span class="input-group-text" onclick="togglePassword(this)" style="cursor: pointer;">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+            </div>
+
+            <div class="form-options">
+                <label class="form-check">
+                    <input class="form-check-input" type="checkbox" name="remember">
+                    {% if current_lang == 'ur' %}مجھے یاد رکھیں{% else %}Remember me{% endif %}
+                </label>
+                <a href="{{ url_for('forgot_password') }}" class="forgot-link">
+                    {% if current_lang == 'ur' %}پاس ورڈ بھول گئے؟{% else %}Forgot Password?{% endif %}
+                </a>
+            </div>
+
+            <button type="submit" class="login-btn">
+                <i class="fas fa-sign-in-alt me-2"></i>
+                {% if current_lang == 'ur' %}سائن ان کریں{% else %}Sign In{% endif %}
+            </button>
+        </form>
+
+        <div class="login-divider">
+            <span>{% if current_lang == 'ur' %}یا{% else %}or{% endif %}</span>
+        </div>
+
+        <div class="login-footer">
+            <p>
+                {% if current_lang == 'ur' %}اکاؤنٹ نہیں ہے؟{% else %}Don't have an account?{% endif %} 
+                <a href="{{ url_for('register') }}">
+                    {% if current_lang == 'ur' %}رجسٹر کریں{% else %}Register{% endif %}
+                </a>
+            </p>
+            <span class="demo-cred">🔑 Demo: admin / admin123</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePassword(el) {
+        const input = el.closest('.input-group').querySelector('input');
+        const icon = el.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const usernameInput = document.querySelector('input[name="username"]');
+        const passwordInput = document.querySelector('input[name="password"]');
+        if (usernameInput) usernameInput.value = 'admin';
+        if (passwordInput) passwordInput.value = 'admin123';
+    });
+</script>
+{% endblock %}

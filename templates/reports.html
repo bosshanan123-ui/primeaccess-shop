@@ -1,0 +1,133 @@
+<!-- templates/reports.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}رپورٹس - شاپ مینجمنٹ{% else %}Reports - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-chart-bar text-primary me-2"></i>
+                {% if current_lang == 'ur' %}رپورٹس{% else %}Reports{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}رپورٹس{% else %}Reports{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Sales Report -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center p-4">
+                <div class="mb-3" style="font-size: 3rem; color: #667eea;">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h4>
+                    {% if current_lang == 'ur' %}سیل رپورٹ{% else %}Sales Report{% endif %}
+                </h4>
+                <p class="text-muted">
+                    {% if current_lang == 'ur' %}سیل کے اعداد و شمار، رجحانات اور کارکردگی دیکھیں{% else %}View sales statistics, trends, and performance{% endif %}
+                </p>
+                <a href="{{ url_for('reports_sales') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    {% if current_lang == 'ur' %}رپورٹ دیکھیں{% else %}View Report{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profit Report -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center p-4">
+                <div class="mb-3" style="font-size: 3rem; color: #00b894;">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h4>
+                    {% if current_lang == 'ur' %}منافع کی رپورٹ{% else %}Profit Report{% endif %}
+                </h4>
+                <p class="text-muted">
+                    {% if current_lang == 'ur' %}منافع کے مارجن اور مالی کارکردگی کا تجزیہ کریں{% else %}Analyze profit margins and financial performance{% endif %}
+                </p>
+                <a href="{{ url_for('reports_profit') }}" class="btn btn-success">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    {% if current_lang == 'ur' %}رپورٹ دیکھیں{% else %}View Report{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Inventory Report -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center p-4">
+                <div class="mb-3" style="font-size: 3rem; color: #fdcb6e;">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <h4>
+                    {% if current_lang == 'ur' %}انوینٹری رپورٹ{% else %}Inventory Report{% endif %}
+                </h4>
+                <p class="text-muted">
+                    {% if current_lang == 'ur' %}اسٹاک کی سطح اور پروڈکٹ کی قیمتوں کو ٹریک کریں{% else %}Track stock levels and product values{% endif %}
+                </p>
+                <a href="{{ url_for('reports_inventory') }}" class="btn btn-warning">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    {% if current_lang == 'ur' %}رپورٹ دیکھیں{% else %}View Report{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-calculator me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}فوری اعداد و شمار{% else %}Quick Statistics{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h6 class="text-muted">
+                            {% if current_lang == 'ur' %}کل ریونیو{% else %}Total Revenue{% endif %}
+                        </h6>
+                        <h3 class="fw-bold text-primary">PKR 0</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">
+                            {% if current_lang == 'ur' %}کل پرچیزز{% else %}Total Purchases{% endif %}
+                        </h6>
+                        <h3 class="fw-bold text-danger">PKR 0</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">
+                            {% if current_lang == 'ur' %}کل اخراجات{% else %}Total Expenses{% endif %}
+                        </h6>
+                        <h3 class="fw-bold text-warning">PKR 0</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">
+                            {% if current_lang == 'ur' %}خالص منافع{% else %}Net Profit{% endif %}
+                        </h6>
+                        <h3 class="fw-bold text-success">PKR 0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+<!-- templates/errors/500.html -->
+{% extends "base.html" %}
+
+{% block title %}500 - Server Error{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div style="font-size: 6rem; color: #e17055;">
+                <i class="fas fa-bug"></i>
+            </div>
+            <h1 class="display-1 fw-bold">500</h1>
+            <h2 class="mb-3">Internal Server Error</h2>
+            <p class="text-muted mb-4">Something went wrong on our end. Please try again later or contact support.</p>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-home me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

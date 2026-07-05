@@ -1,0 +1,109 @@
+<!-- templates/reports_sales.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}سیل رپورٹ - شاپ مینجمنٹ{% else %}Sales Report - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-chart-line text-primary me-2"></i>
+                {% if current_lang == 'ur' %}سیل رپورٹ{% else %}Sales Report{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('reports') }}">
+                        {% if current_lang == 'ur' %}رپورٹس{% else %}Reports{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}سیل{% else %}Sales{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>
+                {% if current_lang == 'ur' %}رپورٹ پرنٹ کریں{% else %}Print Report{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card" style="border-left-color: #667eea;">
+            <div class="stat-number">PKR {{ "%.0f"|format(sales_data|sum(attribute='total_sales')) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل سیلز{% else %}Total Sales{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card" style="border-left-color: #00b894;">
+            <div class="stat-number">{{ sales_data|sum(attribute='total_orders') }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل آرڈرز{% else %}Total Orders{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card" style="border-left-color: #fdcb6e;">
+            <div class="stat-number">
+                {% if sales_data|length > 0 %}
+                    {{ "%.0f"|format((sales_data|sum(attribute='total_sales') / sales_data|sum(attribute='total_orders'))|default(0)) }}
+                {% else %}
+                    0
+                {% endif %}
+            </div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}اوسط آرڈر ویلیو{% else %}Average Order Value{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-calendar-alt me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}ماہانہ سیل کی تقسیم{% else %}Monthly Sales Breakdown{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if current_lang == 'ur' %}مہینہ{% else %}Month{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}آرڈرز{% else %}Orders{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}کل سیلز{% else %}Total Sales{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اوسط{% else %}Average{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in sales_data %}
+                        <tr>
+                            <td>{{ data.month }}</td>
+                            <td>{{ data.total_orders }}</td>
+                            <td>PKR {{ "%.0f"|format(data.total_sales) }}</td>
+                            <td>PKR {{ "%.0f"|format((data.total_sales / data.total_orders)|default(0)) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

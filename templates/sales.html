@@ -1,0 +1,356 @@
+<!-- templates/sales.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}سیلز ہسٹری - شاپ مینجمنٹ{% else %}Sales History - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-receipt text-primary me-2"></i>
+                {% if current_lang == 'ur' %}سیلز ہسٹری{% else %}Sales History{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}سیلز{% else %}Sales{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="window.location.href='{{ url_for('new_sale') }}'">
+                <i class="fas fa-plus me-2"></i>
+                {% if current_lang == 'ur' %}نیا سیل{% else %}New Sale{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="saleSearch" 
+                           placeholder="{% if current_lang == 'ur' %}انوائسز تلاش کریں...{% else %}Search invoices...{% endif %}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <input type="date" class="form-control" id="dateFrom" 
+                       placeholder="{% if current_lang == 'ur' %}تاریخ سے{% else %}From Date{% endif %}">
+            </div>
+            <div class="col-md-3">
+                <input type="date" class="form-control" id="dateTo" 
+                       placeholder="{% if current_lang == 'ur' %}تاریخ تک{% else %}To Date{% endif %}">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="fas fa-undo me-2"></i>
+                    {% if current_lang == 'ur' %}ری سیٹ{% else %}Reset{% endif %}
+                </button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="table table-hover" id="salesTable">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if current_lang == 'ur' %}انوائس{% else %}Invoice{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}آئٹمز{% else %}Items{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}کل{% else %}Total{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}ادائیگی{% else %}Payment{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                        <tr onclick="window.location.href='{{ url_for('view_sale', sale_id=sale.id) }}'" style="cursor: pointer;">
+                            <td><span class="badge bg-primary">{{ sale.invoice_number }}</span></td>
+                            <td>{{ sale.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                {% if sale.customer %}
+                                    {{ sale.customer.name }}
+                                {% else %}
+                                    <span class="text-muted">
+                                        {% if current_lang == 'ur' %}واک ان{% else %}Walk-in{% endif %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ sale.items|length }}</td>
+                            <td class="fw-bold">PKR {{ "%.0f"|format(sale.total_amount) }}</td>
+                            <td>
+                                <span class="badge {% if sale.payment_method == 'cash' %}bg-success{% elif sale.payment_method == 'card' %}bg-primary{% elif sale.payment_method == 'due' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    {% if sale.payment_method == 'cash' %}
+                                        {% if current_lang == 'ur' %}نقد{% else %}Cash{% endif %}
+                                    {% elif sale.payment_method == 'card' %}
+                                        {% if current_lang == 'ur' %}کارڈ{% else %}Card{% endif %}
+                                    {% elif sale.payment_method == 'due' %}
+                                        {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                                    {% elif sale.payment_method == 'online' %}
+                                        {% if current_lang == 'ur' %}آن لائن{% else %}Online{% endif %}
+                                    {% else %}
+                                        {{ sale.payment_method|title }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge-status {% if sale.payment_status == 'paid' %}paid{% elif sale.payment_status == 'pending' %}pending{% else %}due{% endif %}">
+                                    {% if sale.payment_status == 'paid' %}
+                                        {% if current_lang == 'ur' %}ادا شدہ{% else %}Paid{% endif %}
+                                    {% elif sale.payment_status == 'pending' %}
+                                        {% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}
+                                    {% else %}
+                                        {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td onclick="event.stopPropagation();">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="window.location.href='{{ url_for('view_sale', sale_id=sale.id) }}'" data-tooltip="{% if current_lang == 'ur' %}سیل دیکھیں{% else %}View Sale{% endif %}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info" onclick="printReceipt({{ sale.id }})" data-tooltip="{% if current_lang == 'ur' %}رسیپٹ پرنٹ کریں{% else %}Print Receipt{% endif %}">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="shareWhatsAppPDF({{ sale.id }})" data-tooltip="{% if current_lang == 'ur' %}واٹس ایپ پر پی ڈی ایف شیئر کریں{% else %}Share PDF on WhatsApp{% endif %}" id="whatsappBtn-{{ sale.id }}">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        const table = $('#salesTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[1, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [7] }
+            ]
+        });
+        
+        $('#saleSearch').on('keyup', function() {
+            table.search(this.value).draw();
+        });
+        
+        $('#dateFrom, #dateTo').on('change', function() {
+            const from = $('#dateFrom').val();
+            const to = $('#dateTo').val();
+            if (from && to) {
+                table.column(1).search(from + '|' + to, true, false).draw();
+            }
+        });
+    });
+    
+    function clearFilters() {
+        $('#saleSearch').val('');
+        $('#dateFrom').val('');
+        $('#dateTo').val('');
+        $('#salesTable').DataTable().search('').draw();
+    }
+
+    function printReceipt(saleId) {
+        const lang = '{{ current_lang }}';
+        const printWindow = window.open(`/sale/${saleId}/receipt`, '_blank');
+        if (printWindow) {
+            printWindow.onload = function() {
+                printWindow.print();
+            };
+        } else {
+            const msg = lang === 'ur' ? 'براہ کرم رسیپٹ پرنٹ کرنے کے لیے پاپ اپس کی اجازت دیں' : 'Please allow popups to print receipts';
+            showToast(msg, 'warning');
+        }
+    }
+
+    function shareWhatsAppPDF(saleId) {
+        const lang = '{{ current_lang }}';
+        const btn = document.getElementById(`whatsappBtn-${saleId}`);
+        if (!btn) return;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        showLoading(lang === 'ur' ? 'پی ڈی ایف بن رہا ہے...' : 'Generating PDF...');
+        
+        const row = document.querySelector(`tr[onclick*="view_sale/${saleId}"]`);
+        let invoiceNo = 'INV-' + saleId;
+        let customerName = lang === 'ur' ? 'واک ان' : 'Walk-in';
+        let totalAmount = '0';
+        
+        if (row) {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 5) {
+                invoiceNo = cells[0].textContent.trim();
+                customerName = cells[2].textContent.trim();
+                totalAmount = cells[4].textContent.trim().replace('PKR ', '');
+            }
+        }
+        
+        fetch(`/sale/${saleId}/pdf`)
+            .then(response => {
+                if (!response.ok) throw new Error('PDF generation failed');
+                return response.blob();
+            })
+            .then(blob => {
+                hideLoading();
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `Invoice_${invoiceNo.replace(/\s/g, '')}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                setTimeout(() => {
+                    URL.revokeObjectURL(link.href);
+                }, 5000);
+                
+                const message = `🧾 *PRIMEACCESS* - Invoice\n\n` +
+                               `📋 Invoice: ${invoiceNo}\n` +
+                               `👤 Customer: ${customerName}\n` +
+                               `💰 Total: ${totalAmount}\n` +
+                               `📅 Date: ${new Date().toLocaleDateString()}\n\n` +
+                               `📎 Please attach the downloaded PDF invoice.\n\n` +
+                               `Thank you for shopping!\n` +
+                               `📞 0325-7230326`;
+                
+                let whatsappUrl = 'https://wa.me/?text=' + encodeURIComponent(message);
+                window.open(whatsappUrl, '_blank');
+                
+                const msg = lang === 'ur' ? '✅ پی ڈی ایف ڈاؤن لوڈ ہو گئی! براہ کرم واٹس ایپ میں منسلک کریں۔' : '✅ PDF downloaded! Please attach in WhatsApp.';
+                showToast(msg, 'success');
+            })
+            .catch(error => {
+                hideLoading();
+                const msg = lang === 'ur' ? '❌ خرابی: ' + error.message : '❌ Error: ' + error.message;
+                showToast(msg, 'danger');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fab fa-whatsapp"></i>';
+            });
+    }
+    
+    function showLoading(message = 'Loading...') {
+        if (typeof Swal !== 'undefined' && Swal.fire) {
+            Swal.fire({
+                title: message,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+    }
+    
+    function hideLoading() {
+        if (typeof Swal !== 'undefined' && Swal.close) {
+            Swal.close();
+        }
+    }
+    
+    function showToast(message, type = 'info') {
+        if (typeof window.showToast === 'function') {
+            window.showToast(message, type);
+            return;
+        }
+        
+        const container = document.getElementById('toastContainer');
+        if (!container) {
+            const newContainer = document.createElement('div');
+            newContainer.id = 'toastContainer';
+            newContainer.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;max-width:380px;width:100%;';
+            document.body.appendChild(newContainer);
+        }
+        
+        const toastContainer = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        const colors = { success: '#00B894', danger: '#E11D48', warning: '#FFB800', info: '#2563EB' };
+        const icons = { success: 'fa-check-circle', danger: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+        const color = colors[type] || colors.info;
+        const icon = icons[type] || icons.info;
+        
+        toast.style.cssText = `
+            background: white;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-left: 3px solid ${color};
+            animation: slideInRight 0.3s ease;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        `;
+        
+        toast.innerHTML = `
+            <i class="fas ${icon}" style="color: ${color};"></i>
+            <span style="flex:1;">${message}</span>
+            <button onclick="this.closest('.toast-custom').remove()" style="background:none; border:none; color: #888; cursor:pointer; font-size:0.8rem;">
+                <i class="fas fa-times"></i>
+            </button>
+            <div style="position:absolute;bottom:0;left:0;height:2px;background:${color};width:100%;animation: shrink 5s linear forwards;"></div>
+        `;
+        toast.className = 'toast-custom';
+        
+        toastContainer.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => {
+                    if (toast.parentNode) toast.remove();
+                }, 300);
+            }
+        }, 5000);
+    }
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'n') {
+            e.preventDefault();
+            window.location.href = '/new_sale';
+        }
+    });
+    
+    console.log('📋 Sales page loaded successfully!');
+</script>
+{% endblock %}

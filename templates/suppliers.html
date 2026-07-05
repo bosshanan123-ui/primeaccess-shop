@@ -1,0 +1,113 @@
+<!-- templates/suppliers.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}سپلائرز - شاپ مینجمنٹ{% else %}Suppliers - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-handshake text-primary me-2"></i>
+                {% if current_lang == 'ur' %}سپلائرز{% else %}Suppliers{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}سپلائرز{% else %}Suppliers{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="window.location.href='{{ url_for('add_supplier') }}'">
+                <i class="fas fa-plus me-2"></i>
+                {% if current_lang == 'ur' %}سپلائر شامل کریں{% else %}Add Supplier{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table table-hover" id="suppliersTable">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if current_lang == 'ur' %}سپلائر{% else %}Supplier{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}رابطہ{% else %}Contact{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}فون{% else %}Phone{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}علاقہ{% else %}Area{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}پرچیزز{% else %}Purchases{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for supplier in suppliers %}
+                        <tr>
+                            <td>
+                                <div>
+                                    <div class="fw-semibold">{{ supplier.name }}</div>
+                                    <small class="text-muted">{{ supplier.shop_name }}</small>
+                                </div>
+                            </td>
+                            <td>{{ supplier.contact_person or '-' }}</td>
+                            <td>{{ supplier.phone }}</td>
+                            <td>{{ supplier.area or '-' }}</td>
+                            <td>{{ "%.0f"|format(supplier.total_purchases) }}</td>
+                            <td>
+                                {% if supplier.total_due > 0 %}
+                                    <span class="text-danger fw-bold">{{ "%.0f"|format(supplier.total_due) }}</span>
+                                {% else %}
+                                    <span class="text-success">0</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="window.location.href='{{ url_for('view_supplier', supplier_id=supplier.id) }}'">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="window.location.href='{{ url_for('new_purchase') }}?supplier={{ supplier.id }}'">
+                                        <i class="fas fa-truck"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#suppliersTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[0, 'asc']]
+        });
+    });
+</script>
+{% endblock %}

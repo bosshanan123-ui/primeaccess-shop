@@ -1,0 +1,352 @@
+<!-- templates/mobile_wallet.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}موبائل والیٹس - شاپ مینجمنٹ{% else %}Mobile Wallets - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-mobile-alt text-primary me-2"></i>
+                {% if current_lang == 'ur' %}موبائل والیٹس{% else %}Mobile Wallets{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}موبائل والیٹس{% else %}Mobile Wallets{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #FF6B00;">
+            <div class="stat-number" style="color: #FF6B00;">PKR {{ "%.0f"|format(balance_jazz) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}جازکیش بیلنس{% else %}JazzCash Balance{% endif %}
+            </div>
+            <small>
+                {% if current_lang == 'ur' %}وصول:{% else %}Received:{% endif %} {{ "%.0f"|format(total_received_jazz) }} | 
+                {% if current_lang == 'ur' %}بھیجا:{% else %}Sent:{% endif %} {{ "%.0f"|format(total_sent_jazz) }}
+            </small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #00A651;">
+            <div class="stat-number" style="color: #00A651;">PKR {{ "%.0f"|format(balance_easy) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}ایزی پیسہ بیلنس{% else %}EasyPaisa Balance{% endif %}
+            </div>
+            <small>
+                {% if current_lang == 'ur' %}وصول:{% else %}Received:{% endif %} {{ "%.0f"|format(total_received_easy) }} | 
+                {% if current_lang == 'ur' %}بھیجا:{% else %}Sent:{% endif %} {{ "%.0f"|format(total_sent_easy) }}
+            </small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #667eea;">
+            <div class="stat-number">PKR {{ "%.0f"|format(balance_jazz + balance_easy) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل بیلنس{% else %}Total Balance{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #00b894;">
+            <div class="stat-number">{{ transactions|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل ٹرانزیکشنز{% else %}Total Transactions{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Transaction -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-plus me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}نیا ٹرانزیکشن{% else %}New Transaction{% endif %}
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('add_mobile_wallet') }}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}والیٹ{% else %}Wallet{% endif %}
+                    </label>
+                    <select class="form-select" name="wallet_type" required>
+                        <option value="jazzcash">JazzCash</option>
+                        <option value="easypaisa">EasyPaisa</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}
+                    </label>
+                    <select class="form-select" name="transaction_type" required>
+                        <option value="receive">
+                            {% if current_lang == 'ur' %}وصول (پیمنٹ لینا){% else %}Receive (Payment Lena){% endif %}
+                        </option>
+                        <option value="send">
+                            {% if current_lang == 'ur' %}بھیجیں (پیمنٹ دینا){% else %}Send (Payment Dena){% endif %}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}رقم (PKR){% else %}Amount (PKR){% endif %}
+                    </label>
+                    <input type="number" class="form-control" name="amount" required step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}
+                    </label>
+                    <select class="form-select" name="customer_id">
+                        <option value="">
+                            {% if current_lang == 'ur' %}کسٹمر منتخب کریں{% else %}Select Customer{% endif %}
+                        </option>
+                        {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}فون نمبر{% else %}Phone Number{% endif %}
+                    </label>
+                    <input type="tel" class="form-control" name="phone_number" placeholder="03XX-XXXXXXX">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}کسٹمر کا نام{% else %}Customer Name{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="customer_name" 
+                           placeholder="{% if current_lang == 'ur' %}کسٹمر کا نام{% else %}Customer name{% endif %}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}ٹرانزیکشن آئی ڈی{% else %}Transaction ID{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="transaction_id" placeholder="TXN-XXXXXX">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}نوٹس{% else %}Notes{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="notes" 
+                           placeholder="{% if current_lang == 'ur' %}اختیاری نوٹس{% else %}Optional notes{% endif %}">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>
+                        {% if current_lang == 'ur' %}ٹرانزیکشن شامل کریں{% else %}Add Transaction{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Transactions History -->
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-history me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}ٹرانزیکشن کی تاریخ{% else %}Transaction History{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="walletTable">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}والیٹ{% else %}Wallet{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}رقم{% else %}Amount{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}فون{% else %}Phone{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in transactions %}
+                        <tr>
+                            <td>{{ t.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <span class="badge {% if t.wallet_type == 'jazzcash' %}badge-jazzcash{% else %}badge-easypaisa{% endif %}">
+                                    {{ t.wallet_type|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if t.transaction_type == 'receive' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if t.transaction_type == 'receive' %}
+                                        {% if current_lang == 'ur' %}وصول{% else %}Receive{% endif %}
+                                    {% else %}
+                                        {% if current_lang == 'ur' %}بھیجیں{% else %}Send{% endif %}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>{{ t.customer.name if t.customer else t.customer_name or '-' }}</td>
+                            <td class="fw-bold {% if t.transaction_type == 'receive' %}text-success{% else %}text-danger{% endif %}">
+                                PKR {{ "%.0f"|format(t.amount) }}
+                            </td>
+                            <td>{{ t.phone_number or '-' }}</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    {% if t.status == 'completed' %}
+                                        {% if current_lang == 'ur' %}مکمل{% else %}Completed{% endif %}
+                                    {% else %}
+                                        {{ t.status|title }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-sm btn-outline-info" onclick="printTransaction({{ t.id }})" 
+                                            title="{% if current_lang == 'ur' %}رسیپٹ پرنٹ کریں{% else %}Print Receipt{% endif %}">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction({{ t.id }})" 
+                                            title="{% if current_lang == 'ur' %}ٹرانزیکشن حذف کریں{% else %}Delete Transaction{% endif %}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-3">
+                                {% if current_lang == 'ur' %}ابھی تک کوئی ٹرانزیکشن نہیں{% else %}No transactions yet{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#walletTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[0, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [7] }
+            ]
+        });
+    });
+    
+    function deleteTransaction(id) {
+        const lang = '{{ current_lang }}';
+        Swal.fire({
+            title: lang === 'ur' ? 'ٹرانزیکشن حذف کریں؟' : 'Delete Transaction?',
+            text: lang === 'ur' ? 'یہ عمل واپس نہیں کیا جا سکتا۔' : 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e17055',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: lang === 'ur' ? 'ہاں، حذف کریں!' : 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: lang === 'ur' ? 'حذف ہو رہا ہے...' : 'Deleting...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                fetch('/mobile_wallet/delete/' + id, { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    Swal.close();
+                    if (data.status === 'success') {
+                        const msg = lang === 'ur' ? 'حذف ہو گیا!' : 'Deleted!';
+                        const text = lang === 'ur' ? 'ٹرانزیکشن کامیابی سے حذف ہو گیا!' : 'Transaction deleted successfully!';
+                        Swal.fire({
+                            icon: 'success',
+                            title: msg,
+                            text: text,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: lang === 'ur' ? 'ناکام!' : 'Failed!',
+                            text: lang === 'ur' ? 'ٹرانزیکشن حذف کرنے میں ناکامی' : 'Failed to delete transaction'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: lang === 'ur' ? 'خرابی!' : 'Error!',
+                        text: lang === 'ur' ? 'ٹرانزیکشن حذف کرنے میں خرابی' : 'Error deleting transaction'
+                    });
+                    console.error('Error:', error);
+                });
+            }
+        });
+    }
+    
+    function printTransaction(id) {
+        const printWindow = window.open(`/mobile_wallet/receipt/${id}`, '_blank', 'width=400,height=600');
+        if (printWindow) {
+            printWindow.onload = function() {
+                setTimeout(function() {
+                    printWindow.print();
+                }, 500);
+            };
+            printWindow.onerror = function() {
+                const lang = '{{ current_lang }}';
+                const msg = lang === 'ur' ? 'رسیپٹ لوڈ کرنے میں خرابی' : 'Error loading receipt';
+                showToast(msg, 'danger');
+            };
+        } else {
+            const lang = '{{ current_lang }}';
+            const msg = lang === 'ur' ? 'براہ کرم رسیپٹ پرنٹ کرنے کے لیے پاپ اپس کی اجازت دیں' : 'Please allow popups to print receipts';
+            showToast(msg, 'warning');
+        }
+    }
+</script>
+{% endblock %}

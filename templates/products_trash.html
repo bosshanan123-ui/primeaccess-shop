@@ -1,0 +1,177 @@
+<!-- templates/products_trash.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}ردی شدہ پروڈکٹس - شاپ مینجمنٹ{% else %}Trashed Products - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-trash text-primary me-2"></i>
+                {% if current_lang == 'ur' %}ردی شدہ پروڈکٹس{% else %}Trashed Products{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('products') }}">
+                        {% if current_lang == 'ur' %}پروڈکٹس{% else %}Products{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}ردی{% else %}Trash{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('products') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if current_lang == 'ur' %}پروڈکٹس پر واپس جائیں{% else %}Back to Products{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            {% if current_lang == 'ur' %}
+                ردی میں موجود پروڈکٹس کو بحال یا مستقل طور پر حذف کیا جا سکتا ہے۔
+            {% else %}
+                Products in trash can be restored or permanently deleted.
+            {% endif %}
+        </div>
+        
+        <div class="table-container">
+            <table class="table table-hover" id="trashTable">
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>
+                            {% if current_lang == 'ur' %}نام{% else %}Name{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}زمرہ{% else %}Category{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}قیمت{% else %}Price{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}حذف کی تاریخ{% else %}Deleted At{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td><span class="badge bg-secondary">{{ product.sku }}</span></td>
+                            <td>
+                                <div class="fw-semibold">{{ product.name }}</div>
+                                <small class="text-muted">{{ product.barcode or 'No barcode' }}</small>
+                            </td>
+                            <td><span class="badge bg-info">{{ product.category }}</span></td>
+                            <td>
+                                <div>
+                                    {% if current_lang == 'ur' %}فروخت:{% else %}Sale:{% endif %} 
+                                    <strong>PKR {{ "%.0f"|format(product.selling_price) }}</strong>
+                                </div>
+                                <small class="text-muted">
+                                    {% if current_lang == 'ur' %}لاگت:{% else %}Cost:{% endif %} 
+                                    PKR {{ "%.0f"|format(product.purchase_price) }}
+                                </small>
+                            </td>
+                            <td>{{ product.last_updated.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-success" onclick="restoreProduct({{ product.id }})">
+                                        <i class="fas fa-undo"></i> 
+                                        {% if current_lang == 'ur' %}بحال کریں{% else %}Restore{% endif %}
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="permanentDelete({{ product.id }})">
+                                        <i class="fas fa-times"></i> 
+                                        {% if current_lang == 'ur' %}حذف کریں{% else %}Delete{% endif %}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-trash fa-2x mb-2 d-block"></i>
+                                {% if current_lang == 'ur' %}
+                                    ردی میں کوئی پروڈکٹ نہیں
+                                {% else %}
+                                    No products in trash
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#trashTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[4, 'desc']]
+        });
+    });
+    
+    function restoreProduct(id) {
+        const lang = '{{ current_lang }}';
+        Swal.fire({
+            title: lang === 'ur' ? 'پروڈکٹ بحال کریں؟' : 'Restore Product?',
+            text: lang === 'ur' ? 'یہ پروڈکٹ انوینٹری میں بحال کر دی جائے گی۔' : 'This product will be restored to inventory.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#00b894',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: lang === 'ur' ? 'ہاں، بحال کریں!' : 'Yes, restore it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/restore_product/' + id,
+                    method: 'POST',
+                    success: function() {
+                        const msg = lang === 'ur' ? '✅ پروڈکٹ کامیابی سے بحال ہو گئی!' : '✅ Product restored successfully!';
+                        showToast(msg, 'success');
+                        location.reload();
+                    }
+                });
+            }
+        });
+    }
+    
+    function permanentDelete(id) {
+        const lang = '{{ current_lang }}';
+        Swal.fire({
+            title: lang === 'ur' ? 'مستقل طور پر حذف کریں؟' : 'Permanently Delete?',
+            text: lang === 'ur' ? 'یہ عمل واپس نہیں کیا جا سکتا!' : 'This action cannot be undone!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e17055',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: lang === 'ur' ? 'ہاں، مستقل حذف کریں!' : 'Yes, delete permanently!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const msg = lang === 'ur' ? '✅ پروڈکٹ مستقل طور پر حذف ہو گئی' : '✅ Product permanently deleted';
+                showToast(msg, 'danger');
+                location.reload();
+            }
+        });
+    }
+</script>
+{% endblock %}

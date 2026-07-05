@@ -1,0 +1,189 @@
+<!-- templates/add_expense.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}خرچہ شامل کریں - شاپ مینجمنٹ{% else %}Add Expense - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-plus-circle text-primary me-2"></i>
+                {% if current_lang == 'ur' %}خرچہ شامل کریں{% else %}Add Expense{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('expenses') }}">
+                        {% if current_lang == 'ur' %}اخراجات{% else %}Expenses{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}شامل کریں{% else %}Add{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}زمرہ{% else %}Category{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" name="category" required>
+                                <option value="">
+                                    {% if current_lang == 'ur' %}زمرہ منتخب کریں{% else %}Select Category{% endif %}
+                                </option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat }}">{{ cat }}</option>
+                                {% endfor %}
+                                <option value="Other">
+                                    {% if current_lang == 'ur' %}دیگر{% else %}Other{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}ذیلی زمرہ{% else %}Sub Category{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="sub_category" 
+                                   placeholder="{% if current_lang == 'ur' %}مثال: بجلی کا بل{% else %}e.g., Electricity Bill{% endif %}">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}تفصیل{% else %}Description{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" name="description" rows="2" required 
+                                      placeholder="{% if current_lang == 'ur' %}خرچہ کی تفصیل لکھیں{% else %}Describe the expense{% endif %}"></textarea>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}رقم{% else %}Amount{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">PKR</span>
+                                <input type="number" class="form-control" name="amount" required step="0.01" min="0" placeholder="0.00">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}خرچہ کی تاریخ{% else %}Expense Date{% endif %}
+                            </label>
+                            <input type="date" class="form-control" name="expense_date" value="{{ now.strftime('%Y-%m-%d') }}">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}ادائیگی کا طریقہ{% else %}Payment Method{% endif %}
+                            </label>
+                            <select class="form-select" name="payment_method">
+                                <option value="">
+                                    {% if current_lang == 'ur' %}طریقہ منتخب کریں{% else %}Select Method{% endif %}
+                                </option>
+                                <option value="cash">
+                                    {% if current_lang == 'ur' %}نقد{% else %}Cash{% endif %}
+                                </option>
+                                <option value="bank">
+                                    {% if current_lang == 'ur' %}بینک ٹرانسفر{% else %}Bank Transfer{% endif %}
+                                </option>
+                                <option value="card">
+                                    {% if current_lang == 'ur' %}کارڈ{% else %}Card{% endif %}
+                                </option>
+                                <option value="online">
+                                    {% if current_lang == 'ur' %}آن لائن{% else %}Online{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}رسیپٹ نمبر{% else %}Receipt Number{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="receipt_number" 
+                                   placeholder="{% if current_lang == 'ur' %}رسیپٹ/حوالہ نمبر{% else %}Receipt/Reference #{% endif %}">
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}وینڈر/سپلائر{% else %}Vendor/Supplier{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="vendor" 
+                                   placeholder="{% if current_lang == 'ur' %}وینڈر کا نام{% else %}Vendor name{% endif %}">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_recurring" id="isRecurring">
+                                <label class="form-check-label" for="isRecurring">
+                                    {% if current_lang == 'ur' %}بار بار ہونے والا خرچہ{% else %}Recurring Expense{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6" id="recurrenceDiv" style="display: none;">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}تکرار کا وقفہ{% else %}Recurrence Interval{% endif %}
+                            </label>
+                            <select class="form-select" name="recurrence_interval">
+                                <option value="daily">
+                                    {% if current_lang == 'ur' %}روزانہ{% else %}Daily{% endif %}
+                                </option>
+                                <option value="weekly">
+                                    {% if current_lang == 'ur' %}ہفتہ وار{% else %}Weekly{% endif %}
+                                </option>
+                                <option value="monthly">
+                                    {% if current_lang == 'ur' %}ماہانہ{% else %}Monthly{% endif %}
+                                </option>
+                                <option value="quarterly">
+                                    {% if current_lang == 'ur' %}سہ ماہی{% else %}Quarterly{% endif %}
+                                </option>
+                                <option value="yearly">
+                                    {% if current_lang == 'ur' %}سالانہ{% else %}Yearly{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fas fa-save me-2"></i>
+                                    {% if current_lang == 'ur' %}خرچہ محفوظ کریں{% else %}Save Expense{% endif %}
+                                </button>
+                                <a href="{{ url_for('expenses') }}" class="btn btn-secondary px-4">
+                                    <i class="fas fa-times me-2"></i>
+                                    {% if current_lang == 'ur' %}منسوخ کریں{% else %}Cancel{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('isRecurring').addEventListener('change', function() {
+        document.getElementById('recurrenceDiv').style.display = this.checked ? 'block' : 'none';
+    });
+</script>
+{% endblock %}

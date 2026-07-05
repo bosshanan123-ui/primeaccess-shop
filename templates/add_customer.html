@@ -1,0 +1,150 @@
+<!-- templates/add_customer.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}کسٹمر شامل کریں - شاپ مینجمنٹ{% else %}Add Customer - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-user-plus text-primary me-2"></i>
+                {% if current_lang == 'ur' %}کسٹمر شامل کریں{% else %}Add Customer{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('customers') }}">
+                        {% if current_lang == 'ur' %}کسٹمرز{% else %}Customers{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}شامل کریں{% else %}Add{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}پورا نام{% else %}Full Name{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" name="name" required 
+                                   placeholder="{% if current_lang == 'ur' %}کسٹمر کا نام درج کریں{% else %}Enter customer name{% endif %}">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}فون{% else %}Phone{% endif %} 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="tel" class="form-control" name="phone" required placeholder="03XX-XXXXXXX">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}سیکنڈری فون{% else %}Secondary Phone{% endif %}
+                            </label>
+                            <input type="tel" class="form-control" name="phone_secondary" 
+                                   placeholder="{% if current_lang == 'ur' %}سیکنڈری فون نمبر{% else %}Secondary phone number{% endif %}">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}ای میل{% else %}Email{% endif %}
+                            </label>
+                            <input type="email" class="form-control" name="email" placeholder="customer@example.com">
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}پتہ{% else %}Address{% endif %}
+                            </label>
+                            <textarea class="form-control" name="address" rows="2" 
+                                      placeholder="{% if current_lang == 'ur' %}گلی کا پتہ{% else %}Street address{% endif %}"></textarea>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}شہر{% else %}City{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="city" 
+                                   placeholder="{% if current_lang == 'ur' %}شہر{% else %}City{% endif %}">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}ملک{% else %}Country{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="country" value="Pakistan">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}کسٹمر کی قسم{% else %}Customer Type{% endif %}
+                            </label>
+                            <select class="form-select" name="customer_type">
+                                <option value="regular">
+                                    {% if current_lang == 'ur' %}عام{% else %}Regular{% endif %}
+                                </option>
+                                <option value="wholesale">
+                                    {% if current_lang == 'ur' %}تھوک{% else %}Wholesale{% endif %}
+                                </option>
+                                <option value="vip">VIP</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}ڈسکاؤنٹ ریٹ (%){% else %}Discount Rate (%){% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="discount_rate" value="0" step="0.1" min="0" max="100">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}کریڈٹ کی حد{% else %}Credit Limit{% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="credit_limit" 
+                                   placeholder="{% if current_lang == 'ur' %}زیادہ سے زیادہ کریڈٹ{% else %}Max credit amount{% endif %}" step="0.01">
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}نوٹس{% else %}Notes{% endif %}
+                            </label>
+                            <textarea class="form-control" name="notes" rows="3" 
+                                      placeholder="{% if current_lang == 'ur' %}کسٹمر کے بارے میں اضافی نوٹس{% else %}Additional notes about customer{% endif %}"></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fas fa-save me-2"></i>
+                                    {% if current_lang == 'ur' %}کسٹمر محفوظ کریں{% else %}Save Customer{% endif %}
+                                </button>
+                                <a href="{{ url_for('customers') }}" class="btn btn-secondary px-4">
+                                    <i class="fas fa-times me-2"></i>
+                                    {% if current_lang == 'ur' %}منسوخ کریں{% else %}Cancel{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

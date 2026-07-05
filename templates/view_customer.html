@@ -1,0 +1,293 @@
+<!-- templates/view_customer.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}{{ customer.name }} - کسٹمر کی تفصیلات{% else %}{{ customer.name }} - Customer Details{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-user text-primary me-2"></i>{{ customer.name }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('customers') }}">
+                        {% if current_lang == 'ur' %}کسٹمرز{% else %}Customers{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">{{ customer.name }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="window.location.href='{{ url_for('new_sale') }}?customer={{ customer.id }}'">
+                    <i class="fas fa-cart-plus me-2"></i>
+                    {% if current_lang == 'ur' %}نیا سیل{% else %}New Sale{% endif %}
+                </button>
+                <button class="btn btn-success" onclick="window.location.href='{{ url_for('new_photocopy') }}?customer={{ customer.id }}'">
+                    <i class="fas fa-copy me-2"></i>
+                    {% if current_lang == 'ur' %}نیا کاپی{% else %}New Copy{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Customer Info -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 2.5rem; color: white;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold">{{ customer.name }}</h4>
+                <p class="text-muted">
+                    <i class="fas fa-tag me-1"></i>
+                    <span class="badge {% if customer.customer_type == 'vip' %}bg-warning{% elif customer.customer_type == 'wholesale' %}bg-info{% else %}bg-secondary{% endif %}">
+                        {% if customer.customer_type == 'regular' %}
+                            {% if current_lang == 'ur' %}عام{% else %}Regular{% endif %}
+                        {% elif customer.customer_type == 'wholesale' %}
+                            {% if current_lang == 'ur' %}تھوک{% else %}Wholesale{% endif %}
+                        {% else %}
+                            VIP
+                        {% endif %}
+                    </span>
+                    {% if customer.is_regular %}
+                        <span class="badge bg-success">
+                            {% if current_lang == 'ur' %}ریگولر{% else %}Regular{% endif %}
+                        </span>
+                    {% endif %}
+                </p>
+                
+                <div class="row g-2 mt-3">
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <div class="text-muted small">
+                                {% if current_lang == 'ur' %}کل خریداریاں{% else %}Total Purchases{% endif %}
+                            </div>
+                            <div class="fw-bold">{{ "%.0f"|format(customer.total_purchases) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <div class="text-muted small">
+                                {% if current_lang == 'ur' %}کل بقایا{% else %}Total Due{% endif %}
+                            </div>
+                            <div class="fw-bold {% if customer.total_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ "%.0f"|format(customer.total_due) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-start">
+                    <p><i class="fas fa-phone me-2 text-primary"></i> {{ customer.phone }}</p>
+                    {% if customer.phone_secondary %}
+                        <p><i class="fas fa-phone me-2 text-primary"></i> {{ customer.phone_secondary }}</p>
+                    {% endif %}
+                    {% if customer.email %}
+                        <p><i class="fas fa-envelope me-2 text-primary"></i> {{ customer.email }}</p>
+                    {% endif %}
+                    {% if customer.address %}
+                        <p><i class="fas fa-map-marker-alt me-2 text-primary"></i> {{ customer.address }}</p>
+                    {% endif %}
+                    <p><i class="fas fa-calendar me-2 text-primary"></i> 
+                        {% if current_lang == 'ur' %}رکن از{% else %}Member since{% endif %} 
+                        {{ customer.created_at.strftime('%B %Y') }}
+                    </p>
+                    <p><i class="fas fa-history me-2 text-primary"></i> {{ customer.total_visits }} 
+                        {% if current_lang == 'ur' %}وزٹ{% else %}visits{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Due Payment -->
+        {% if customer.total_due > 0 %}
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% if current_lang == 'ur' %}بقایا رقم{% else %}Outstanding Due{% endif %}
+                </div>
+                <div class="card-body">
+                    <h3 class="text-danger fw-bold">{{ "%.0f"|format(customer.total_due) }}</h3>
+                    <form method="POST" action="{{ url_for('customer_due_payment', customer_id=customer.id) }}">
+                        <div class="mb-2">
+                            <label class="form-label small">
+                                {% if current_lang == 'ur' %}ادائیگی کی رقم{% else %}Payment Amount{% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="amount" required step="0.01" max="{{ customer.total_due }}">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">
+                                {% if current_lang == 'ur' %}ادائیگی کا طریقہ{% else %}Payment Method{% endif %}
+                            </label>
+                            <select class="form-select" name="payment_method">
+                                <option value="cash">
+                                    {% if current_lang == 'ur' %}نقد{% else %}Cash{% endif %}
+                                </option>
+                                <option value="card">
+                                    {% if current_lang == 'ur' %}کارڈ{% else %}Card{% endif %}
+                                </option>
+                                <option value="online">
+                                    {% if current_lang == 'ur' %}آن لائن ٹرانسفر{% else %}Online Transfer{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">
+                                {% if current_lang == 'ur' %}حوالہ نمبر{% else %}Reference #{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="reference_number" 
+                                   placeholder="{% if current_lang == 'ur' %}ٹرانزیکشن آئی ڈی{% else %}Transaction ID{% endif %}">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-check me-2"></i>
+                            {% if current_lang == 'ur' %}ادائیگی ریکارڈ کریں{% else %}Record Payment{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sales History -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-receipt me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}سیلز ہسٹری{% else %}Sales History{% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>
+                                    {% if current_lang == 'ur' %}انوائس{% else %}Invoice{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}آئٹمز{% else %}Items{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}کل{% else %}Total{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}عمل{% else %}Action{% endif %}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in sales %}
+                                <tr>
+                                    <td><span class="badge bg-primary">{{ sale.invoice_number }}</span></td>
+                                    <td>{{ sale.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ sale.items|length }}</td>
+                                    <td class="fw-bold">{{ "%.0f"|format(sale.total_amount) }}</td>
+                                    <td>
+                                        <span class="badge-status {% if sale.payment_status == 'paid' %}paid{% elif sale.payment_status == 'pending' %}pending{% else %}due{% endif %}">
+                                            {% if sale.payment_status == 'paid' %}
+                                                {% if current_lang == 'ur' %}ادا شدہ{% else %}Paid{% endif %}
+                                            {% elif sale.payment_status == 'pending' %}
+                                                {% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}
+                                            {% else %}
+                                                {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="window.location.href='{{ url_for('view_sale', sale_id=sale.id) }}'">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-3">
+                                        {% if current_lang == 'ur' %}ابھی تک کوئی سیل نہیں{% else %}No sales yet{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Photocopy Jobs -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="fas fa-copy me-2 text-success"></i>
+                {% if current_lang == 'ur' %}فوٹو کاپی جابز{% else %}Photocopy Jobs{% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>
+                                    {% if current_lang == 'ur' %}جاب #{% else %}Job #{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}صفحات{% else %}Pages{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}رقم{% else %}Amount{% endif %}
+                                </th>
+                                <th>
+                                    {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in photocopy_jobs %}
+                                <tr>
+                                    <td><span class="badge bg-success">{{ job.job_number }}</span></td>
+                                    <td>{{ job.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ job.total_pages }}</td>
+                                    <td>{{ "%.0f"|format(job.total_amount) }}</td>
+                                    <td>
+                                        <span class="badge {% if job.status == 'completed' %}bg-success{% elif job.status == 'pending' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {% if job.status == 'completed' %}
+                                                {% if current_lang == 'ur' %}مکمل{% else %}Completed{% endif %}
+                                            {% elif job.status == 'pending' %}
+                                                {% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}
+                                            {% else %}
+                                                {{ job.status|title }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-3">
+                                        {% if current_lang == 'ur' %}کوئی فوٹو کاپی جاب نہیں{% else %}No photocopy jobs{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

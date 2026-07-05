@@ -1,0 +1,174 @@
+<!-- templates/customers.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}کسٹمرز - شاپ مینجمنٹ{% else %}Customers - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-users text-primary me-2"></i>
+                {% if current_lang == 'ur' %}کسٹمرز{% else %}Customers{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}کسٹمرز{% else %}Customers{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="window.location.href='{{ url_for('add_customer') }}'">
+                <i class="fas fa-plus me-2"></i>
+                {% if current_lang == 'ur' %}کسٹمر شامل کریں{% else %}Add Customer{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #667eea;">
+            <div class="stat-number">{{ customers|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل کسٹمرز{% else %}Total Customers{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #00b894;">
+            <div class="stat-number">{{ customers|selectattr('total_purchases', 'gt', 0)|list|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}فعال کسٹمرز{% else %}Active Customers{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #fdcb6e;">
+            <div class="stat-number">{{ customers|selectattr('total_due', 'gt', 0)|list|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}بقایا والے{% else %}With Due{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #e17055;">
+            <div class="stat-number">{{ customers|selectattr('is_regular')|list|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}ریگولر کسٹمرز{% else %}Regular Customers{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table table-hover" id="customersTable">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if current_lang == 'ur' %}نام{% else %}Name{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}فون{% else %}Phone{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}ای میل{% else %}Email{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}خریداریاں{% else %}Purchases{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 35px; height: 35px; border-radius: 50%; background: rgba(102, 126, 234, 0.1); display: flex; align-items: center; justify-content: center; color: #667eea; margin-right: 10px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ customer.name }}</div>
+                                        <small class="text-muted">{{ customer.visits }} 
+                                            {% if current_lang == 'ur' %}وزٹ{% else %}visits{% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ customer.phone }}</td>
+                            <td>{{ customer.email or '-' }}</td>
+                            <td>
+                                <span class="badge {% if customer.customer_type == 'vip' %}bg-warning{% elif customer.customer_type == 'wholesale' %}bg-info{% else %}bg-secondary{% endif %}">
+                                    {% if customer.customer_type == 'regular' %}
+                                        {% if current_lang == 'ur' %}عام{% else %}Regular{% endif %}
+                                    {% elif customer.customer_type == 'wholesale' %}
+                                        {% if current_lang == 'ur' %}تھوک{% else %}Wholesale{% endif %}
+                                    {% else %}
+                                        VIP
+                                    {% endif %}
+                                </span>
+                                {% if customer.is_regular %}
+                                    <span class="badge bg-success">
+                                        {% if current_lang == 'ur' %}ریگولر{% else %}Regular{% endif %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ "%.0f"|format(customer.total_purchases) }}</td>
+                            <td>
+                                {% if customer.total_due > 0 %}
+                                    <span class="text-danger fw-bold">{{ "%.0f"|format(customer.total_due) }}</span>
+                                {% else %}
+                                    <span class="text-success">0</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="window.location.href='{{ url_for('view_customer', customer_id=customer.id) }}'">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="newSaleForCustomer({{ customer.id }})">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#customersTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[0, 'asc']]
+        });
+    });
+    
+    function newSaleForCustomer(customerId) {
+        window.location.href = '{{ url_for('new_sale') }}?customer=' + customerId;
+    }
+</script>
+{% endblock %}

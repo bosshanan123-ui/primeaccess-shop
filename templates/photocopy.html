@@ -1,0 +1,169 @@
+<!-- templates/photocopy.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}فوٹو کاپی جابز - شاپ مینجمنٹ{% else %}Photocopy Jobs - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-copy text-primary me-2"></i>
+                {% if current_lang == 'ur' %}فوٹو کاپی جابز{% else %}Photocopy Jobs{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}فوٹو کاپی{% else %}Photocopy{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success" onclick="window.location.href='{{ url_for('new_photocopy') }}'">
+                <i class="fas fa-plus me-2"></i>
+                {% if current_lang == 'ur' %}نیا جاب{% else %}New Job{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #00b894;">
+            <div class="stat-number">{{ jobs|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل جابز{% else %}Total Jobs{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #667eea;">
+            <div class="stat-number">{{ jobs|selectattr('status', 'equalto', 'completed')|list|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}مکمل شدہ{% else %}Completed{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #fdcb6e;">
+            <div class="stat-number">{{ jobs|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #e17055;">
+            <div class="stat-number">{{ jobs|sum(attribute='total_pages') }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل پرنٹ شدہ صفحات{% else %}Total Pages Printed{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table table-hover" id="photocopyTable">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if current_lang == 'ur' %}جاب #{% else %}Job #{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}صفحات{% else %}Pages{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}رقم{% else %}Amount{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                        <tr>
+                            <td><span class="badge bg-success">{{ job.job_number }}</span></td>
+                            <td>{{ job.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                {% if job.customer %}
+                                    {{ job.customer.name }}
+                                {% else %}
+                                    <span class="text-muted">
+                                        {% if current_lang == 'ur' %}واک ان{% else %}Walk-in{% endif %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if job.page_type == 'color' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    {% if job.page_type == 'color' %}
+                                        {% if current_lang == 'ur' %}رنگین{% else %}COLOR{% endif %}
+                                    {% else %}
+                                        {% if current_lang == 'ur' %}سیاہ و سفید{% else %}B&W{% endif %}
+                                    {% endif %}
+                                </span>
+                                {% if job.double_sided %}
+                                    <span class="badge bg-info">
+                                        {% if current_lang == 'ur' %}دو طرفہ{% else %}Duplex{% endif %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ job.total_pages }} ({{ job.copies }} 
+                                {% if current_lang == 'ur' %}کاپیاں{% else %}copies{% endif %})
+                            </td>
+                            <td class="fw-bold">{{ "%.0f"|format(job.total_amount) }}</td>
+                            <td>
+                                <span class="badge {% if job.status == 'completed' %}bg-success{% elif job.status == 'pending' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    {% if job.status == 'completed' %}
+                                        {% if current_lang == 'ur' %}مکمل{% else %}Completed{% endif %}
+                                    {% elif job.status == 'pending' %}
+                                        {% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}
+                                    {% else %}
+                                        {{ job.status|title }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="window.location.href='{{ url_for('view_photocopy', job_id=job.id) }}'">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#photocopyTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[1, 'desc']]
+        });
+    });
+</script>
+{% endblock %}

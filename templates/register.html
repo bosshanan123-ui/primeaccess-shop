@@ -1,0 +1,113 @@
+<!-- templates/register.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}رجسٹر کریں - شاپ مینجمنٹ{% else %}Register - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="row w-100 justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <div class="mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user-plus text-white" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <h3 class="fw-bold">
+                            {% if current_lang == 'ur' %}اکاؤنٹ بنائیں{% else %}Create Account{% endif %}
+                        </h3>
+                        <p class="text-muted">
+                            {% if current_lang == 'ur' %}اپنی دکان منظم کرنے کے لیے رجسٹر کریں{% else %}Register to manage your shop{% endif %}
+                        </p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('register') }}">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}پورا نام{% else %}Full Name{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-user text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" name="full_name" 
+                                       placeholder="{% if current_lang == 'ur' %}پورا نام درج کریں{% else %}Enter full name{% endif %}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}صارف نام{% else %}Username{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-id-card text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" name="username" 
+                                       placeholder="{% if current_lang == 'ur' %}صارف نام منتخب کریں{% else %}Choose username{% endif %}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}ای میل{% else %}Email{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-envelope text-muted"></i>
+                                </span>
+                                <input type="email" class="form-control border-start-0" name="email" 
+                                       placeholder="{% if current_lang == 'ur' %}ای میل درج کریں{% else %}Enter email{% endif %}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}پاس ورڈ{% else %}Password{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-lock text-muted"></i>
+                                </span>
+                                <input type="password" class="form-control border-start-0" name="password" 
+                                       placeholder="{% if current_lang == 'ur' %}پاس ورڈ بنائیں{% else %}Create password{% endif %}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                {% if current_lang == 'ur' %}پاس ورڈ کی تصدیق کریں{% else %}Confirm Password{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-check-circle text-muted"></i>
+                                </span>
+                                <input type="password" class="form-control border-start-0" name="confirm_password" 
+                                       placeholder="{% if current_lang == 'ur' %}پاس ورڈ کی تصدیق کریں{% else %}Confirm password{% endif %}" required>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                            <i class="fas fa-user-plus me-2"></i>
+                            {% if current_lang == 'ur' %}رجسٹر کریں{% else %}Register{% endif %}
+                        </button>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <p class="text-muted mb-0">
+                            {% if current_lang == 'ur' %}پہلے سے اکاؤنٹ ہے؟{% else %}Already have an account?{% endif %} 
+                            <a href="{{ url_for('login') }}" class="text-decoration-none fw-semibold">
+                                {% if current_lang == 'ur' %}لاگ ان کریں{% else %}Login{% endif %}
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

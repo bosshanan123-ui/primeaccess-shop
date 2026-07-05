@@ -1,0 +1,333 @@
+<!-- templates/new_purchase.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}نیا پرچیز - شاپ مینجمنٹ{% else %}New Purchase - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-truck text-primary me-2"></i>
+                {% if current_lang == 'ur' %}نیا پرچیز{% else %}New Purchase{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('purchases') }}">
+                        {% if current_lang == 'ur' %}پرچیزز{% else %}Purchases{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}نیا{% else %}New{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-list me-2 text-primary"></i>
+                        {% if current_lang == 'ur' %}پرچیز آئٹمز{% else %}Purchase Items{% endif %}
+                    </span>
+                    <button class="btn btn-sm btn-primary" onclick="addProductRow()">
+                        <i class="fas fa-plus me-1"></i>
+                        {% if current_lang == 'ur' %}پروڈکٹ شامل کریں{% else %}Add Product{% endif %}
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="purchaseForm" method="POST">
+                    <div class="table-container">
+                        <table class="table" id="purchaseItemsTable">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        {% if current_lang == 'ur' %}پروڈکٹ{% else %}Product{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if current_lang == 'ur' %}قیمت{% else %}Price{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if current_lang == 'ur' %}مقدار{% else %}Qty{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if current_lang == 'ur' %}کل{% else %}Total{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if current_lang == 'ur' %}عمل{% else %}Action{% endif %}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchaseItemsBody">
+                                <tr>
+                                    <td>
+                                        <select class="form-select product-select" name="product_id[]" onchange="updateProductPrice(this)">
+                                            <option value="">
+                                                {% if current_lang == 'ur' %}پروڈکٹ منتخب کریں{% else %}Select Product{% endif %}
+                                            </option>
+                                            {% for product in products %}
+                                                <option value="{{ product.id }}" data-price="{{ product.purchase_price }}">
+                                                    {{ product.name }} (Stock: {{ product.stock_quantity }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control price-input" name="price[]" step="0.01" value="0">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control quantity-input" name="quantity[]" min="1" value="1" onchange="updateRowTotal(this)">
+                                    </td>
+                                    <td>
+                                        <span class="row-total fw-bold">0.00</span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold">
+                                        {% if current_lang == 'ur' %}سب ٹوٹل:{% else %}Subtotal:{% endif %}
+                                    </td>
+                                    <td colspan="2"><span id="subtotal" class="fw-bold">0.00</span></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-calculator me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}پرچیز کا خلاصہ{% else %}Purchase Summary{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if current_lang == 'ur' %}سپلائر{% else %}Supplier{% endif %}
+                    </label>
+                    <select class="form-select" name="supplier_id" form="purchaseForm">
+                        <option value="">
+                            {% if current_lang == 'ur' %}سپلائر منتخب کریں{% else %}Select Supplier{% endif %}
+                        </option>
+                        {% for supplier in suppliers %}
+                            <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if current_lang == 'ur' %}ادائیگی کا طریقہ{% else %}Payment Method{% endif %}
+                    </label>
+                    <select class="form-select" name="payment_method" form="purchaseForm">
+                        <option value="cash">
+                            {% if current_lang == 'ur' %}نقد{% else %}Cash{% endif %}
+                        </option>
+                        <option value="bank">
+                            {% if current_lang == 'ur' %}بینک ٹرانسفر{% else %}Bank Transfer{% endif %}
+                        </option>
+                        <option value="due">
+                            {% if current_lang == 'ur' %}بقایا{% else %}Due{% endif %}
+                        </option>
+                        <option value="card">
+                            {% if current_lang == 'ur' %}کارڈ{% else %}Card{% endif %}
+                        </option>
+                    </select>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-2 d-flex justify-content-between">
+                    <span>{% if current_lang == 'ur' %}سب ٹوٹل:{% else %}Subtotal:{% endif %}</span>
+                    <span id="subtotalDisplay" class="fw-bold">0.00</span>
+                </div>
+                
+                <div class="mb-2">
+                    <label class="form-label small">
+                        {% if current_lang == 'ur' %}ڈسکاؤنٹ{% else %}Discount{% endif %}
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">PKR</span>
+                        <input type="number" class="form-control" name="discount" form="purchaseForm" value="0" onchange="updateTotals()">
+                    </div>
+                </div>
+                
+                <div class="mb-2 d-flex justify-content-between">
+                    <span>{% if current_lang == 'ur' %}ڈسکاؤنٹ:{% else %}Discount:{% endif %}</span>
+                    <span id="discountDisplay" class="fw-bold text-danger">0.00</span>
+                </div>
+                
+                <div class="mb-2">
+                    <label class="form-label small">
+                        {% if current_lang == 'ur' %}شپنگ{% else %}Shipping{% endif %}
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">PKR</span>
+                        <input type="number" class="form-control" name="shipping" form="purchaseForm" value="0" onchange="updateTotals()">
+                    </div>
+                </div>
+                
+                <div class="mb-2">
+                    <label class="form-label small">
+                        {% if current_lang == 'ur' %}ٹیکس{% else %}Tax{% endif %}
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">PKR</span>
+                        <input type="number" class="form-control" name="tax" form="purchaseForm" value="0" onchange="updateTotals()">
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3 d-flex justify-content-between">
+                    <span class="h5">{% if current_lang == 'ur' %}کل:{% else %}Total:{% endif %}</span>
+                    <span class="h5 fw-bold text-primary" id="totalDisplay">0.00</span>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if current_lang == 'ur' %}نوٹس{% else %}Notes{% endif %}
+                    </label>
+                    <textarea class="form-control" name="notes" form="purchaseForm" rows="2" 
+                              placeholder="{% if current_lang == 'ur' %}اضافی نوٹس...{% else %}Additional notes...{% endif %}"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-success w-100 py-2" form="purchaseForm" onclick="return validatePurchase()">
+                    <i class="fas fa-check me-2"></i>
+                    {% if current_lang == 'ur' %}پرچیز مکمل کریں{% else %}Complete Purchase{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let rowCount = 1;
+    const lang = '{{ current_lang }}';
+    
+    function addProductRow() {
+        const tbody = document.getElementById('purchaseItemsBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <select class="form-select product-select" name="product_id[]" onchange="updateProductPrice(this)">
+                    <option value="">${lang === 'ur' ? 'پروڈکٹ منتخب کریں' : 'Select Product'}</option>
+                    {% for product in products %}
+                        <option value="{{ product.id }}" data-price="{{ product.purchase_price }}">
+                            {{ product.name }} (Stock: {{ product.stock_quantity }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control price-input" name="price[]" step="0.01" value="0">
+            </td>
+            <td>
+                <input type="number" class="form-control quantity-input" name="quantity[]" min="1" value="1" onchange="updateRowTotal(this)">
+            </td>
+            <td>
+                <span class="row-total fw-bold">0.00</span>
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+        rowCount++;
+        updateTotals();
+    }
+    
+    function removeRow(btn) {
+        const tbody = document.getElementById('purchaseItemsBody');
+        if (tbody.children.length > 1) {
+            btn.closest('tr').remove();
+            updateTotals();
+        } else {
+            const msg = lang === 'ur' ? 'کم از کم ایک پروڈکٹ درکار ہے' : 'At least one product is required';
+            showToast(msg, 'warning');
+        }
+    }
+    
+    function updateProductPrice(select) {
+        const row = select.closest('tr');
+        const priceInput = row.querySelector('.price-input');
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption && selectedOption.dataset.price) {
+            priceInput.value = selectedOption.dataset.price;
+            updateRowTotal(priceInput);
+        }
+    }
+    
+    function updateRowTotal(element) {
+        const row = element.closest('tr');
+        const price = parseFloat(row.querySelector('.price-input').value) || 0;
+        const quantity = parseInt(row.querySelector('.quantity-input').value) || 1;
+        const total = price * quantity;
+        row.querySelector('.row-total').textContent = total.toFixed(2);
+        updateTotals();
+    }
+    
+    function updateTotals() {
+        let subtotal = 0;
+        document.querySelectorAll('.row-total').forEach(el => {
+            subtotal += parseFloat(el.textContent) || 0;
+        });
+        
+        const discount = parseFloat(document.querySelector('input[name="discount"]').value) || 0;
+        const shipping = parseFloat(document.querySelector('input[name="shipping"]').value) || 0;
+        const tax = parseFloat(document.querySelector('input[name="tax"]').value) || 0;
+        
+        const total = subtotal - discount + shipping + tax;
+        
+        document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('subtotalDisplay').textContent = subtotal.toFixed(2);
+        document.getElementById('discountDisplay').textContent = discount.toFixed(2);
+        document.getElementById('totalDisplay').textContent = total.toFixed(2);
+    }
+    
+    function validatePurchase() {
+        const products = document.querySelectorAll('.product-select');
+        let hasProduct = false;
+        products.forEach(select => {
+            if (select.value) hasProduct = true;
+        });
+        
+        if (!hasProduct) {
+            const msg = lang === 'ur' ? 'براہ کرم کم از کم ایک پروڈکٹ شامل کریں' : 'Please add at least one product';
+            showToast(msg, 'warning');
+            return false;
+        }
+        return true;
+    }
+    
+    // Set initial price for first row
+    document.addEventListener('DOMContentLoaded', function() {
+        const firstSelect = document.querySelector('.product-select');
+        if (firstSelect) {
+            updateProductPrice(firstSelect);
+        }
+        updateTotals();
+    });
+</script>
+{% endblock %}

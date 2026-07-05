@@ -1,0 +1,231 @@
+<!-- templates/view_photocopy.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}فوٹو کاپی جاب کی تفصیلات - شاپ مینجمنٹ{% else %}Photocopy Job Details - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-copy text-primary me-2"></i>
+                {% if current_lang == 'ur' %}فوٹو کاپی جاب کی تفصیلات{% else %}Photocopy Job Details{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('photocopy') }}">
+                        {% if current_lang == 'ur' %}فوٹو کاپی جابز{% else %}Photocopy Jobs{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">{{ job.job_number }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>
+                {% if current_lang == 'ur' %}پرنٹ کریں{% else %}Print{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}جاب کی معلومات{% else %}Job Information{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}جاب نمبر{% else %}Job Number{% endif %}
+                        </label>
+                        <div class="fw-bold h5">{{ job.job_number }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                        </label>
+                        <div>
+                            <span class="badge {% if job.status == 'completed' %}bg-success{% elif job.status == 'pending' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                {% if job.status == 'completed' %}
+                                    {% if current_lang == 'ur' %}مکمل{% else %}Completed{% endif %}
+                                {% elif job.status == 'pending' %}
+                                    {% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}
+                                {% else %}
+                                    {{ job.status|title }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}
+                        </label>
+                        <div>
+                            {% if job.customer %}
+                                <a href="{{ url_for('view_customer', customer_id=job.customer.id) }}">{{ job.customer.name }}</a>
+                            {% else %}
+                                <span class="text-muted">
+                                    {% if current_lang == 'ur' %}واک ان کسٹمر{% else %}Walk-in Customer{% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}تاریخ اور وقت{% else %}Date & Time{% endif %}
+                        </label>
+                        <div>{{ job.created_at.strftime('%d/%m/%Y %I:%M %p') }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}صفحہ کی قسم{% else %}Page Type{% endif %}
+                        </label>
+                        <div><span class="badge bg-info">
+                            {% if job.page_type == 'color' %}
+                                {% if current_lang == 'ur' %}رنگین{% else %}COLOR{% endif %}
+                            {% else %}
+                                {% if current_lang == 'ur' %}سیاہ و سفید{% else %}B&W{% endif %}
+                            {% endif %}
+                        </span></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}کاغذ کا سائز{% else %}Paper Size{% endif %}
+                        </label>
+                        <div>{{ job.page_size }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}کاپیاں{% else %}Copies{% endif %}
+                        </label>
+                        <div>{{ job.copies }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}کل صفحات{% else %}Total Pages{% endif %}
+                        </label>
+                        <div class="fw-bold h4">{{ job.total_pages }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}فی صفحہ ریٹ{% else %}Rate Per Page{% endif %}
+                        </label>
+                        <div>PKR {{ "%.2f"|format(job.rate_per_page) }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}استعمال شدہ کاغذ{% else %}Paper Used{% endif %}
+                        </label>
+                        <div>{{ job.paper_used }} 
+                            {% if current_lang == 'ur' %}شیٹس{% else %}sheets{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-muted small">
+                            {% if current_lang == 'ur' %}کل رقم{% else %}Total Amount{% endif %}
+                        </label>
+                        <div class="fw-bold h4 text-primary">PKR {{ "%.0f"|format(job.total_amount) }}</div>
+                    </div>
+                    {% if job.double_sided %}
+                        <div class="col-md-6">
+                            <span class="badge bg-info">
+                                {% if current_lang == 'ur' %}دو طرفہ{% else %}Double Sided{% endif %}
+                            </span>
+                        </div>
+                    {% endif %}
+                    {% if job.binding %}
+                        <div class="col-md-6">
+                            <label class="text-muted small">
+                                {% if current_lang == 'ur' %}بائنڈنگ{% else %}Binding{% endif %}
+                            </label>
+                            <div>{{ job.binding|title }}</div>
+                        </div>
+                    {% endif %}
+                    {% if job.notes %}
+                        <div class="col-12">
+                            <label class="text-muted small">
+                                {% if current_lang == 'ur' %}نوٹس{% else %}Notes{% endif %}
+                            </label>
+                            <div class="p-2 bg-light rounded">{{ job.notes }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-clock me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}ٹائم لائن{% else %}Timeline{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-0">
+                                {% if current_lang == 'ur' %}جاب بنایا گیا{% else %}Job Created{% endif %}
+                            </h6>
+                            <small class="text-muted">{{ job.created_at.strftime('%d/%m/%Y %I:%M %p') }}</small>
+                        </div>
+                    </div>
+                    {% if job.completed_at %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">
+                                    {% if current_lang == 'ur' %}جاب مکمل ہوا{% else %}Job Completed{% endif %}
+                                </h6>
+                                <small class="text-muted">{{ job.completed_at.strftime('%d/%m/%Y %I:%M %p') }}</small>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--bs-card-bg);
+    box-shadow: 0 0 0 2px var(--bs-border-color);
+}
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: -23px;
+    top: 14px;
+    width: 2px;
+    height: calc(100% - 10px);
+    background: var(--bs-border-color);
+}
+</style>
+{% endblock %}

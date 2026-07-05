@@ -1,0 +1,190 @@
+<!-- templates/reports_inventory.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}انوینٹری رپورٹ - شاپ مینجمنٹ{% else %}Inventory Report - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-boxes text-primary me-2"></i>
+                {% if current_lang == 'ur' %}انوینٹری رپورٹ{% else %}Inventory Report{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('reports') }}">
+                        {% if current_lang == 'ur' %}رپورٹس{% else %}Reports{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}انوینٹری{% else %}Inventory{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>
+                {% if current_lang == 'ur' %}رپورٹ پرنٹ کریں{% else %}Print Report{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #667eea;">
+            <div class="stat-number">{{ total_items }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل پروڈکٹس{% else %}Total Products{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #00b894;">
+            <div class="stat-number">{{ "%.0f"|format(total_value) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل انوینٹری ویلیو{% else %}Total Inventory Value{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #fdcb6e;">
+            <div class="stat-number">{{ low_stock_count }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کم اسٹاک آئٹمز{% else %}Low Stock Items{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #e17055;">
+            <div class="stat-number">{{ out_of_stock_count }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}اسٹاک ختم آئٹمز{% else %}Out of Stock Items{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-chart-pie me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}زمرہ کی تقسیم{% else %}Category Breakdown{% endif %}
+    </div>
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if current_lang == 'ur' %}زمرہ{% else %}Category{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}کل مقدار{% else %}Total Quantity{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}کل ویلیو{% else %}Total Value{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}آئٹمز{% else %}Items{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                        <tr>
+                            <td><span class="badge bg-info">{{ category.category }}</span></td>
+                            <td>{{ category.total_quantity }}</td>
+                            <td>PKR {{ "%.0f"|format(category.total_value) }}</td>
+                            <td>{{ category.item_count }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-3">
+                                {% if current_lang == 'ur' %}کوئی زمرہ نہیں ملا{% else %}No categories found{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-list me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}تمام پروڈکٹس انوینٹری{% else %}All Products Inventory{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="inventoryTable">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if current_lang == 'ur' %}پروڈکٹ{% else %}Product{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}زمرہ{% else %}Category{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}اسٹاک{% else %}Stock{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}کم لیول{% else %}Min Level{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}خرید قیمت{% else %}Purchase Price{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}فروخت قیمت{% else %}Selling Price{% endif %}
+                        </th>
+                        <th>
+                            {% if current_lang == 'ur' %}کل ویلیو{% else %}Total Value{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td><span class="badge bg-info">{{ product.category }}</span></td>
+                            <td>
+                                <span class="badge {% if product.stock_quantity <= 0 %}bg-danger{% elif product.stock_quantity <= product.min_stock_level %}bg-warning{% else %}bg-success{% endif %}">
+                                    {{ product.stock_quantity }}
+                                </span>
+                            </td>
+                            <td>{{ product.min_stock_level }}</td>
+                            <td>PKR {{ "%.0f"|format(product.purchase_price) }}</td>
+                            <td>PKR {{ "%.0f"|format(product.selling_price) }}</td>
+                            <td>PKR {{ "%.0f"|format(product.purchase_price * product.stock_quantity) }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-3">
+                                {% if current_lang == 'ur' %}کوئی پروڈکٹ نہیں ملا{% else %}No products found{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#inventoryTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[0, 'asc']]
+        });
+    });
+</script>
+{% endblock %}

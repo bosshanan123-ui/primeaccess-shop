@@ -1,0 +1,310 @@
+<!-- templates/sale_receipt_pdf.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice - {{ sale.invoice_number }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            background: white;
+            padding: 40px;
+            color: #1A2332;
+        }
+        .invoice-container {
+            max-width: 700px;
+            margin: 0 auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+        }
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #2563EB;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .invoice-header .brand h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2563EB;
+            letter-spacing: 1px;
+        }
+        .invoice-header .brand .tagline {
+            font-size: 12px;
+            color: #888;
+            letter-spacing: 2px;
+        }
+        .invoice-header .brand .address {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 2px;
+        }
+        .invoice-header .logo img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+        .invoice-info {
+            display: flex;
+            justify-content: space-between;
+            background: #f8fafc;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .invoice-info .col { margin: 4px 0; }
+        .invoice-info .col label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+        }
+        .invoice-info .col .value {
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .items-table th {
+            background: #f8fafc;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #888;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .items-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        .items-table .text-right { text-align: right; }
+        .items-table .text-center { text-align: center; }
+        .items-table .item-name { font-weight: 500; }
+        .items-table .item-sku { font-size: 11px; color: #aaa; }
+        .total-section {
+            margin-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            padding-top: 15px;
+        }
+        .total-section .row {
+            display: flex;
+            justify-content: flex-end;
+            padding: 4px 0;
+            font-size: 14px;
+        }
+        .total-section .row .label { width: 150px; text-align: right; color: #888; padding-right: 20px; }
+        .total-section .row .value { width: 120px; text-align: right; font-weight: 500; }
+        .total-section .grand-total {
+            font-size: 20px;
+            font-weight: 800;
+            border-top: 2px solid #2563EB;
+            padding-top: 10px;
+            margin-top: 5px;
+        }
+        .total-section .grand-total .value { color: #2563EB; }
+        .total-section .paid { color: #00B894; }
+        .total-section .due { color: #E11D48; }
+        .invoice-footer {
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 25px;
+            padding-top: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+        .invoice-footer .thankyou {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1A2332;
+        }
+        .invoice-footer .return-policy {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 4px;
+        }
+        .barcode {
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .barcode .code {
+            font-size: 16px;
+            letter-spacing: 4px;
+            font-weight: 600;
+            color: #1A2332;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-paid { background: #00B89420; color: #00B894; }
+        .badge-pending { background: #FFB80020; color: #FFB800; }
+        .badge-due { background: #E11D4820; color: #E11D48; }
+        
+        @media (max-width: 600px) {
+            .invoice-container { padding: 20px; }
+            .invoice-header { flex-direction: column; text-align: center; }
+            .invoice-info { flex-direction: column; gap: 8px; }
+            .total-section .row { justify-content: space-between; }
+            .total-section .row .label { width: auto; text-align: left; padding-right: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="invoice-container">
+    <!-- ===== HEADER ===== -->
+    <div class="invoice-header">
+        <div class="brand">
+            <h1>PRIMEACCESS</h1>
+            <div class="tagline">Premium Mobile Accessories</div>
+            <div class="address">Data Nagar, Lahore | 📞 0325-7230326</div>
+            <div style="font-size:10px; color:#aaa; margin-top:2px;">GST: XX-XXXXXXX-X</div>
+        </div>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='img/logo1.png', _external=True) }}" alt="Logo">
+        </div>
+    </div>
+
+    <!-- ===== INVOICE INFO ===== -->
+    <div class="invoice-info">
+        <div class="col">
+            <label>Invoice #</label>
+            <div class="value">{{ sale.invoice_number }}</div>
+        </div>
+        <div class="col">
+            <label>Date</label>
+            <div class="value">{{ sale.created_at.strftime('%d/%m/%Y %I:%M %p') }}</div>
+        </div>
+        <div class="col">
+            <label>Customer</label>
+            <div class="value">{{ sale.customer.name if sale.customer else 'Walk-in' }}</div>
+        </div>
+        <div class="col">
+            <label>Payment</label>
+            <div class="value">{{ sale.payment_method|title }}</div>
+        </div>
+        <div class="col">
+            <label>Status</label>
+            <div>
+                <span class="badge {% if sale.payment_status == 'paid' %}badge-paid{% elif sale.payment_status == 'pending' %}badge-pending{% else %}badge-due{% endif %}">
+                    {{ sale.payment_status|title }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ITEMS ===== -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width:45%;">Item</th>
+                <th class="text-center" style="width:15%;">Qty</th>
+                <th class="text-right" style="width:20%;">Price</th>
+                <th class="text-right" style="width:20%;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sale.items %}
+            <tr>
+                <td>
+                    <div class="item-name">
+                        {% if item.is_product %}
+                            {{ item.product.name }}
+                        {% else %}
+                            {{ item.service_name }}
+                        {% endif %}
+                    </div>
+                    {% if item.is_product and item.product.sku %}
+                    <div class="item-sku">SKU: {{ item.product.sku }}</div>
+                    {% endif %}
+                </td>
+                <td class="text-center">{{ item.quantity }}</td>
+                <td class="text-right">PKR {{ "%.0f"|format(item.unit_price) }}</td>
+                <td class="text-right">PKR {{ "%.0f"|format(item.total_price) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- ===== TOTAL ===== -->
+    <div class="total-section">
+        <div class="row">
+            <span class="label">Subtotal</span>
+            <span class="value">PKR {{ "%.0f"|format(sale.subtotal) }}</span>
+        </div>
+        {% if sale.discount_amount > 0 %}
+        <div class="row">
+            <span class="label">Discount</span>
+            <span class="value" style="color:#E11D48;">- PKR {{ "%.0f"|format(sale.discount_amount) }}</span>
+        </div>
+        {% endif %}
+        {% if sale.tax_amount > 0 %}
+        <div class="row">
+            <span class="label">Tax</span>
+            <span class="value">PKR {{ "%.0f"|format(sale.tax_amount) }}</span>
+        </div>
+        {% endif %}
+        {% if sale.shipping_charge > 0 %}
+        <div class="row">
+            <span class="label">Shipping</span>
+            <span class="value">PKR {{ "%.0f"|format(sale.shipping_charge) }}</span>
+        </div>
+        {% endif %}
+        <div class="row grand-total">
+            <span class="label">TOTAL</span>
+            <span class="value">PKR {{ "%.0f"|format(sale.total_amount) }}</span>
+        </div>
+        <div class="row">
+            <span class="label">Paid</span>
+            <span class="value paid">PKR {{ "%.0f"|format(sale.amount_paid) }}</span>
+        </div>
+        {% if sale.due_amount > 0 %}
+        <div class="row">
+            <span class="label">Due</span>
+            <span class="value due">PKR {{ "%.0f"|format(sale.due_amount) }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ===== BARCODE ===== -->
+    <div class="barcode">
+        <div class="code">{{ sale.invoice_number }}</div>
+        <div style="font-size:10px; color:#aaa; margin-top:2px;">Scan to verify</div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <div class="invoice-footer">
+        <div class="thankyou">✨ Thank you for shopping with us! ✨</div>
+        <div class="return-policy">Returns accepted within 7 days with original receipt</div>
+        <div style="margin-top:8px; font-size:10px; color:#ccc;">
+            Prime Access - The Name of Trust
+        </div>
+        <div style="margin-top:4px; font-size:9px; color:#ddd;">
+            This is a computer generated invoice
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
