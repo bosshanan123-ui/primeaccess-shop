@@ -1,4 +1,6 @@
 # app.py - Complete Main Application with Theme System
+
+import os
 import sys
 if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -38,9 +40,22 @@ from urllib.parse import quote
 from languages import t, TRANSLATIONS
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-super-secret-key-change-in-production-2024'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop_management.db'
+# Database configuration
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
+
+# Supabase PostgreSQL connection
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    # Fix for Supabase
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg2://')
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop_management.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300,
+}
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
