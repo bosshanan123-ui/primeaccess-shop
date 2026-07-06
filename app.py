@@ -1726,73 +1726,198 @@ def delete_expense(expense_id):
 def reports():
     return render_template('reports.html')
 
+# ============ REPORTS ROUTES - POSTGRESQL COMPATIBLE ============
+
+from sqlalchemy import extract, func, and_, or_
+from datetime import datetime, timedelta
+
 @app.route('/reports/sales')
 @login_required
 def reports_sales():
-    sales_data = db.session.query(
-        func.strftime('%Y-%m', Sale.created_at).label('month'),
-        func.sum(Sale.total_amount).label('total_sales'),
-        func.count(Sale.id).label('total_orders')
-    ).group_by('month').order_by('month').all()
-    
-    return render_template('reports_sales.html', sales_data=sales_data)
+    try:
+        # PostgreSQL compatible monthly grouping
+        # Use EXTRACT or to_char for PostgreSQL
+        monthly_data = db.session.query(
+            func.to_char(Sale.created_at, 'YYYY-MM').label('month'),
+            func.sum(Sale.total_amount).label('total_sales'),
+            func.count(Sale.id).label('total_orders')
+        ).group_by(
+            func.to_char(Sale.created_at, 'YYYY-MM')
+        ).order_by(
+            func.to_char(Sale.created_at, 'YYYY-MM')
+        ).all()
+        
+        # Convert to list of dicts
+        sales_data = []
+        total_sales = 0
+        total_orders = 0
+        
+        for data in monthly_data:
+            sales_data.append({
+                'month': data.month,
+                'total_sales': float(data.total_sales or 0),
+                'total_orders': data.total_orders or 0
+            })
+            total_sales += float(data.total_sales or 0)
+            total_orders += data.total_orders or 0
+        
+        avg_order_value = total_sales / total_orders if total_orders > 0 else 0
+        
+        return render_template('reports_sales.html', 
+                             sales_data=sales_data,
+                             total_sales=total_sales,
+                             total_orders=total_orders,
+                             avg_order_value=avg_order_value)
+    except Exception as e:
+        print(f"Sales Report Error: {str(e)}")
+        # Fallback: Get total sales without grouping
+        try:
+            total_sales = db.session.query(func.sum(Sale.total_amount)).scalar() or 0
+            total_orders = db.session.query(func.count(Sale.id)).scalar() or 0
+            avg_order_value = total_sales / total_orders if total_orders > 0 else 0
+            
+            # Try to get monthly data with alternative method
+            monthly_data = []
+            # Get last 6 months
+            for i in range(6, 0, -1):
+                month_date = datetime.now() - timedelta(days=30*i)
+                month_start = month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                month_end = (month_start + timedelta(days=32)).replace(day=1)
+                
+                month_sales = Sale.query.filter(
+                    Sale.created_at >= month_start,
+                    Sale.created_at < month_end
+                ).all()
+                
+                monthly_data.append({
+                    'month': month_start.strftime('%Y-%m'),
+                    'total_sales': sum(s.total_amount for s in month_sales),
+                    'total_orders': len(month_sales)
+                })
+            
+            return render_template('reports_sales.html', 
+                                 sales_data=monthly_data,
+                                 total_sales=total_sales,
+                                 total_orders=total_orders,
+                                 avg_order_value=avg_order_value)
+        except Exception as e2:
+            print(f"Sales Report Fallback Error: {str(e2)}")
+            return render_template('reports_sales.html', 
+                                 sales_data=[], 
+                                 total_sales=0, 
+                                 total_orders=0, 
+                                 avg_order_value=0)
 
 @app.route('/reports/profit')
 @login_required
 def reports_profit():
-    total_revenue = db.session.query(func.sum(Sale.total_amount)).scalar() or 0
-    total_cost = db.session.query(func.sum(SaleItem.cost_price * SaleItem.quantity)).scalar() or 0
-    total_expenses = db.session.query(func.sum(Expense.amount)).scalar() or 0
-    gross_profit = total_revenue - total_cost
-    net_profit = gross_profit - total_expenses
-    
-    monthly_data = db.session.query(
-        func.strftime('%Y-%m', Sale.created_at).label('month'),
-        func.sum(Sale.total_amount).label('revenue'),
-        func.sum(SaleItem.cost_price * SaleItem.quantity).label('cost')
-    ).join(SaleItem).group_by('month').order_by('month').all()
-    
-    return render_template('reports_profit.html', 
-                         total_revenue=total_revenue,
-                         total_cost=total_cost,
-                         total_expenses=total_expenses,
-                         gross_profit=gross_profit,
-                         net_profit=net_profit,
-                         monthly_data=monthly_data)
+    try:
+        # Total revenue
+        total_revenue = db.session.query(func.sum(Sale.total_amount)).scalar() or 0
+        
+        # Total cost from sale items
+        total_cost = db.session.query(
+            func.sum(SaleItem.cost_price * SaleItem.quantity)
+        ).scalar() or 0
+        
+        # Total expenses
+        total_expenses = db.session.query(func.sum(Expense.amount)).scalar() or 0
+        
+        gross_profit = total_revenue - total_cost
+        net_profit = gross_profit - total_expenses
+        
+        # Monthly breakdown - PostgreSQL compatible
+        try:
+            monthly_data_raw = db.session.query(
+                func.to_char(Sale.created_at, 'YYYY-MM').label('month'),
+                func.sum(Sale.total_amount).label('revenue'),
+                func.sum(SaleItem.cost_price * SaleItem.quantity).label('cost')
+            ).join(SaleItem).group_by(
+                func.to_char(Sale.created_at, 'YYYY-MM')
+            ).order_by(
+                func.to_char(Sale.created_at, 'YYYY-MM')
+            ).all()
+            
+            monthly_data = []
+            for data in monthly_data_raw:
+                monthly_data.append({
+                    'month': data.month,
+                    'revenue': float(data.revenue or 0),
+                    'cost': float(data.cost or 0)
+                })
+        except Exception as e:
+            print(f"Monthly data error: {str(e)}")
+            monthly_data = []
+        
+        return render_template('reports_profit.html',
+                             total_revenue=total_revenue,
+                             total_cost=total_cost,
+                             total_expenses=total_expenses,
+                             gross_profit=gross_profit,
+                             net_profit=net_profit,
+                             monthly_data=monthly_data)
+    except Exception as e:
+        print(f"Profit Report Error: {str(e)}")
+        return render_template('reports_profit.html',
+                             total_revenue=0, 
+                             total_cost=0, 
+                             total_expenses=0,
+                             gross_profit=0, 
+                             net_profit=0, 
+                             monthly_data=[])
 
 @app.route('/reports/inventory')
 @login_required
 def reports_inventory():
-    products = Product.query.filter_by(is_active=True).all()
-    total_items = len(products)
-    total_value = sum(p.purchase_price * p.stock_quantity for p in products)
-    
-    low_stock_count = Product.query.filter(
-        Product.stock_quantity <= Product.min_stock_level,
-        Product.stock_quantity > 0,
-        Product.is_active == True
-    ).count()
-    
-    out_of_stock_count = Product.query.filter(
-        Product.stock_quantity == 0,
-        Product.is_active == True
-    ).count()
-    
-    categories = db.session.query(
-        Product.category,
-        func.sum(Product.stock_quantity).label('total_quantity'),
-        func.sum(Product.purchase_price * Product.stock_quantity).label('total_value'),
-        func.count(Product.id).label('item_count')
-    ).filter(Product.is_active == True).group_by(Product.category).all()
-    
-    return render_template('reports_inventory.html', 
-                         products=products,
-                         total_items=total_items,
-                         total_value=total_value,
-                         low_stock_count=low_stock_count,
-                         out_of_stock_count=out_of_stock_count,
-                         categories=categories)
-
+    try:
+        products = Product.query.filter_by(is_active=True).all()
+        total_items = len(products)
+        total_value = sum((p.purchase_price or 0) * (p.stock_quantity or 0) for p in products)
+        
+        low_stock_count = Product.query.filter(
+            Product.stock_quantity <= Product.min_stock_level,
+            Product.stock_quantity > 0,
+            Product.is_active == True
+        ).count()
+        
+        out_of_stock_count = Product.query.filter(
+            Product.stock_quantity == 0,
+            Product.is_active == True
+        ).count()
+        
+        # Category breakdown
+        categories_raw = db.session.query(
+            Product.category,
+            func.sum(Product.stock_quantity).label('total_quantity'),
+            func.sum(Product.purchase_price * Product.stock_quantity).label('total_value'),
+            func.count(Product.id).label('item_count')
+        ).filter(Product.is_active == True).group_by(Product.category).all()
+        
+        categories = []
+        for cat in categories_raw:
+            categories.append({
+                'category': cat.category or 'Uncategorized',
+                'total_quantity': cat.total_quantity or 0,
+                'total_value': float(cat.total_value or 0),
+                'item_count': cat.item_count or 0
+            })
+        
+        return render_template('reports_inventory.html',
+                             products=products,
+                             total_items=total_items,
+                             total_value=total_value,
+                             low_stock_count=low_stock_count,
+                             out_of_stock_count=out_of_stock_count,
+                             categories=categories)
+    except Exception as e:
+        print(f"Inventory Report Error: {str(e)}")
+        return render_template('reports_inventory.html',
+                             products=[], 
+                             total_items=0, 
+                             total_value=0,
+                             low_stock_count=0, 
+                             out_of_stock_count=0, 
+                             categories=[])
 # ---------- Backup Routes ----------
 
 @app.route('/backup', methods=['GET', 'POST'])
