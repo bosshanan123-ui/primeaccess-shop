@@ -2001,7 +2001,7 @@ def backup():
                     continue
                 try:
                     result = db.session.execute(f'SELECT * FROM {table}').fetchall()
-                    backup_data[table] = [dict(row._mapping) for row in result]
+                    backup_data[table] = [dict(row) for row in result]
                 except Exception as e:
                     print(f"Error backing up table {table}: {str(e)}")
                     backup_data[table] = []
