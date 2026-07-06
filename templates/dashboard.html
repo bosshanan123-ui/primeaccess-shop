@@ -292,32 +292,22 @@
         const msg = lang === 'ur' ? '📊 چارٹ اپ ڈیٹ ہو رہا ہے: ' + period : '📊 Updating chart to ' + period + ' view';
         showToast(msg, 'info');
     }
-</script>
-// ============================================
-// FIX: loadNotifications Function
-// ============================================
-function loadNotifications() {
-    console.log('📢 Loading notifications...');
-    
-    // Check if NotificationSystem exists (from base.html)
-    if (window.notificationSystem) {
-        window.notificationSystem.loadNotifications();
-        return;
-    }
-    
-    // Fallback: Fetch notifications directly
-    fetch('/api/notifications?limit=10')
-        .then(response => response.json())
-        .then(data => {
-            console.log('📢 Notifications loaded:', data.length);
-            // Render notifications if needed
-        })
-        .catch(err => console.log('❌ Error loading notifications:', err));
-}
 
-// Auto-load when page is ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Load notifications after 1 second
-    setTimeout(loadNotifications, 1000);
-});
+    // Notifications Loader - Silent
+    (function() {
+        function loadNotifications() {
+            if (window.notificationSystem) {
+                window.notificationSystem.loadNotifications();
+                return;
+            }
+            fetch('/api/notifications?limit=10')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {})
+                .catch(function(err) {});
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(loadNotifications, 1000);
+        });
+    })();
+</script>
 {% endblock %}
