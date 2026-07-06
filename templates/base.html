@@ -1469,7 +1469,12 @@
                 <span>Suppliers</span>
             </a>
         </div>
-
+    <div class="nav-item {% if request.endpoint == 'notes' %}active{% endif %}">
+    <a class="nav-link" href="{{ url_for('notes') }}">
+        <i class="fas fa-sticky-note"></i>
+        <span>Notepad</span>
+    </a>
+</div>
         <div class="menu-label">Finance</div>
         <div class="nav-item {% if request.endpoint == 'expenses' %}active{% endif %}">
             <a class="nav-link" href="{{ url_for('expenses') }}">
