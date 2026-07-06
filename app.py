@@ -1,6 +1,6 @@
 # app.py - Complete Main Application with Theme System
-# app.py - Top par yeh imports add karein
-from sqlalchemy import func, and_, or_, inspect  # ← inspect add karein
+# ============ IMPORTS ============
+from sqlalchemy import func, and_, or_, inspect
 import os
 import sys
 if sys.stdout.encoding != 'utf-8':
@@ -37,6 +37,9 @@ import secrets
 import hashlib
 from urllib.parse import quote
 
+# ============ 🆕 NEW IMPORT - SUPABASE STORAGE ============
+import requests
+
 # Import language translations
 from languages import t, TRANSLATIONS
 
@@ -67,6 +70,10 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
+
+# ============ 🆕 SUPABASE STORAGE CONFIG ============
+SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://your-project.supabase.co')
+SUPABASE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', 'your-service-key')
 
 # ==================== MODELS ====================
 
@@ -459,6 +466,58 @@ class MobileWalletTransaction(db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# ============ 🆕 SUPABASE STORAGE HELPERS ============
+
+def upload_to_supabase_storage(file_data, filename, bucket='backups'):
+    """Upload file to Supabase Storage"""
+    try:
+        url = f"{SUPABASE_URL}/storage/v1/object/{bucket}/{filename}"
+        headers = {
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.post(url, headers=headers, data=file_data)
+        if response.status_code in [200, 201]:
+            print(f"✅ File uploaded: {filename}")
+            return True
+        else:
+            print(f"❌ Upload failed: {response.text}")
+            return False
+    except Exception as e:
+        print(f"❌ Upload error: {str(e)}")
+        return False
+
+def download_from_supabase_storage(filename, bucket='backups'):
+    """Download file from Supabase Storage"""
+    try:
+        url = f"{SUPABASE_URL}/storage/v1/object/{bucket}/{filename}"
+        headers = {
+            'Authorization': f'Bearer {SUPABASE_KEY}'
+        }
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            return BytesIO(response.content)
+        return None
+    except Exception as e:
+        print(f"❌ Download error: {str(e)}")
+        return None
+
+def delete_from_supabase_storage(filename, bucket='backups'):
+    """Delete file from Supabase Storage"""
+    try:
+        url = f"{SUPABASE_URL}/storage/v1/object/{bucket}/{filename}"
+        headers = {
+            'Authorization': f'Bearer {SUPABASE_KEY}'
+        }
+        response = requests.delete(url, headers=headers)
+        if response.status_code in [200, 204]:
+            print(f"✅ File deleted: {filename}")
+            return True
+        return False
+    except Exception as e:
+        print(f"❌ Delete error: {str(e)}")
+        return False
 
 # ==================== CONTEXT PROCESSORS ====================
 
@@ -1012,7 +1071,7 @@ def new_sale():
         db.session.add(sale)
         db.session.flush()
         
-        # ✅ Sale Items - Correct indentation (8 spaces from start of function)
+        # ✅ Sale Items
         for item in sale_items:
             sale_item = SaleItem(
                 sale_id=sale.id,
@@ -1025,7 +1084,7 @@ def new_sale():
             )
             db.session.add(sale_item)
         
-        # ✅ Customer Due - Correct indentation (8 spaces)
+        # ✅ Customer Due
         if payment_method == 'due' and customer_id:
             customer_due = CustomerDue(
                 customer_id=int(customer_id),
@@ -1041,7 +1100,7 @@ def new_sale():
             if customer:
                 customer.total_due += total_amount
         
-        # ✅ Customer update - Correct indentation (8 spaces)
+        # ✅ Customer update
         if customer_id:
             customer = Customer.query.get(int(customer_id))
             if customer:
@@ -1049,7 +1108,7 @@ def new_sale():
                 customer.total_visits += 1
                 customer.last_purchase = datetime.utcnow()
         
-        # ✅ Audit Log - Correct indentation (8 spaces)
+        # ✅ Audit Log
         log = AuditLog(
             user_id=current_user.id,
             action='create',
@@ -1335,6 +1394,7 @@ def return_sale(sale_id):
 def purchases():
     purchases = Purchase.query.order_by(Purchase.created_at.desc()).all()
     return render_template('purchases.html', purchases=purchases)
+
 @app.route('/purchase/<int:purchase_id>')
 @login_required
 def view_purchase(purchase_id):
@@ -1692,6 +1752,7 @@ def add_expense():
     categories = ['Rent', 'Electricity', 'Water', 'Internet', 'Salaries', 
                   'Maintenance', 'Stationery', 'Transport', 'Marketing', 'Other']
     return render_template('add_expense.html', categories=categories)
+
 @app.route('/delete_expense/<int:expense_id>', methods=['POST'])
 @login_required
 def delete_expense(expense_id):
@@ -1737,7 +1798,6 @@ from datetime import datetime, timedelta
 def reports_sales():
     try:
         # PostgreSQL compatible monthly grouping
-        # Use EXTRACT or to_char for PostgreSQL
         monthly_data = db.session.query(
             func.to_char(Sale.created_at, 'YYYY-MM').label('month'),
             func.sum(Sale.total_amount).label('total_sales'),
@@ -1919,25 +1979,19 @@ def reports_inventory():
                              low_stock_count=0, 
                              out_of_stock_count=0, 
                              categories=[])
-# ---------- Backup Routes ----------
+
+# ============ 🆕 BACKUP ROUTES - UPDATED WITH SUPABASE STORAGE ============
 
 @app.route('/backup', methods=['GET', 'POST'])
 @login_required
 def backup():
+    """Create and manage backups using Supabase Storage"""
     if request.method == 'POST':
         try:
-            # Create backups directory if it doesn't exist
-            backup_dir = 'backups'
-            if not os.path.exists(backup_dir):
-                os.makedirs(backup_dir)
-                print(f"✅ Created backups directory: {backup_dir}")
-            
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             backup_filename = f"backup_{timestamp}.json"
-            backup_path = os.path.join(backup_dir, backup_filename)
             
             # For Supabase PostgreSQL - Export data as JSON
-            # Use inspect to get table names
             inspector = inspect(db.engine)
             tables = inspector.get_table_names()
             
@@ -1946,22 +2000,26 @@ def backup():
                 if table.startswith('sqlite_'):
                     continue
                 try:
-                    # Query all data from the table
                     result = db.session.execute(f'SELECT * FROM {table}').fetchall()
-                    # Convert to list of dicts
                     backup_data[table] = [dict(row._mapping) for row in result]
                 except Exception as e:
                     print(f"Error backing up table {table}: {str(e)}")
                     backup_data[table] = []
             
-            # Write to JSON file
-            with open(backup_path, 'w', encoding='utf-8') as f:
-                json.dump(backup_data, f, default=str, indent=2)
+            # Convert to JSON
+            json_data = json.dumps(backup_data, default=str, indent=2).encode('utf-8')
+            
+            # Upload to Supabase Storage
+            success = upload_to_supabase_storage(json_data, backup_filename)
+            
+            if not success:
+                flash('❌ Failed to upload backup to storage!', 'danger')
+                return redirect(url_for('backup'))
             
             # Save backup record in database
             backup = Backup(
                 filename=backup_filename,
-                size=os.path.getsize(backup_path),
+                size=len(json_data),
                 type='manual',
                 created_by=current_user.id,
                 notes=f'Manual backup by {current_user.username}'
@@ -1969,7 +2027,7 @@ def backup():
             db.session.add(backup)
             db.session.commit()
             
-            flash('✅ Backup created successfully!', 'success')
+            flash('✅ Backup created and stored in Supabase!', 'success')
             
         except Exception as e:
             print(f"Backup Error: {str(e)}")
@@ -1983,43 +2041,48 @@ def backup():
 @app.route('/backup/download/<int:backup_id>')
 @login_required
 def download_backup(backup_id):
+    """Download backup file from Supabase Storage"""
     backup = Backup.query.get_or_404(backup_id)
-    backup_path = os.path.join('backups', backup.filename)
     
-    if os.path.exists(backup_path):
+    # Download from Supabase Storage
+    file_data = download_from_supabase_storage(backup.filename)
+    
+    if file_data:
         return send_file(
-            backup_path, 
-            as_attachment=True, 
-            download_name=backup.filename
+            file_data,
+            as_attachment=True,
+            download_name=backup.filename,
+            mimetype='application/json'
         )
     else:
-        flash('❌ Backup file not found.', 'danger')
+        flash('❌ Backup file not found in storage.', 'danger')
         return redirect(url_for('backup'))
 
 @app.route('/backup/export_excel/<int:backup_id>')
 @login_required
 def export_backup_excel(backup_id):
+    """Export backup to Excel from Supabase Storage"""
     backup = Backup.query.get_or_404(backup_id)
-    backup_path = os.path.join('backups', backup.filename)
     
-    if not os.path.exists(backup_path):
+    # Download from Supabase Storage
+    file_data = download_from_supabase_storage(backup.filename)
+    
+    if not file_data:
         flash('❌ Backup file not found!', 'danger')
         return redirect(url_for('backup'))
     
     try:
         # Load JSON data
-        with open(backup_path, 'r', encoding='utf-8') as f:
-            backup_data = json.load(f)
+        backup_data = json.load(file_data)
         
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             for table_name, data in backup_data.items():
                 if data:
                     df = pd.DataFrame(data)
-                    sheet_name = table_name[:31]  # Excel sheet name max 31 chars
+                    sheet_name = table_name[:31]
                     df.to_excel(writer, sheet_name=sheet_name, index=False)
                     
-                    # Auto-adjust column widths
                     worksheet = writer.sheets[sheet_name]
                     for column in worksheet.columns:
                         max_length = 0
@@ -2033,7 +2096,6 @@ def export_backup_excel(backup_id):
                         adjusted_width = min(max_length + 2, 50)
                         worksheet.column_dimensions[column_letter].width = adjusted_width
                 else:
-                    # Empty table
                     pd.DataFrame({'Message': ['No data found']}).to_excel(
                         writer, sheet_name=table_name[:31], index=False
                     )
@@ -2112,14 +2174,12 @@ def filter_backups():
 @app.route('/api/backup/delete/<int:backup_id>', methods=['DELETE'])
 @login_required
 def delete_backup_api(backup_id):
+    """Delete backup from Supabase Storage and database"""
     try:
         backup = Backup.query.get_or_404(backup_id)
         
-        # Delete file from filesystem
-        file_path = os.path.join('backups', backup.filename)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            print(f"✅ Deleted backup file: {file_path}")
+        # Delete from Supabase Storage
+        delete_from_supabase_storage(backup.filename)
         
         # Delete record from database
         db.session.delete(backup)
@@ -2161,8 +2221,9 @@ def save_theme_preference():
         'theme_mode': theme_mode,
         'message': 'Theme preference saved successfully'
     })
+
 # ============================================
-# COLOR THEME ROUTES - ADD THESE NEW ROUTES
+# COLOR THEME ROUTES
 # ============================================
 
 @app.route('/api/color-theme/<theme>')
@@ -2178,7 +2239,6 @@ def api_color_theme(theme):
         return jsonify({'status': 'success', 'theme': theme})
     return jsonify({'status': 'error', 'message': 'Invalid theme'}), 400
 
-
 @app.route('/api/theme-mode/<mode>')
 @login_required
 def api_theme_mode(mode):
@@ -2188,11 +2248,11 @@ def api_theme_mode(mode):
     if mode in valid_modes:
         session['theme_mode'] = mode
         session['theme'] = mode  # Keep backward compatibility
-        # Also save to database
         current_user.theme_preference = mode
         db.session.commit()
         return jsonify({'status': 'success', 'mode': mode})
     return jsonify({'status': 'error', 'message': 'Invalid mode'}), 400
+
 @app.route('/api/theme/preference', methods=['GET'])
 @login_required
 def get_theme_preference():
@@ -2775,6 +2835,7 @@ def profile_update():
     db.session.commit()
     flash('Profile updated successfully!', 'success')
     return redirect(url_for('profile'))
+
 # ==================== PWA ROUTES ====================
 
 @app.route('/manifest.json')
@@ -2834,7 +2895,6 @@ self.addEventListener('fetch', e => {
 });
         '''
         return Response(sw_code, mimetype='application/javascript')
-
 
 # ============================================
 # OFFLINE SYNC API
