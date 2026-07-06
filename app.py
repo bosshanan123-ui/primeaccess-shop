@@ -1924,31 +1924,55 @@ def reports_inventory():
 @login_required
 def backup():
     if request.method == 'POST':
-        backup_dir = 'backups'
-        if not os.path.exists(backup_dir):
-            os.makedirs(backup_dir)
-        
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        backup_filename = f"backup_{timestamp}.db"
-        backup_path = os.path.join(backup_dir, backup_filename)
-        
         try:
-            shutil.copy2('shop_management.db', backup_path)
+            # Create backups directory if it doesn't exist
+            backup_dir = 'backups'
+            if not os.path.exists(backup_dir):
+                os.makedirs(backup_dir)
+                print(f"✅ Created backups directory: {backup_dir}")
+            
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            backup_filename = f"backup_{timestamp}.json"
+            backup_path = os.path.join(backup_dir, backup_filename)
+            
+            # For Supabase PostgreSQL - Export data as JSON
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
+            
+            backup_data = {}
+            for table in tables:
+                if table.startswith('sqlite_'):
+                    continue
+                try:
+                    # Query all data from the table
+                    result = db.session.execute(f'SELECT * FROM {table}').fetchall()
+                    # Convert to list of dicts
+                    backup_data[table] = [dict(row._mapping) for row in result]
+                except Exception as e:
+                    print(f"Error backing up table {table}: {str(e)}")
+                    backup_data[table] = []
+            
+            # Write to JSON file
+            with open(backup_path, 'w', encoding='utf-8') as f:
+                json.dump(backup_data, f, default=str, indent=2)
+            
+            # Save backup record in database
+            backup = Backup(
+                filename=backup_filename,
+                size=os.path.getsize(backup_path),
+                type='manual',
+                created_by=current_user.id,
+                notes=f'Manual backup by {current_user.username}'
+            )
+            db.session.add(backup)
+            db.session.commit()
+            
+            flash('✅ Backup created successfully!', 'success')
+            
         except Exception as e:
+            print(f"Backup Error: {str(e)}")
             flash(f'❌ Error creating backup: {str(e)}', 'danger')
-            return redirect(url_for('backup'))
         
-        backup = Backup(
-            filename=backup_filename,
-            size=os.path.getsize(backup_path),
-            type='manual',
-            created_by=current_user.id,
-            notes=f'Manual backup by {current_user.username}'
-        )
-        db.session.add(backup)
-        db.session.commit()
-        
-        flash('✅ Backup created successfully!', 'success')
         return redirect(url_for('backup'))
     
     backups = Backup.query.order_by(Backup.backup_date.desc()).all()
@@ -1981,43 +2005,37 @@ def export_backup_excel(backup_id):
         return redirect(url_for('backup'))
     
     try:
-        conn = sqlite3.connect(backup_path)
+        # Load JSON data
+        with open(backup_path, 'r', encoding='utf-8') as f:
+            backup_data = json.load(f)
+        
         output = BytesIO()
-        
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            tables = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-            ).fetchall()
-            
-            if not tables:
-                flash('❌ No tables found in backup!', 'danger')
-                conn.close()
-                return redirect(url_for('backup'))
-            
-            for table in tables:
-                table_name = table[0]
-                df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
-                
-                if df.empty:
-                    df = pd.DataFrame({'Message': ['No data found']})
-                
-                sheet_name = table_name[:31]
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
-                
-                worksheet = writer.sheets[sheet_name]
-                for column in worksheet.columns:
-                    max_length = 0
-                    column_letter = column[0].column_letter
-                    for cell in column:
-                        try:
-                            if len(str(cell.value)) > max_length:
-                                max_length = len(str(cell.value))
-                        except:
-                            pass
-                    adjusted_width = min(max_length + 2, 50)
-                    worksheet.column_dimensions[column_letter].width = adjusted_width
+            for table_name, data in backup_data.items():
+                if data:
+                    df = pd.DataFrame(data)
+                    sheet_name = table_name[:31]  # Excel sheet name max 31 chars
+                    df.to_excel(writer, sheet_name=sheet_name, index=False)
+                    
+                    # Auto-adjust column widths
+                    worksheet = writer.sheets[sheet_name]
+                    for column in worksheet.columns:
+                        max_length = 0
+                        column_letter = column[0].column_letter
+                        for cell in column:
+                            try:
+                                if len(str(cell.value)) > max_length:
+                                    max_length = len(str(cell.value))
+                            except:
+                                pass
+                        adjusted_width = min(max_length + 2, 50)
+                        worksheet.column_dimensions[column_letter].width = adjusted_width
+                else:
+                    # Empty table
+                    pd.DataFrame({'Message': ['No data found']}).to_excel(
+                        writer, sheet_name=table_name[:31], index=False
+                    )
         
-        conn.close()
         output.seek(0)
         return send_file(
             output,
@@ -2027,8 +2045,11 @@ def export_backup_excel(backup_id):
         )
         
     except Exception as e:
+        print(f"Export Error: {str(e)}")
         flash(f'❌ Error exporting backup: {str(e)}', 'danger')
         return redirect(url_for('backup'))
+
+# ============ API ROUTES FOR BACKUP ============
 
 @app.route('/api/backup/filter', methods=['POST'])
 @login_required
@@ -2079,7 +2100,7 @@ def filter_backups():
         'size': b.size,
         'size_kb': round(b.size / 1024, 1) if b.size else 0,
         'type': b.type or 'manual',
-        'created_by': b.created_by or 'System'
+        'created_by': current_user.username if b.created_by else 'System'
     } for b in backups]
     
     return jsonify({
@@ -2091,16 +2112,29 @@ def filter_backups():
 @app.route('/api/backup/delete/<int:backup_id>', methods=['DELETE'])
 @login_required
 def delete_backup_api(backup_id):
-    backup = Backup.query.get_or_404(backup_id)
-    
-    file_path = os.path.join('backups', backup.filename)
-    if os.path.exists(file_path):
-        os.remove(file_path)
-    
-    db.session.delete(backup)
-    db.session.commit()
-    
-    return jsonify({'status': 'success', 'message': 'Backup deleted successfully'})
+    try:
+        backup = Backup.query.get_or_404(backup_id)
+        
+        # Delete file from filesystem
+        file_path = os.path.join('backups', backup.filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            print(f"✅ Deleted backup file: {file_path}")
+        
+        # Delete record from database
+        db.session.delete(backup)
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success', 
+            'message': 'Backup deleted successfully'
+        })
+    except Exception as e:
+        print(f"Delete Error: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 # ---------- Theme Preference Routes ----------
 
