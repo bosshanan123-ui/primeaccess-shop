@@ -161,7 +161,17 @@ class Supplier(db.Model):
     
     purchases = db.relationship('Purchase', backref='supplier', lazy=True)
     created_user = db.relationship('User', backref='created_suppliers')
+# ==================== NOTES MODEL ====================
 
+class Note(db.Model):
+    __tablename__ = 'notes'
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False, default='')
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref='notes')
 class Customer(db.Model):
     __tablename__ = 'customers'
     id = db.Column(db.Integer, primary_key=True)
@@ -974,7 +984,76 @@ def bulk_delete_products():
     db.session.commit()
     flash('Products deleted successfully!', 'success')
     return jsonify({'status': 'success'})
+# ============ NOTES ROUTES - DATABASE VERSION ============
 
+@app.route('/notes')
+@login_required
+def notes():
+    """Simple notepad for shopkeeper - Database version"""
+    # Get or create note for current user
+    note = Note.query.filter_by(created_by=current_user.id).first()
+    if not note:
+        note = Note(content='', created_by=current_user.id)
+        db.session.add(note)
+        db.session.commit()
+    
+    return render_template('notes.html', note=note)
+
+@app.route('/api/notes/save', methods=['POST'])
+@login_required
+def save_note():
+    """Save note to database"""
+    data = request.json
+    content = data.get('content', '')
+    
+    note = Note.query.filter_by(created_by=current_user.id).first()
+    if not note:
+        note = Note(content=content, created_by=current_user.id)
+        db.session.add(note)
+    else:
+        note.content = content
+        note.updated_at = datetime.utcnow()
+    
+    db.session.commit()
+    
+    return jsonify({
+        'status': 'success',
+        'message': 'Note saved successfully',
+        'updated_at': note.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+    })
+
+@app.route('/api/notes/get', methods=['GET'])
+@login_required
+def get_note():
+    """Get note from database"""
+    note = Note.query.filter_by(created_by=current_user.id).first()
+    if note:
+        return jsonify({
+            'status': 'success',
+            'content': note.content,
+            'updated_at': note.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    else:
+        return jsonify({
+            'status': 'success',
+            'content': '',
+            'updated_at': None
+        })
+
+@app.route('/api/notes/clear', methods=['POST'])
+@login_required
+def clear_note():
+    """Clear note from database"""
+    note = Note.query.filter_by(created_by=current_user.id).first()
+    if note:
+        note.content = ''
+        note.updated_at = datetime.utcnow()
+        db.session.commit()
+    
+    return jsonify({
+        'status': 'success',
+        'message': 'Note cleared successfully'
+    })
 # ---------- Sale Routes ----------
 
 @app.route('/sales')
