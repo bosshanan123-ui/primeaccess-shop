@@ -1,0 +1,337 @@
+<!-- templates/notes.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}نوٹ پیڈ - شاپ مینجمنٹ{% else %}Notepad - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-sticky-note text-primary me-2"></i>
+                {% if current_lang == 'ur' %}نوٹ پیڈ{% else %}Notepad{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}نوٹ پیڈ{% else %}Notepad{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success" onclick="saveNotes()">
+                <i class="fas fa-save me-2"></i>
+                {% if current_lang == 'ur' %}محفوظ کریں{% else %}Save{% endif %}
+            </button>
+            <button class="btn btn-danger" onclick="clearNotes()">
+                <i class="fas fa-trash me-2"></i>
+                {% if current_lang == 'ur' %}سب حذف کریں{% else %}Clear All{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-edit me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}اپنے نوٹس یہاں لکھیں{% else %}Write your notes here{% endif %}
+                <span class="badge bg-info ms-2" id="charCount">0 characters</span>
+                <span class="badge bg-success ms-2" id="saveStatus">
+                    <i class="fas fa-check-circle me-1"></i>
+                    {% if current_lang == 'ur' %}محفوظ{% else %}Saved{% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {% if current_lang == 'ur' %}
+                        یہ نوٹس ڈیٹابیس میں محفوظ ہوتے ہیں۔ آپ کسی بھی ڈیوائس (موبائل، لیپ ٹاپ، وغیرہ) سے اپنے نوٹس دیکھ سکتے ہیں۔
+                    {% else %}
+                        These notes are saved in the database. You can access your notes from any device (mobile, laptop, etc.).
+                    {% endif %}
+                </div>
+                
+                <textarea id="notesContent" class="form-control" rows="20" 
+                          placeholder="{% if current_lang == 'ur' %}اپنے نوٹس یہاں لکھیں...{% else %}Write your notes here...{% endif %}"
+                          oninput="onNoteChange()"
+                          style="font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.8; resize: vertical;"></textarea>
+                
+                <div class="mt-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            <span id="lastSaved">{% if current_lang == 'ur' %}آخری بار محفوظ: ابھی نہیں{% else %}Last saved: Never{% endif %}</span>
+                        </span>
+                        <span class="text-muted ms-3">
+                            <i class="fas fa-user me-1"></i>
+                            <span>{% if current_lang == 'ur' %}صارف: {% else %}User: {% endif %}{{ current_user.username }}</span>
+                        </span>
+                    </div>
+                    <div>
+                        <span class="badge bg-secondary" id="saveIndicator">
+                            <i class="fas fa-circle me-1" style="color: #ffc107;"></i>
+                            {% if current_lang == 'ur' %}غیر محفوظ{% else %}Unsaved{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-download me-2 text-success"></i>
+                {% if current_lang == 'ur' %}نوٹس ڈاؤن لوڈ کریں{% else %}Download Notes{% endif %}
+            </div>
+            <div class="card-body">
+                <button class="btn btn-success w-100" onclick="downloadNotes()">
+                    <i class="fas fa-file-download me-2"></i>
+                    {% if current_lang == 'ur' %}ٹیکسٹ فائل کے طور پر ڈاؤن لوڈ کریں{% else %}Download as Text File{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-upload me-2 text-warning"></i>
+                {% if current_lang == 'ur' %}نوٹس امپورٹ کریں{% else %}Import Notes{% endif %}
+            </div>
+            <div class="card-body">
+                <input type="file" id="fileInput" accept=".txt" style="display: none;" onchange="importNotes(event)">
+                <button class="btn btn-warning w-100" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-file-upload me-2"></i>
+                    {% if current_lang == 'ur' %}ٹیکسٹ فائل سے امپورٹ کریں{% else %}Import from Text File{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ============================================
+    // NOTES FEATURE - DATABASE VERSION
+    // ============================================
+    
+    let isSaving = false;
+    let lastContent = '';
+    let saveTimeout = null;
+    const SAVE_DELAY = 1000; // 1 second after typing stops
+    
+    // Load notes on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadNotes();
+        updateCharCount();
+    });
+    
+    // ============ LOAD NOTES FROM DATABASE ============
+    function loadNotes() {
+        fetch('/api/notes/get')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('notesContent').value = data.content || '';
+                    lastContent = data.content || '';
+                    if (data.updated_at) {
+                        updateLastSaved(data.updated_at);
+                    }
+                    updateSaveStatus(true);
+                    updateSaveIndicator(false);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notes:', error);
+                showToast('❌ Error loading notes', 'danger');
+            });
+    }
+    
+    // ============ SAVE NOTES TO DATABASE ============
+    function saveNotes() {
+        if (isSaving) return;
+        
+        const content = document.getElementById('notesContent').value;
+        
+        // Don't save if content hasn't changed
+        if (content === lastContent) {
+            updateSaveIndicator(false);
+            return;
+        }
+        
+        isSaving = true;
+        updateSaveIndicator(true, 'Saving...');
+        
+        fetch('/api/notes/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content: content })
+        })
+        .then(response => response.json())
+        .then(data => {
+            isSaving = false;
+            if (data.status === 'success') {
+                lastContent = content;
+                updateSaveStatus(true);
+                updateLastSaved(data.updated_at);
+                updateSaveIndicator(false);
+                showToast('✅ Notes saved successfully!', 'success');
+            } else {
+                updateSaveIndicator(false, 'Error');
+                showToast('❌ Error saving notes', 'danger');
+            }
+        })
+        .catch(error => {
+            isSaving = false;
+            updateSaveIndicator(false, 'Error');
+            console.error('Error saving notes:', error);
+            showToast('❌ Error saving notes', 'danger');
+        });
+    }
+    
+    // ============ ON NOTE CHANGE ============
+    function onNoteChange() {
+        updateCharCount();
+        updateSaveStatus(false);
+        updateSaveIndicator(true, 'Unsaved');
+        
+        // Auto-save after typing stops
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(function() {
+            saveNotes();
+        }, SAVE_DELAY);
+    }
+    
+    // ============ CLEAR NOTES ============
+    function clearNotes() {
+        const lang = '{{ current_lang }}';
+        Swal.fire({
+            title: lang === 'ur' ? 'نوٹس حذف کریں؟' : 'Clear Notes?',
+            text: lang === 'ur' ? 'کیا آپ واقعی تمام نوٹس حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں کیا جا سکتا۔' : 'Are you sure you want to delete all notes? This cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e17055',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: lang === 'ur' ? 'ہاں، حذف کریں!' : 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('notesContent').value = '';
+                lastContent = '';
+                saveNotes();
+                updateCharCount();
+                const msg = lang === 'ur' ? '✅ نوٹس حذف ہو گئے!' : '✅ Notes cleared!';
+                showToast(msg, 'success');
+            }
+        });
+    }
+    
+    // ============ UPDATE UI ============
+    function updateLastSaved(text) {
+        const lang = '{{ current_lang }}';
+        document.getElementById('lastSaved').textContent = (lang === 'ur' ? 'آخری بار محفوظ: ' : 'Last saved: ') + text;
+    }
+    
+    function updateSaveStatus(saved) {
+        const status = document.getElementById('saveStatus');
+        if (saved) {
+            status.className = 'badge bg-success';
+            status.innerHTML = '<i class="fas fa-check-circle me-1"></i> {% if current_lang == 'ur' %}محفوظ{% else %}Saved{% endif %}';
+        } else {
+            status.className = 'badge bg-warning';
+            status.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i> {% if current_lang == 'ur' %}غیر محفوظ{% else %}Unsaved{% endif %}';
+        }
+    }
+    
+    function updateSaveIndicator(visible, text) {
+        const indicator = document.getElementById('saveIndicator');
+        if (visible) {
+            indicator.style.display = 'inline-block';
+            if (text) {
+                indicator.innerHTML = '<i class="fas fa-circle me-1" style="color: #ffc107;"></i> ' + text;
+            } else {
+                indicator.innerHTML = '<i class="fas fa-circle me-1" style="color: #ffc107;"></i> {% if current_lang == 'ur' %}غیر محفوظ{% else %}Unsaved{% endif %}';
+            }
+        } else {
+            indicator.style.display = 'none';
+        }
+    }
+    
+    function updateCharCount() {
+        const content = document.getElementById('notesContent').value;
+        const count = content.length;
+        const lang = '{{ current_lang }}';
+        document.getElementById('charCount').textContent = count + ' ' + (lang === 'ur' ? 'حروف' : 'characters');
+    }
+    
+    // ============ DOWNLOAD NOTES ============
+    function downloadNotes() {
+        const content = document.getElementById('notesContent').value;
+        if (!content) {
+            const lang = '{{ current_lang }}';
+            showToast(lang === 'ur' ? '⚠️ کوئی نوٹس نہیں ہیں!' : '⚠️ No notes to download!', 'warning');
+            return;
+        }
+        
+        const blob = new Blob([content], {type: 'text/plain;charset=utf-8'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'notes_' + new Date().toISOString().slice(0,10) + '.txt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        
+        const lang = '{{ current_lang }}';
+        showToast(lang === 'ur' ? '✅ نوٹس ڈاؤن لوڈ ہو گئے!' : '✅ Notes downloaded!', 'success');
+    }
+    
+    // ============ IMPORT NOTES ============
+    function importNotes(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            document.getElementById('notesContent').value = content;
+            lastContent = content;
+            saveNotes();
+            updateCharCount();
+            const lang = '{{ current_lang }}';
+            showToast(lang === 'ur' ? '✅ نوٹس امپورٹ ہو گئے!' : '✅ Notes imported!', 'success');
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Reset file input
+    }
+    
+    // ============ KEYBOARD SHORTCUTS ============
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+S to save
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            saveNotes();
+        }
+    });
+    
+    // ============ AUTO-SAVE ON PAGE LEAVE ============
+    window.addEventListener('beforeunload', function() {
+        saveNotes();
+    });
+    
+    console.log('📝 Notepad feature loaded successfully!');
+    console.log('💡 Press Ctrl+S to save notes');
+    console.log('💡 Notes are saved in database - accessible from any device');
+</script>
+{% endblock %}
