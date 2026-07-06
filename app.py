@@ -1,5 +1,6 @@
 # app.py - Complete Main Application with Theme System
-
+# app.py - Top par yeh imports add karein
+from sqlalchemy import func, and_, or_, inspect  # ← inspect add karein
 import os
 import sys
 if sys.stdout.encoding != 'utf-8':
@@ -1936,6 +1937,7 @@ def backup():
             backup_path = os.path.join(backup_dir, backup_filename)
             
             # For Supabase PostgreSQL - Export data as JSON
+            # Use inspect to get table names
             inspector = inspect(db.engine)
             tables = inspector.get_table_names()
             
@@ -2048,8 +2050,6 @@ def export_backup_excel(backup_id):
         print(f"Export Error: {str(e)}")
         flash(f'❌ Error exporting backup: {str(e)}', 'danger')
         return redirect(url_for('backup'))
-
-# ============ API ROUTES FOR BACKUP ============
 
 @app.route('/api/backup/filter', methods=['POST'])
 @login_required
