@@ -35,75 +35,114 @@
     </div>
 </div>
 
+<!-- Stats Cards -->
 <div class="row g-4 mb-4">
-    <div class="col-md-4">
+    <!-- Total Revenue (All Sources) -->
+    <div class="col-md-3">
         <div class="stat-card" style="border-left-color: #667eea;">
-            <div class="stat-number">PKR {{ "%.0f"|format(sales_data|sum(attribute='total_sales')) }}</div>
+            <div class="stat-number">PKR {{ "%.0f"|format(total_revenue_all) }}</div>
             <div class="stat-label">
-                {% if current_lang == 'ur' %}کل سیلز{% else %}Total Sales{% endif %}
+                {% if current_lang == 'ur' %}کل ریونیو (تمام ذرائع){% else %}Total Revenue (All Sources){% endif %}
             </div>
+            <small>{% if current_lang == 'ur' %}سیل + کاپی + والیٹ{% else %}Sales + Copy + Wallet{% endif %}</small>
         </div>
     </div>
-    <div class="col-md-4">
+    
+    <!-- Product Sales -->
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #2563EB;">
+            <div class="stat-number">PKR {{ "%.0f"|format(total_product_sales) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}پروڈکٹ سیلز{% else %}Product Sales{% endif %}
+            </div>
+            <small>{{ total_orders }} {% if current_lang == 'ur' %}آرڈرز{% else %}orders{% endif %}</small>
+        </div>
+    </div>
+    
+    <!-- Photocopy Revenue -->
+    <div class="col-md-3">
         <div class="stat-card" style="border-left-color: #00b894;">
-            <div class="stat-number">{{ sales_data|sum(attribute='total_orders') }}</div>
+            <div class="stat-number">PKR {{ "%.0f"|format(total_photocopy_revenue) }}</div>
             <div class="stat-label">
-                {% if current_lang == 'ur' %}کل آرڈرز{% else %}Total Orders{% endif %}
+                {% if current_lang == 'ur' %}فوٹو کاپی ریونیو{% else %}Photocopy Revenue{% endif %}
             </div>
+            <small>{{ total_jobs }} {% if current_lang == 'ur' %}جابز{% else %}jobs{% endif %}</small>
         </div>
     </div>
-    <div class="col-md-4">
+    
+    <!-- Wallet Revenue + Profit -->
+    <div class="col-md-3">
         <div class="stat-card" style="border-left-color: #fdcb6e;">
-            <div class="stat-number">
-                {% if sales_data|length > 0 %}
-                    {{ "%.0f"|format((sales_data|sum(attribute='total_sales') / sales_data|sum(attribute='total_orders'))|default(0)) }}
-                {% else %}
-                    0
-                {% endif %}
-            </div>
+            <div class="stat-number">PKR {{ "%.0f"|format(total_wallet_revenue) }}</div>
             <div class="stat-label">
-                {% if current_lang == 'ur' %}اوسط آرڈر ویلیو{% else %}Average Order Value{% endif %}
+                {% if current_lang == 'ur' %}والیٹ ریونیو{% else %}Wallet Revenue{% endif %}
             </div>
+            <small>{% if current_lang == 'ur' %}منافع: PKR {{ "%.0f"|format(total_wallet_profit) }}{% else %}Profit: PKR {{ "%.0f"|format(total_wallet_profit) }}{% endif %}</small>
         </div>
     </div>
 </div>
 
+<!-- Monthly Breakdown -->
 <div class="card">
     <div class="card-header">
         <i class="fas fa-calendar-alt me-2 text-primary"></i>
-        {% if current_lang == 'ur' %}ماہانہ سیل کی تقسیم{% else %}Monthly Sales Breakdown{% endif %}
+        {% if current_lang == 'ur' %}ماہانہ تفصیل{% else %}Monthly Breakdown{% endif %}
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0" id="salesReportTable">
                 <thead>
                     <tr>
-                        <th>
-                            {% if current_lang == 'ur' %}مہینہ{% else %}Month{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}آرڈرز{% else %}Orders{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}کل سیلز{% else %}Total Sales{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}اوسط{% else %}Average{% endif %}
-                        </th>
+                        <th>{% if current_lang == 'ur' %}مہینہ{% else %}Month{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}پروڈکٹ سیلز{% else %}Product Sales{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}فوٹو کاپی{% else %}Photocopy{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}والیٹ{% else %}Wallet{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}والیٹ منافع{% else %}Wallet Profit{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}کل{% else %}Total{% endif %}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for data in sales_data %}
                         <tr>
-                            <td>{{ data.month }}</td>
-                            <td>{{ data.total_orders }}</td>
-                            <td>PKR {{ "%.0f"|format(data.total_sales) }}</td>
-                            <td>PKR {{ "%.0f"|format((data.total_sales / data.total_orders)|default(0)) }}</td>
+                            <td><span class="badge bg-primary">{{ data.month }}</span></td>
+                            <td>PKR {{ "%.0f"|format(data.product_sales) }}</td>
+                            <td>PKR {{ "%.0f"|format(data.photocopy_revenue) }}</td>
+                            <td>PKR {{ "%.0f"|format(data.wallet_revenue) }}</td>
+                            <td>PKR {{ "%.0f"|format(data.wallet_profit) }}</td>
+                            <td class="fw-bold">PKR {{ "%.0f"|format(data.total_revenue) }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">
+                                {% if current_lang == 'ur' %}کوئی ڈیٹا نہیں ملا{% else %}No data found{% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
+                <tfoot>
+                    <tr class="table-primary">
+                        <th class="fw-bold">{% if current_lang == 'ur' %}کل{% else %}Total{% endif %}</th>
+                        <th class="fw-bold">PKR {{ "%.0f"|format(total_product_sales) }}</th>
+                        <th class="fw-bold">PKR {{ "%.0f"|format(total_photocopy_revenue) }}</th>
+                        <th class="fw-bold">PKR {{ "%.0f"|format(total_wallet_revenue) }}</th>
+                        <th class="fw-bold">PKR {{ "%.0f"|format(total_wallet_profit) }}</th>
+                        <th class="fw-bold">PKR {{ "%.0f"|format(total_revenue_all) }}</th>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#salesReportTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[0, 'desc']]
+        });
+    });
+</script>
 {% endblock %}
