@@ -79,16 +79,17 @@
         </div>
     </div>
     
-    <!-- ===== 4. MOBILE WALLET RECEIVE (TODAY ONLY) ===== -->
+    <!-- ===== 4. MOBILE WALLET REVENUE (TODAY'S PROFIT) ===== -->
     <div class="col-xl-3 col-lg-6">
         <div class="stat-card" style="border-left-color: #fdcb6e;">
             <div class="stat-icon" style="background: #fdcb6e;"><i class="fas fa-mobile-alt"></i></div>
-            <div class="stat-number" data-count="{{ total_wallet_receive_today }}" data-currency="true">PKR 0</div>
+            <!-- ✅ FIXED: Aaj ka wallet profit (Send 1% + Receive 2%) -->
+            <div class="stat-number" data-count="{{ today_wallet_profit }}" data-currency="true">PKR 0</div>
             <div class="stat-label">
-                {% if current_lang == 'ur' %}موبائل والیٹ وصول{% else %}Mobile Wallet Receive{% endif %}
+                {% if current_lang == 'ur' %}موبائل والیٹ ریونیو{% else %}Mobile Wallet Revenue{% endif %}
             </div>
             <small>
-                {% if current_lang == 'ur' %}آج کا وصول{% else %}Today's Receive{% endif %}
+                {% if current_lang == 'ur' %}آج کا منافع (بھیجنا 1% | وصول 2%){% else %}Today's Profit (Send 1% | Receive 2%){% endif %}
             </small>
         </div>
     </div>
