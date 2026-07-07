@@ -136,7 +136,20 @@ class Product(db.Model):
     sale_items = db.relationship('SaleItem', backref='product', lazy=True)
     purchase_items = db.relationship('PurchaseItem', backref='product', lazy=True)
     stock_movements = db.relationship('StockMovement', backref='product', lazy=True)
+# ==================== DATA REVENUE MODEL ====================
 
+class DataRevenue(db.Model):
+    __tablename__ = 'data_revenue'
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(50), nullable=False)  # movies, songs, cartoon, vlogs, other
+    customer_name = db.Column(db.String(200))
+    phone = db.Column(db.String(20))
+    amount = db.Column(db.Float, nullable=False)
+    description = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref='data_revenues')
 class Supplier(db.Model):
     __tablename__ = 'suppliers'
     id = db.Column(db.Integer, primary_key=True)
@@ -689,7 +702,63 @@ def reset_password(token):
         return redirect(url_for('login'))
     
     return render_template('reset_password.html')
+# ============ DATA REVENUE ROUTES ============
 
+@app.route('/data_revenue')
+@login_required
+def data_revenue():
+    """Data/Content Revenue Management"""
+    revenues = DataRevenue.query.order_by(DataRevenue.created_at.desc()).all()
+    
+    # Category totals
+    category_totals = {}
+    categories = ['movies', 'songs', 'cartoon', 'vlogs', 'other']
+    for cat in categories:
+        total = db.session.query(func.sum(DataRevenue.amount)).filter(
+            DataRevenue.category == cat
+        ).scalar() or 0
+        category_totals[cat] = total
+    
+    total_data_revenue = sum(category_totals.values())
+    
+    return render_template('data_revenue.html', 
+                         revenues=revenues,
+                         category_totals=category_totals,
+                         total_data_revenue=total_data_revenue)
+
+@app.route('/data_revenue/add', methods=['POST'])
+@login_required
+def add_data_revenue():
+    """Add data revenue"""
+    category = request.form.get('category')
+    customer_name = request.form.get('customer_name')
+    phone = request.form.get('phone')
+    amount = float(request.form.get('amount'))
+    description = request.form.get('description')
+    
+    revenue = DataRevenue(
+        category=category,
+        customer_name=customer_name,
+        phone=phone,
+        amount=amount,
+        description=description,
+        created_by=current_user.id
+    )
+    db.session.add(revenue)
+    db.session.commit()
+    
+    flash(f'✅ Data revenue added: {category} - PKR {amount:,.0f}', 'success')
+    return redirect(url_for('data_revenue'))
+
+@app.route('/data_revenue/delete/<int:revenue_id>', methods=['POST'])
+@login_required
+def delete_data_revenue(revenue_id):
+    """Delete data revenue"""
+    revenue = DataRevenue.query.get_or_404(revenue_id)
+    db.session.delete(revenue)
+    db.session.commit()
+    flash('✅ Data revenue deleted!', 'success')
+    return jsonify({'status': 'success'})
 @app.route('/dashboard')
 @login_required
 def dashboard():
