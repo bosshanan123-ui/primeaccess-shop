@@ -27,7 +27,8 @@
             </nav>
         </div>
         <div class="col-auto">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPaperModal">
+            <!-- ===== ADD PAPER BUTTON - SIMPLE BUTTON ===== -->
+            <button type="button" class="btn btn-primary" id="addPaperBtn">
                 <i class="fas fa-plus me-2"></i>
                 {% if current_lang == 'ur' %}کاغذ شامل کریں{% else %}Add Paper{% endif %}
             </button>
@@ -123,7 +124,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" onclick="editPaper({{ paper.id }})">
+                                <button class="btn btn-sm btn-outline-primary edit-btn" data-id="{{ paper.id }}">
                                     <i class="fas fa-edit"></i>
                                 </button>
                             </td>
@@ -146,174 +147,143 @@
     </div>
 </div>
 
-<!-- ============ ADD PAPER MODAL ============ -->
-<div class="modal fade" id="addPaperModal" tabindex="-1" aria-labelledby="addPaperModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addPaperModalLabel">
-                    <i class="fas fa-plus me-2 text-primary"></i>
-                    {% if current_lang == 'ur' %}کاغذ شامل کریں{% else %}Add Paper{% endif %}
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="{{ url_for('add_paper_stock') }}">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %} 
-                            <span class="text-danger">*</span>
-                        </label>
-                        <select class="form-select" name="paper_type" required>
-                            <option value="b&w">
-                                {% if current_lang == 'ur' %}سیاہ و سفید{% else %}Black & White{% endif %}
-                            </option>
-                            <option value="color">
-                                {% if current_lang == 'ur' %}رنگین{% else %}Color{% endif %}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}سائز{% else %}Size{% endif %} 
-                            <span class="text-danger">*</span>
-                        </label>
-                        <select class="form-select" name="paper_size" required>
-                            <option value="A4">A4</option>
-                            <option value="A3">A3</option>
-                            <option value="A5">A5</option>
-                            <option value="Letter">Letter</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}کل شیٹس{% else %}Total Sheets{% endif %} 
-                            <span class="text-danger">*</span>
-                        </label>
-                        <input type="number" class="form-control" name="total_sheets" required min="1" value="1000">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}کم لیول (الرٹ){% else %}Min Level (Alert){% endif %}
-                        </label>
-                        <input type="number" class="form-control" name="min_level" value="100" min="0">
-                        <small class="text-muted">
-                            {% if current_lang == 'ur' %}
-                                جب اسٹاک اس لیول سے کم ہو جائے تو الرٹ دکھائے گا
-                            {% else %}
-                                Alert when stock goes below this level
-                            {% endif %}
-                        </small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}زیادہ لیول{% else %}Max Level{% endif %}
-                        </label>
-                        <input type="number" class="form-control" name="max_level" value="5000" min="0">
-                    </div>
+<!-- ============ ADD PAPER FORM (Inline - No Modal) ============ -->
+<div class="card mt-4" id="addPaperFormCard" style="display: none;">
+    <div class="card-header">
+        <i class="fas fa-plus me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}نیا کاغذ شامل کریں{% else %}Add New Paper{% endif %}
+        <button type="button" class="btn-close float-end" id="closeAddForm" aria-label="Close"></button>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('add_paper_stock') }}" id="addPaperForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %} 
+                        <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select" name="paper_type" required>
+                        <option value="b&w">
+                            {% if current_lang == 'ur' %}سیاہ و سفید{% else %}Black & White{% endif %}
+                        </option>
+                        <option value="color">
+                            {% if current_lang == 'ur' %}رنگین{% else %}Color{% endif %}
+                        </option>
+                    </select>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>
-                        {% if current_lang == 'ur' %}منسوخ کریں{% else %}Cancel{% endif %}
-                    </button>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}سائز{% else %}Size{% endif %} 
+                        <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select" name="paper_size" required>
+                        <option value="A4">A4</option>
+                        <option value="A3">A3</option>
+                        <option value="A5">A5</option>
+                        <option value="Letter">Letter</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}کل شیٹس{% else %}Total Sheets{% endif %} 
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" name="total_sheets" required min="1" value="1000">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}کم لیول{% else %}Min Level{% endif %}
+                    </label>
+                    <input type="number" class="form-control" name="min_level" value="100" min="0">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}زیادہ لیول{% else %}Max Level{% endif %}
+                    </label>
+                    <input type="number" class="form-control" name="max_level" value="5000" min="0">
+                </div>
+                <div class="col-12">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-2"></i>
                         {% if current_lang == 'ur' %}شامل کریں{% else %}Add{% endif %}
                     </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- ============ EDIT PAPER MODAL ============ -->
-<div class="modal fade" id="editPaperModal" tabindex="-1" aria-labelledby="editPaperModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editPaperModalLabel">
-                    <i class="fas fa-edit me-2 text-primary"></i>
-                    {% if current_lang == 'ur' %}کاغذ اپ ڈیٹ کریں{% else %}Update Paper{% endif %}
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="editPaperForm" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}
-                        </label>
-                        <input type="text" class="form-control" id="editPaperType" disabled>
-                        <small class="text-muted">{% if current_lang == 'ur' %}قسم تبدیل نہیں کی جا سکتی{% else %}Type cannot be changed{% endif %}</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}سائز{% else %}Size{% endif %}
-                        </label>
-                        <input type="text" class="form-control" id="editPaperSize" disabled>
-                        <small class="text-muted">{% if current_lang == 'ur' %}سائز تبدیل نہیں کیا جا سکتا{% else %}Size cannot be changed{% endif %}</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}کل شیٹس{% else %}Total Sheets{% endif %} 
-                            <span class="text-danger">*</span>
-                        </label>
-                        <input type="number" class="form-control" name="total_sheets" id="editTotalSheets" required min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}استعمال شدہ شیٹس{% else %}Used Sheets{% endif %}
-                        </label>
-                        <input type="number" class="form-control" id="editUsedSheets" disabled>
-                        <small class="text-muted">{% if current_lang == 'ur' %}استعمال شدہ خودکار اپ ڈیٹ ہوتا ہے{% else %}Used sheets are auto-updated{% endif %}</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}کم لیول (الرٹ){% else %}Min Level (Alert){% endif %}
-                        </label>
-                        <input type="number" class="form-control" name="min_level" id="editMinLevel" min="0">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}زیادہ لیول{% else %}Max Level{% endif %}
-                        </label>
-                        <input type="number" class="form-control" name="max_level" id="editMaxLevel" min="0">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
-                        </label>
-                        <span id="editStatus" class="badge"></span>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" id="cancelAddForm">
                         <i class="fas fa-times me-2"></i>
                         {% if current_lang == 'ur' %}منسوخ کریں{% else %}Cancel{% endif %}
                     </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============ EDIT PAPER FORM (Inline - No Modal) ============ -->
+<div class="card mt-4" id="editPaperFormCard" style="display: none;">
+    <div class="card-header">
+        <i class="fas fa-edit me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}کاغذ اپ ڈیٹ کریں{% else %}Update Paper{% endif %}
+        <button type="button" class="btn-close float-end" id="closeEditForm" aria-label="Close"></button>
+    </div>
+    <div class="card-body">
+        <form id="editPaperForm" method="POST">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}
+                    </label>
+                    <input type="text" class="form-control" id="editPaperType" disabled>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}سائز{% else %}Size{% endif %}
+                    </label>
+                    <input type="text" class="form-control" id="editPaperSize" disabled>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}کل شیٹس{% else %}Total Sheets{% endif %} 
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" name="total_sheets" id="editTotalSheets" required min="1">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}کم لیول{% else %}Min Level{% endif %}
+                    </label>
+                    <input type="number" class="form-control" name="min_level" id="editMinLevel" min="0">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}زیادہ لیول{% else %}Max Level{% endif %}
+                    </label>
+                    <input type="number" class="form-control" name="max_level" id="editMaxLevel" min="0">
+                </div>
+                <div class="col-12">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-2"></i>
                         {% if current_lang == 'ur' %}اپ ڈیٹ کریں{% else %}Update{% endif %}
                     </button>
+                    <button type="button" class="btn btn-secondary" id="cancelEditForm">
+                        <i class="fas fa-times me-2"></i>
+                        {% if current_lang == 'ur' %}منسوخ کریں{% else %}Cancel{% endif %}
+                    </button>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    // Initialize DataTable - Column count: 9 (0-8)
+    // ===== DATATABLE =====
     $('#paperStockTable').DataTable({
         pageLength: 25,
         responsive: true,
         order: [[0, 'asc']],
         columnDefs: [
-            { orderable: false, targets: [8] } // Actions column (index 8) - disable sorting
+            { orderable: false, targets: [8] }
         ],
         language: {
             search: "{% if current_lang == 'ur' %}تلاش کریں:{% else %}Search:{% endif %}",
@@ -324,117 +294,54 @@ $(document).ready(function() {
             zeroRecords: "{% if current_lang == 'ur' %}کوئی میچنگ ریکارڈ نہیں ملا{% else %}No matching records found{% endif %}"
         }
     });
-});
 
-// ============ EDIT PAPER FUNCTION ============
-function editPaper(id) {
-    // Get the row by data-id
-    const row = document.querySelector(`#paperStockTable tbody tr[data-id="${id}"]`);
-    if (!row) {
-        console.error('Row not found for ID:', id);
-        return;
-    }
-    
-    const cells = row.querySelectorAll('td');
-    
-    // Cells: 0=#, 1=Type, 2=Size, 3=Total, 4=Used, 5=Remaining, 6=Min Level, 7=Status, 8=Actions
-    const paperType = cells[1]?.textContent?.trim() || '';
-    const paperSize = cells[2]?.textContent?.trim() || '';
-    const totalSheets = cells[3]?.textContent?.trim() || '';
-    const usedSheets = cells[4]?.textContent?.trim() || '';
-    const minLevel = cells[6]?.textContent?.trim() || '';
-    const status = cells[7]?.textContent?.trim() || '';
-    
-    // Get max level from the row data or use default
-    // Since we don't show max level in the table, we need to store it
-    // For now, we'll fetch it from the paper object via API
-    fetch(`/api/paper_stock/${id}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                document.getElementById('editPaperType').value = paperType;
-                document.getElementById('editPaperSize').value = paperSize;
-                document.getElementById('editTotalSheets').value = data.total_sheets || totalSheets;
-                document.getElementById('editUsedSheets').value = data.used_sheets || usedSheets;
-                document.getElementById('editMinLevel').value = data.min_level || minLevel;
-                document.getElementById('editMaxLevel').value = data.max_level || 5000;
-                
-                // Update status
-                const statusBadge = document.getElementById('editStatus');
-                const remaining = data.total_sheets - data.used_sheets;
-                if (remaining <= data.min_level) {
-                    statusBadge.className = 'badge bg-danger';
-                    statusBadge.textContent = '{% if current_lang == 'ur' %}کم{% else %}Low{% endif %}';
-                } else {
-                    statusBadge.className = 'badge bg-success';
-                    statusBadge.textContent = '{% if current_lang == 'ur' %}کافی{% else %}Sufficient{% endif %}';
-                }
-                
-                document.getElementById('editPaperForm').action = `/paper_stock/update/${id}`;
-                $('#editPaperModal').modal('show');
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching paper data:', error);
-            // Fallback: Use table data
-            document.getElementById('editPaperType').value = paperType;
-            document.getElementById('editPaperSize').value = paperSize;
-            document.getElementById('editTotalSheets').value = totalSheets;
-            document.getElementById('editUsedSheets').value = usedSheets;
-            document.getElementById('editMinLevel').value = minLevel;
-            document.getElementById('editMaxLevel').value = 5000;
-            
-            const statusBadge = document.getElementById('editStatus');
-            const remaining = parseInt(totalSheets) - parseInt(usedSheets);
-            if (remaining <= parseInt(minLevel)) {
-                statusBadge.className = 'badge bg-danger';
-                statusBadge.textContent = '{% if current_lang == 'ur' %}کم{% else %}Low{% endif %}';
-            } else {
-                statusBadge.className = 'badge bg-success';
-                statusBadge.textContent = '{% if current_lang == 'ur' %}کافی{% else %}Sufficient{% endif %}';
-            }
-            
-            document.getElementById('editPaperForm').action = `/paper_stock/update/${id}`;
-            $('#editPaperModal').modal('show');
-        });
-}
-
-// ============ DELETE PAPER FUNCTION (Optional) ============
-function deletePaper(id) {
-    const lang = '{{ current_lang }}';
-    Swal.fire({
-        title: lang === 'ur' ? 'کاغذ حذف کریں؟' : 'Delete Paper?',
-        text: lang === 'ur' ? 'کیا آپ واقعی اس کاغذ کو حذف کرنا چاہتے ہیں؟' : 'Are you sure you want to delete this paper?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#e17055',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: lang === 'ur' ? 'ہاں، حذف کریں!' : 'Yes, delete!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`/paper_stock/delete/${id}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    const msg = lang === 'ur' ? '✅ کاغذ حذف ہو گیا!' : '✅ Paper deleted!';
-                    showToast(msg, 'success');
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    const msg = lang === 'ur' ? '❌ حذف کرنے میں ناکامی' : '❌ Failed to delete';
-                    showToast(msg, 'danger');
-                }
-            })
-            .catch(error => {
-                const msg = lang === 'ur' ? '❌ خرابی: ' + error.message : '❌ Error: ' + error.message;
-                showToast(msg, 'danger');
-            });
-        }
+    // ===== SHOW ADD FORM =====
+    $('#addPaperBtn').click(function() {
+        $('#addPaperFormCard').slideDown();
+        $('html, body').animate({
+            scrollTop: $('#addPaperFormCard').offset().top - 100
+        }, 500);
     });
-}
+
+    // ===== HIDE ADD FORM =====
+    $('#closeAddForm, #cancelAddForm').click(function() {
+        $('#addPaperFormCard').slideUp();
+    });
+
+    // ===== SHOW EDIT FORM =====
+    $('.edit-btn').click(function() {
+        const id = $(this).data('id');
+        const row = $(this).closest('tr');
+        const cells = row.find('td');
+        
+        // Get data from row
+        const type = cells.eq(1).text().trim();
+        const size = cells.eq(2).text().trim();
+        const totalSheets = cells.eq(3).text().trim();
+        const usedSheets = cells.eq(4).text().trim();
+        const minLevel = cells.eq(6).text().trim();
+        
+        // Populate edit form
+        document.getElementById('editPaperType').value = type;
+        document.getElementById('editPaperSize').value = size;
+        document.getElementById('editTotalSheets').value = totalSheets;
+        document.getElementById('editMinLevel').value = minLevel;
+        document.getElementById('editMaxLevel').value = 5000;
+        
+        // Set form action
+        document.getElementById('editPaperForm').action = `/paper_stock/update/${id}`;
+        
+        // Show form
+        $('#editPaperFormCard').slideDown();
+        $('html, body').animate({
+            scrollTop: $('#editPaperFormCard').offset().top - 100
+        }, 500);
+    });
+
+    // ===== HIDE EDIT FORM =====
+    $('#closeEditForm, #cancelEditForm').click(function() {
+        $('#editPaperFormCard').slideUp();
+    });
+});
 </script>
 {% endblock %}
