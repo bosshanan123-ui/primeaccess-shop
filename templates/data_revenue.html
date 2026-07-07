@@ -1,0 +1,232 @@
+<!-- templates/data_revenue.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}ڈیٹا ریونیو - شاپ مینجمنٹ{% else %}Data Revenue - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-film text-primary me-2"></i>
+                {% if current_lang == 'ur' %}ڈیٹا/کانٹینٹ ریونیو{% else %}Data/Content Revenue{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}ڈیٹا ریونیو{% else %}Data Revenue{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #667eea;">
+            <div class="stat-number">PKR {{ "%.0f"|format(total_data_revenue) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل ڈیٹا ریونیو{% else %}Total Data Revenue{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #e17055;">
+            <div class="stat-number">{{ revenues|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل انٹریز{% else %}Total Entries{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-2">
+        <div class="stat-card" style="border-left-color: #FF6B6B;">
+            <div class="stat-number" style="color: #FF6B6B;">PKR {{ "%.0f"|format(category_totals.movies) }}</div>
+            <div class="stat-label">🎬 Movies</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card" style="border-left-color: #4ECDC4;">
+            <div class="stat-number" style="color: #4ECDC4;">PKR {{ "%.0f"|format(category_totals.songs) }}</div>
+            <div class="stat-label">🎵 Songs</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card" style="border-left-color: #FFE66D;">
+            <div class="stat-number" style="color: #FFE66D;">PKR {{ "%.0f"|format(category_totals.cartoon) }}</div>
+            <div class="stat-label">🎨 Cartoon</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card" style="border-left-color: #A8E6CF;">
+            <div class="stat-number" style="color: #A8E6CF;">PKR {{ "%.0f"|format(category_totals.vlogs) }}</div>
+            <div class="stat-label">📹 Vlogs</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card" style="border-left-color: #DDA0DD;">
+            <div class="stat-number" style="color: #DDA0DD;">PKR {{ "%.0f"|format(category_totals.other) }}</div>
+            <div class="stat-label">📦 Other</div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Revenue Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-plus me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}نیا ریونیو شامل کریں{% else %}Add New Revenue{% endif %}
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('add_data_revenue') }}">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}قسم{% else %}Category{% endif %}
+                    </label>
+                    <select class="form-select" name="category" required>
+                        <option value="movies">🎬 {% if current_lang == 'ur' %}موویز{% else %}Movies{% endif %}</option>
+                        <option value="songs">🎵 {% if current_lang == 'ur' %}گانے{% else %}Songs{% endif %}</option>
+                        <option value="cartoon">🎨 {% if current_lang == 'ur' %}کارٹون{% else %}Cartoon{% endif %}</option>
+                        <option value="vlogs">📹 {% if current_lang == 'ur' %}ولوگ{% else %}Vlogs{% endif %}</option>
+                        <option value="other">📦 {% if current_lang == 'ur' %}دیگر{% else %}Other{% endif %}</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}رقم (PKR){% else %}Amount (PKR){% endif %}
+                    </label>
+                    <input type="number" class="form-control" name="amount" required step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}کسٹمر کا نام{% else %}Customer Name{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="customer_name" placeholder="{% if current_lang == 'ur' %}نام{% else %}Name{% endif %}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}فون{% else %}Phone{% endif %}
+                    </label>
+                    <input type="tel" class="form-control" name="phone" placeholder="03XX-XXXXXXX">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}تفصیل{% else %}Description{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="description" placeholder="{% if current_lang == 'ur' %}اختیاری{% else %}Optional{% endif %}">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>
+                        {% if current_lang == 'ur' %}شامل کریں{% else %}Add{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Revenue History -->
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-history me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}ریونیو ہسٹری{% else %}Revenue History{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="dataRevenueTable">
+                <thead>
+                    <tr>
+                        <th>{% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}قسم{% else %}Category{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}فون{% else %}Phone{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}رقم{% else %}Amount{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}تفصیل{% else %}Description{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for revenue in revenues %}
+                        <tr>
+                            <td>{{ revenue.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <span class="badge {% if revenue.category == 'movies' %}bg-danger{% elif revenue.category == 'songs' %}bg-success{% elif revenue.category == 'cartoon' %}bg-warning{% elif revenue.category == 'vlogs' %}bg-info{% else %}bg-secondary{% endif %}">
+                                    {% if revenue.category == 'movies' %}🎬 Movies{% elif revenue.category == 'songs' %}🎵 Songs{% elif revenue.category == 'cartoon' %}🎨 Cartoon{% elif revenue.category == 'vlogs' %}📹 Vlogs{% else %}📦 Other{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ revenue.customer_name or '-' }}</td>
+                            <td>{{ revenue.phone or '-' }}</td>
+                            <td class="fw-bold text-success">PKR {{ "%.0f"|format(revenue.amount) }}</td>
+                            <td>{{ revenue.description or '-' }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteRevenue({{ revenue.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-3">
+                                {% if current_lang == 'ur' %}ابھی تک کوئی ڈیٹا ریونیو نہیں{% else %}No data revenue yet{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#dataRevenueTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[0, 'desc']]
+        });
+    });
+    
+    function deleteRevenue(id) {
+        const lang = '{{ current_lang }}';
+        Swal.fire({
+            title: lang === 'ur' ? 'ریونیو حذف کریں؟' : 'Delete Revenue?',
+            text: lang === 'ur' ? 'یہ عمل واپس نہیں کیا جا سکتا۔' : 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e17055',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: lang === 'ur' ? 'ہاں، حذف کریں!' : 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/data_revenue/delete/' + id, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const msg = lang === 'ur' ? '✅ ریونیو حذف ہو گیا!' : '✅ Revenue deleted!';
+                        showToast(msg, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}
