@@ -74,6 +74,24 @@ login_manager.login_message_category = 'info'
 # ============ 🆕 SUPABASE STORAGE CONFIG ============
 SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://your-project.supabase.co')
 SUPABASE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', 'your-service-key')
+USEFUL_TABLES = [
+    'users',                    # Users
+    'products',                 # Products
+    'customers',                # Customers
+    'suppliers',                # Suppliers
+    'sales',                    # Sales
+    'sale_items',               # Sale Items
+    'purchases',                # Purchases
+    'purchase_items',           # Purchase Items
+    'expenses',                 # Expenses
+    'photocopy_jobs',           # Photocopy Jobs
+    'mobile_wallet_transactions', # Mobile Wallet
+    'data_revenue',             # Data Revenue
+    'notes',                    # Notes
+    'paper_stock',              # Paper Stock
+    'customer_dues',            # Customer Dues
+    'payments',                 # Payments
+]
 
 # ==================== MODELS ====================
 
@@ -2501,33 +2519,31 @@ def download_backup(backup_id):
 @app.route('/backup/export_excel/<int:backup_id>')
 @login_required
 def export_backup_excel(backup_id):
-    """Export backup to Excel directly from database"""
+    """Export backup to Excel - Only important tables"""
     backup = Backup.query.get_or_404(backup_id)
     
     try:
         output = BytesIO()
         
-        # Get all tables from database directly
-        inspector = inspect(db.engine)
-        tables = inspector.get_table_names()
-        
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            for table in tables:
-                if table.startswith('sqlite_'):
-                    continue
+            exported_count = 0
+            
+            for table in USEFUL_TABLES:
                 try:
-                    # Direct SQL query
+                    # Check if table exists
+                    inspector = inspect(db.engine)
+                    if table not in inspector.get_table_names():
+                        continue
+                    
                     query = f'SELECT * FROM {table}'
                     df = pd.read_sql(query, db.engine)
                     
+                    # Skip empty tables
                     if df.empty:
-                        pd.DataFrame({'Message': ['No data found']}).to_excel(
-                            writer, sheet_name=table[:31], index=False
-                        )
                         continue
                     
                     # Write to Excel
-                    sheet_name = table[:31]  # Excel sheet name max 31 chars
+                    sheet_name = table[:31]
                     df.to_excel(writer, sheet_name=sheet_name, index=False)
                     
                     # Auto-adjust column widths
@@ -2543,12 +2559,19 @@ def export_backup_excel(backup_id):
                                 pass
                         adjusted_width = min(max_length + 2, 50)
                         worksheet.column_dimensions[column_letter].width = adjusted_width
-                        
+                    
+                    exported_count += 1
+                    print(f"✅ Exported: {table}")
+                    
                 except Exception as e:
-                    print(f"Error exporting table {table}: {str(e)}")
-                    pd.DataFrame({'Error': [str(e)]}).to_excel(
-                        writer, sheet_name=table[:31], index=False
-                    )
+                    print(f"❌ Error exporting {table}: {str(e)}")
+                    continue
+            
+            # If no tables exported, show message
+            if exported_count == 0:
+                pd.DataFrame({'Message': ['No data found in any table']}).to_excel(
+                    writer, sheet_name='No Data', index=False
+                )
         
         output.seek(0)
         
