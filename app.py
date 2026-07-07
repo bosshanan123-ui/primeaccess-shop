@@ -688,8 +688,6 @@ def reset_password(token):
     
     return render_template('reset_password.html')
 
-# ---------- Dashboard Routes ----------
-
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -697,42 +695,66 @@ def dashboard():
     today_start = datetime.combine(today, datetime.min.time())
     today_end = datetime.combine(today, datetime.max.time())
     
+    # ============ 1. PRODUCT SALES ============
     today_sales = Sale.query.filter(Sale.created_at.between(today_start, today_end)).all()
     total_sales_today = sum(sale.total_amount for sale in today_sales)
     total_sales_count = len(today_sales)
     
+    # ============ 2. PHOTOCOPY REVENUE ============
     today_photocopy = PhotocopyJob.query.filter(PhotocopyJob.created_at.between(today_start, today_end)).all()
     total_prints_today = sum(job.total_pages for job in today_photocopy)
     total_photocopy_revenue = sum(job.total_amount for job in today_photocopy)
     
+    # ============ 3. MOBILE WALLET RECEIVE ============
+    today_wallet_receive = MobileWalletTransaction.query.filter(
+        MobileWalletTransaction.created_at.between(today_start, today_end),
+        MobileWalletTransaction.transaction_type == 'receive'
+    ).all()
+    total_wallet_receive_today = sum(t.amount for t in today_wallet_receive)
+    
+    # ============ 4. TOTAL REVENUE (ALL SOURCES) ============
+    total_revenue_today = total_sales_today + total_photocopy_revenue + total_wallet_receive_today
+    
+    # ============ 5. EXPENSES ============
     today_expenses = Expense.query.filter(Expense.expense_date.between(today_start, today_end)).all()
     total_expenses_today = sum(expense.amount for expense in today_expenses)
     
+    # ============ 6. NET PROFIT ============
+    net_profit_today = total_revenue_today - total_expenses_today
+    
+    # ============ 7. DUES ============
     today_dues = CustomerDue.query.filter(CustomerDue.due_date.between(today_start, today_end), 
                                          CustomerDue.status == 'pending').all()
     due_amount_today = sum(due.remaining_amount or due.amount for due in today_dues)
     
+    # ============ 8. STOCK ALERTS ============
     low_stock = Product.query.filter(Product.stock_quantity <= Product.min_stock_level).all()
     out_of_stock = Product.query.filter(Product.stock_quantity == 0).all()
     
+    # ============ 9. MONTHLY SALES ============
     month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     monthly_sales = Sale.query.filter(Sale.created_at >= month_start).all()
     total_monthly_sales = sum(sale.total_amount for sale in monthly_sales)
     
+    # ============ 10. WEEKLY SALES ============
     week_start = datetime.now() - timedelta(days=7)
     weekly_sales = Sale.query.filter(Sale.created_at >= week_start).all()
     total_weekly_sales = sum(sale.total_amount for sale in weekly_sales)
     
+    # ============ 11. RECENT ACTIVITY ============
     recent_sales = Sale.query.order_by(Sale.created_at.desc()).limit(10).all()
     recent_photocopy = PhotocopyJob.query.order_by(PhotocopyJob.created_at.desc()).limit(5).all()
     recent_expenses = Expense.query.order_by(Expense.expense_date.desc()).limit(5).all()
     
+    # ============ 12. CUSTOMERS ============
     total_customers = Customer.query.count()
     new_customers_today = Customer.query.filter(Customer.created_at.between(today_start, today_end)).count()
     
+    # ============ 13. PRODUCTS ============
     total_products = Product.query.filter_by(is_active=True).count()
     total_products_value = db.session.query(func.sum(Product.purchase_price * Product.stock_quantity)).scalar() or 0
     
+    # ============ 14. DAILY SALES DATA (for chart) ============
     days = [(datetime.now() - timedelta(days=i)).date() for i in range(7, -1, -1)]
     daily_sales_data = []
     for day in days:
@@ -741,42 +763,91 @@ def dashboard():
         day_sales = Sale.query.filter(Sale.created_at.between(day_start, day_end)).all()
         daily_sales_data.append(sum(sale.total_amount for sale in day_sales))
     
+    # ============ 15. TOP PRODUCTS ============
     top_products = db.session.query(
         Product.name,
         func.sum(SaleItem.quantity).label('total_sold')
     ).join(SaleItem).group_by(Product.id).order_by(func.sum(SaleItem.quantity).desc()).limit(10).all()
     
+    # ============ 16. PAYMENT METHODS ============
     payment_methods = db.session.query(
         Sale.payment_method,
         func.count(Sale.id).label('count'),
         func.sum(Sale.total_amount).label('total')
     ).group_by(Sale.payment_method).all()
     
+    # ============ 17. WALLET BALANCE ============
+    total_received_jazz = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.wallet_type == 'jazzcash',
+        MobileWalletTransaction.transaction_type == 'receive'
+    ).scalar() or 0
+    
+    total_sent_jazz = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.wallet_type == 'jazzcash',
+        MobileWalletTransaction.transaction_type == 'send'
+    ).scalar() or 0
+    
+    total_received_easy = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.wallet_type == 'easypaisa',
+        MobileWalletTransaction.transaction_type == 'receive'
+    ).scalar() or 0
+    
+    total_sent_easy = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.wallet_type == 'easypaisa',
+        MobileWalletTransaction.transaction_type == 'send'
+    ).scalar() or 0
+    
+    balance_jazz = total_received_jazz - total_sent_jazz
+    balance_easy = total_received_easy - total_sent_easy
+    total_wallet_balance = balance_jazz + balance_easy
+    
     context = {
+        # ===== REVENUE =====
         'total_sales_today': total_sales_today,
         'total_sales_count': total_sales_count,
-        'total_prints_today': total_prints_today,
         'total_photocopy_revenue': total_photocopy_revenue,
+        'total_wallet_receive_today': total_wallet_receive_today,
+        'total_revenue_today': total_revenue_today,  # ← NEW: All sources combined
+        'total_prints_today': total_prints_today,
+        
+        # ===== EXPENSES & PROFIT =====
         'total_expenses_today': total_expenses_today,
+        'net_profit_today': net_profit_today,
         'due_amount_today': due_amount_today,
+        
+        # ===== STOCK =====
         'low_stock': low_stock,
         'out_of_stock': out_of_stock,
         'low_stock_count': len(low_stock),
         'out_of_stock_count': len(out_of_stock),
+        
+        # ===== MONTHLY/WEEKLY =====
         'total_monthly_sales': total_monthly_sales,
         'total_weekly_sales': total_weekly_sales,
+        
+        # ===== RECENT =====
         'recent_sales': recent_sales,
         'recent_photocopy': recent_photocopy,
         'recent_expenses': recent_expenses,
+        
+        # ===== CUSTOMERS =====
         'total_customers': total_customers,
         'new_customers_today': new_customers_today,
+        
+        # ===== PRODUCTS =====
         'total_products': total_products,
         'total_products_value': total_products_value,
+        
+        # ===== CHARTS =====
         'daily_sales_data': daily_sales_data,
         'days': days,
         'top_products': top_products,
         'payment_methods': payment_methods,
-        'net_profit_today': total_sales_today + total_photocopy_revenue - total_expenses_today
+        
+        # ===== WALLET =====
+        'balance_jazz': balance_jazz,
+        'balance_easy': balance_easy,
+        'total_wallet_balance': total_wallet_balance,
     }
     
     return render_template('dashboard.html', **context)
