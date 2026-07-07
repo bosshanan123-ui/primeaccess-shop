@@ -3101,7 +3101,7 @@ def api_notifications_clear():
     
     db.session.commit()
     return jsonify({'success': True, 'count': len(notifications)})
-# ============ ACTIVITY LOG API ============
+# ============ ACTIVITY LOG API - FIXED ============
 
 @app.route('/api/activities')
 @login_required
@@ -3120,116 +3120,137 @@ def api_activities():
         activities = []
         
         # ===== 1. SALES =====
-        sales = Sale.query.filter(Sale.created_at.between(month_start, month_end)).all()
-        for sale in sales:
-            activities.append({
-                'type': 'sale',
-                'customer': sale.customer.name if sale.customer else 'Walk-in',
-                'invoice': sale.invoice_number,
-                'amount': sale.total_amount,
-                'description': f'Sale of {len(sale.items)} items',
-                'time': sale.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                'details': {
-                    'items': len(sale.items),
-                    'payment': sale.payment_method,
-                    'status': sale.payment_status
-                }
-            })
+        try:
+            sales = Sale.query.filter(Sale.created_at.between(month_start, month_end)).all()
+            for sale in sales:
+                activities.append({
+                    'type': 'sale',
+                    'customer': sale.customer.name if sale.customer else 'Walk-in',
+                    'invoice': sale.invoice_number,
+                    'amount': sale.total_amount,
+                    'description': f'Sale of {len(sale.items)} items',
+                    'time': sale.created_at.strftime('%d/%m/%Y %I:%M %p'),
+                    'details': {
+                        'items': len(sale.items),
+                        'payment': sale.payment_method,
+                        'status': sale.payment_status
+                    }
+                })
+        except Exception as e:
+            print(f"Sales error: {str(e)}")
         
         # ===== 2. WALLET TRANSACTIONS =====
-        wallet = MobileWalletTransaction.query.filter(
-            MobileWalletTransaction.created_at.between(month_start, month_end)
-        ).all()
-        for w in wallet:
-            profit = w.amount * 0.01 if w.transaction_type == 'send' else w.amount * 0.02
-            activities.append({
-                'type': 'wallet',
-                'customer': w.customer.name if w.customer else w.customer_name or 'Unknown',
-                'phone': w.phone_number,
-                'amount': profit,
-                'description': f'{w.transaction_type.title()} - {w.wallet_type.title()}',
-                'category': w.wallet_type,
-                'time': w.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                'details': {
-                    'transaction_id': w.transaction_id,
-                    'type': w.transaction_type,
-                    'wallet': w.wallet_type
-                }
-            })
+        try:
+            wallet = MobileWalletTransaction.query.filter(
+                MobileWalletTransaction.created_at.between(month_start, month_end)
+            ).all()
+            for w in wallet:
+                profit = w.amount * 0.01 if w.transaction_type == 'send' else w.amount * 0.02
+                activities.append({
+                    'type': 'wallet',
+                    'customer': w.customer.name if w.customer else w.customer_name or 'Unknown',
+                    'phone': w.phone_number,
+                    'amount': profit,
+                    'description': f'{w.transaction_type.title()} - {w.wallet_type.title()}',
+                    'category': w.wallet_type,
+                    'time': w.created_at.strftime('%d/%m/%Y %I:%M %p'),
+                    'details': {
+                        'transaction_id': w.transaction_id,
+                        'type': w.transaction_type,
+                        'wallet': w.wallet_type
+                    }
+                })
+        except Exception as e:
+            print(f"Wallet error: {str(e)}")
         
         # ===== 3. PHOTOCOPY JOBS =====
-        photocopy = PhotocopyJob.query.filter(
-            PhotocopyJob.created_at.between(month_start, month_end)
-        ).all()
-        for p in photocopy:
-            activities.append({
-                'type': 'photocopy',
-                'customer': p.customer.name if p.customer else 'Walk-in',
-                'amount': p.total_amount,
-                'description': f'{p.total_pages} pages, {p.copies} copies',
-                'category': p.page_type,
-                'time': p.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                'details': {
-                    'job_number': p.job_number,
-                    'pages': p.total_pages,
-                    'copies': p.copies,
-                    'paper_used': p.paper_used
-                }
-            })
+        try:
+            photocopy = PhotocopyJob.query.filter(
+                PhotocopyJob.created_at.between(month_start, month_end)
+            ).all()
+            for p in photocopy:
+                activities.append({
+                    'type': 'photocopy',
+                    'customer': p.customer.name if p.customer else 'Walk-in',
+                    'amount': p.total_amount,
+                    'description': f'{p.total_pages} pages, {p.copies} copies',
+                    'category': p.page_type,
+                    'time': p.created_at.strftime('%d/%m/%Y %I:%M %p'),
+                    'details': {
+                        'job_number': p.job_number,
+                        'pages': p.total_pages,
+                        'copies': p.copies,
+                        'paper_used': p.paper_used
+                    }
+                })
+        except Exception as e:
+            print(f"Photocopy error: {str(e)}")
         
         # ===== 4. DATA REVENUE =====
-        data_revenue = DataRevenue.query.filter(
-            DataRevenue.created_at.between(month_start, month_end)
-        ).all()
-        for d in data_revenue:
-            activities.append({
-                'type': 'data',
-                'customer': d.customer_name or 'Unknown',
-                'phone': d.phone,
-                'amount': d.amount,
-                'description': d.description or d.category,
-                'category': d.category,
-                'time': d.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                'details': {
-                    'category': d.category
-                }
-            })
+        try:
+            # Check if DataRevenue table exists
+            inspector = inspect(db.engine)
+            if 'data_revenue' in inspector.get_table_names():
+                data_revenue = DataRevenue.query.filter(
+                    DataRevenue.created_at.between(month_start, month_end)
+                ).all()
+                for d in data_revenue:
+                    activities.append({
+                        'type': 'data',
+                        'customer': d.customer_name or 'Unknown',
+                        'phone': d.phone,
+                        'amount': d.amount,
+                        'description': d.description or d.category,
+                        'category': d.category,
+                        'time': d.created_at.strftime('%d/%m/%Y %I:%M %p'),
+                        'details': {
+                            'category': d.category
+                        }
+                    })
+        except Exception as e:
+            print(f"Data Revenue error: {str(e)}")
         
         # ===== 5. CUSTOMERS =====
-        customers = Customer.query.filter(
-            Customer.created_at.between(month_start, month_end)
-        ).all()
-        for c in customers:
-            activities.append({
-                'type': 'customer',
-                'customer': c.name,
-                'phone': c.phone,
-                'description': f'New customer registered',
-                'time': c.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                'details': {
+        try:
+            customers = Customer.query.filter(
+                Customer.created_at.between(month_start, month_end)
+            ).all()
+            for c in customers:
+                activities.append({
+                    'type': 'customer',
+                    'customer': c.name,
                     'phone': c.phone,
-                    'type': c.customer_type
-                }
-            })
+                    'description': f'New customer registered',
+                    'time': c.created_at.strftime('%d/%m/%Y %I:%M %p'),
+                    'details': {
+                        'phone': c.phone,
+                        'type': c.customer_type
+                    }
+                })
+        except Exception as e:
+            print(f"Customers error: {str(e)}")
         
         # ===== 6. PRODUCTS =====
-        products = Product.query.filter(
-            Product.created_at.between(month_start, month_end)
-        ).all()
-        for p in products:
-            activities.append({
-                'type': 'product',
-                'product': p.name,
-                'category': p.category,
-                'description': f'New product added - {p.sku}',
-                'amount': p.selling_price,
-                'time': p.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                'details': {
-                    'sku': p.sku,
+        try:
+            products = Product.query.filter(
+                Product.created_at.between(month_start, month_end)
+            ).all()
+            for p in products:
+                activities.append({
+                    'type': 'product',
+                    'product': p.name,
                     'category': p.category,
-                    'stock': p.stock_quantity
-                }
-            })
+                    'description': f'New product added - {p.sku}',
+                    'amount': p.selling_price,
+                    'time': p.created_at.strftime('%d/%m/%Y %I:%M %p'),
+                    'details': {
+                        'sku': p.sku,
+                        'category': p.category,
+                        'stock': p.stock_quantity
+                    }
+                })
+        except Exception as e:
+            print(f"Products error: {str(e)}")
         
         # Sort by time (newest first)
         activities.sort(key=lambda x: x['time'], reverse=True)
