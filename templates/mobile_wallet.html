@@ -26,46 +26,37 @@
     </div>
 </div>
 
-<!-- Stats -->
 <div class="row g-4 mb-4">
+    <!-- JazzCash Balance -->
     <div class="col-md-3">
         <div class="stat-card" style="border-left-color: #FF6B00;">
             <div class="stat-number" style="color: #FF6B00;">PKR {{ "%.0f"|format(balance_jazz) }}</div>
-            <div class="stat-label">
-                {% if current_lang == 'ur' %}جازکیش بیلنس{% else %}JazzCash Balance{% endif %}
-            </div>
-            <small>
-                {% if current_lang == 'ur' %}وصول:{% else %}Received:{% endif %} {{ "%.0f"|format(total_received_jazz) }} | 
-                {% if current_lang == 'ur' %}بھیجا:{% else %}Sent:{% endif %} {{ "%.0f"|format(total_sent_jazz) }}
-            </small>
+            <div class="stat-label">{% if current_lang == 'ur' %}جازکیش بیلنس{% else %}JazzCash Balance{% endif %}</div>
         </div>
     </div>
+    
+    <!-- EasyPaisa Balance -->
     <div class="col-md-3">
         <div class="stat-card" style="border-left-color: #00A651;">
             <div class="stat-number" style="color: #00A651;">PKR {{ "%.0f"|format(balance_easy) }}</div>
-            <div class="stat-label">
-                {% if current_lang == 'ur' %}ایزی پیسہ بیلنس{% else %}EasyPaisa Balance{% endif %}
-            </div>
-            <small>
-                {% if current_lang == 'ur' %}وصول:{% else %}Received:{% endif %} {{ "%.0f"|format(total_received_easy) }} | 
-                {% if current_lang == 'ur' %}بھیجا:{% else %}Sent:{% endif %} {{ "%.0f"|format(total_sent_easy) }}
-            </small>
+            <div class="stat-label">{% if current_lang == 'ur' %}ایزی پیسہ بیلنس{% else %}EasyPaisa Balance{% endif %}</div>
         </div>
     </div>
+    
+    <!-- 🆕 Wallet Profit -->
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #06B6D4;">
+            <div class="stat-number" style="color: #06B6D4;">PKR {{ "%.0f"|format(wallet_profit) }}</div>
+            <div class="stat-label">{% if current_lang == 'ur' %}کل والیٹ منافع{% else %}Total Wallet Profit{% endif %}</div>
+            <small>{% if current_lang == 'ur' %}بھیجنا 1% | وصول 2%{% else %}Send 1% | Receive 2%{% endif %}</small>
+        </div>
+    </div>
+    
+    <!-- Total Transactions -->
     <div class="col-md-3">
         <div class="stat-card" style="border-left-color: #667eea;">
-            <div class="stat-number">PKR {{ "%.0f"|format(balance_jazz + balance_easy) }}</div>
-            <div class="stat-label">
-                {% if current_lang == 'ur' %}کل بیلنس{% else %}Total Balance{% endif %}
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card" style="border-left-color: #00b894;">
             <div class="stat-number">{{ transactions|length }}</div>
-            <div class="stat-label">
-                {% if current_lang == 'ur' %}کل ٹرانزیکشنز{% else %}Total Transactions{% endif %}
-            </div>
+            <div class="stat-label">{% if current_lang == 'ur' %}کل ٹرانزیکشنز{% else %}Total Transactions{% endif %}</div>
         </div>
     </div>
 </div>
