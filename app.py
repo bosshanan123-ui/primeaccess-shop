@@ -2403,6 +2403,8 @@ def reports_inventory():
 
 # ============ 🆕 BACKUP ROUTES - UPDATED WITH SUPABASE STORAGE ============
 
+# ============ 🆕 BACKUP ROUTES - UPDATED WITH SUPABASE STORAGE ============
+
 @app.route('/backup', methods=['GET', 'POST'])
 @login_required
 def backup():
@@ -2422,13 +2424,28 @@ def backup():
                     continue
                 try:
                     result = db.session.execute(f'SELECT * FROM {table}').fetchall()
-                    backup_data[table] = [dict(row) for row in result]
+                    
+                    # ✅ FIXED: Better row to dict conversion
+                    if result:
+                        # Get column names from result
+                        columns = result[0].keys()
+                        backup_data[table] = [dict(zip(columns, row)) for row in result]
+                    else:
+                        backup_data[table] = []
+                        
                 except Exception as e:
                     print(f"Error backing up table {table}: {str(e)}")
                     backup_data[table] = []
             
-            # Convert to JSON
-            json_data = json.dumps(backup_data, default=str, indent=2).encode('utf-8')
+            # ✅ FIXED: Better JSON serialization
+            def json_serializer(obj):
+                if isinstance(obj, datetime):
+                    return obj.isoformat()
+                if hasattr(obj, '__dict__'):
+                    return str(obj)
+                return str(obj)
+            
+            json_data = json.dumps(backup_data, default=json_serializer, indent=2).encode('utf-8')
             
             # Upload to Supabase Storage
             success = upload_to_supabase_storage(json_data, backup_filename)
@@ -2448,7 +2465,7 @@ def backup():
             db.session.add(backup)
             db.session.commit()
             
-            flash('✅ Backup created and stored in Supabase!', 'success')
+            flash(f'✅ Backup created successfully! {len(tables)} tables exported.', 'success')
             
         except Exception as e:
             print(f"Backup Error: {str(e)}")
@@ -2458,6 +2475,7 @@ def backup():
     
     backups = Backup.query.order_by(Backup.backup_date.desc()).all()
     return render_template('backup.html', backups=backups)
+
 
 @app.route('/backup/download/<int:backup_id>')
 @login_required
@@ -2479,31 +2497,40 @@ def download_backup(backup_id):
         flash('❌ Backup file not found in storage.', 'danger')
         return redirect(url_for('backup'))
 
+
 @app.route('/backup/export_excel/<int:backup_id>')
 @login_required
 def export_backup_excel(backup_id):
-    """Export backup to Excel from Supabase Storage"""
+    """Export backup to Excel directly from database"""
     backup = Backup.query.get_or_404(backup_id)
     
-    # Download from Supabase Storage
-    file_data = download_from_supabase_storage(backup.filename)
-    
-    if not file_data:
-        flash('❌ Backup file not found!', 'danger')
-        return redirect(url_for('backup'))
-    
     try:
-        # Load JSON data
-        backup_data = json.load(file_data)
-        
         output = BytesIO()
+        
+        # Get all tables from database directly
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
+        
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            for table_name, data in backup_data.items():
-                if data:
-                    df = pd.DataFrame(data)
-                    sheet_name = table_name[:31]
+            for table in tables:
+                if table.startswith('sqlite_'):
+                    continue
+                try:
+                    # Direct SQL query
+                    query = f'SELECT * FROM {table}'
+                    df = pd.read_sql(query, db.engine)
+                    
+                    if df.empty:
+                        pd.DataFrame({'Message': ['No data found']}).to_excel(
+                            writer, sheet_name=table[:31], index=False
+                        )
+                        continue
+                    
+                    # Write to Excel
+                    sheet_name = table[:31]  # Excel sheet name max 31 chars
                     df.to_excel(writer, sheet_name=sheet_name, index=False)
                     
+                    # Auto-adjust column widths
                     worksheet = writer.sheets[sheet_name]
                     for column in worksheet.columns:
                         max_length = 0
@@ -2516,17 +2543,22 @@ def export_backup_excel(backup_id):
                                 pass
                         adjusted_width = min(max_length + 2, 50)
                         worksheet.column_dimensions[column_letter].width = adjusted_width
-                else:
-                    pd.DataFrame({'Message': ['No data found']}).to_excel(
-                        writer, sheet_name=table_name[:31], index=False
+                        
+                except Exception as e:
+                    print(f"Error exporting table {table}: {str(e)}")
+                    pd.DataFrame({'Error': [str(e)]}).to_excel(
+                        writer, sheet_name=table[:31], index=False
                     )
         
         output.seek(0)
+        
+        filename = f"backup_{backup.backup_date.strftime('%Y%m%d_%H%M')}.xlsx"
+        
         return send_file(
             output,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
-            download_name=f"backup_{backup.backup_date.strftime('%Y%m%d_%H%M')}.xlsx"
+            download_name=filename
         )
         
     except Exception as e:
@@ -2534,9 +2566,11 @@ def export_backup_excel(backup_id):
         flash(f'❌ Error exporting backup: {str(e)}', 'danger')
         return redirect(url_for('backup'))
 
+
 @app.route('/api/backup/filter', methods=['POST'])
 @login_required
 def filter_backups():
+    """Filter backups by date"""
     data = request.json
     filter_type = data.get('filter_type', 'all')
     date_from = data.get('date_from')
@@ -2592,6 +2626,7 @@ def filter_backups():
         'backups': result
     })
 
+
 @app.route('/api/backup/delete/<int:backup_id>', methods=['DELETE'])
 @login_required
 def delete_backup_api(backup_id):
@@ -2616,37 +2651,6 @@ def delete_backup_api(backup_id):
             'status': 'error',
             'message': str(e)
         }), 500
-
-# ---------- Theme Preference Routes ----------
-
-@app.route('/api/theme/preference', methods=['POST'])
-@login_required
-def save_theme_preference():
-    """Save user's theme preference to database"""
-    data = request.json
-    theme_mode = data.get('theme_mode', 'auto')
-    
-    valid_modes = ['light', 'dark', 'auto', 'light-sensor']
-    if theme_mode not in valid_modes:
-        return jsonify({
-            'status': 'error',
-            'message': 'Invalid theme mode'
-        }), 400
-    
-    current_user.theme_preference = theme_mode
-    db.session.commit()
-    session['theme_mode'] = theme_mode
-    
-    return jsonify({
-        'status': 'success',
-        'theme_mode': theme_mode,
-        'message': 'Theme preference saved successfully'
-    })
-
-# ============================================
-# COLOR THEME ROUTES
-# ============================================
-
 @app.route('/api/color-theme/<theme>')
 @login_required
 def api_color_theme(theme):
