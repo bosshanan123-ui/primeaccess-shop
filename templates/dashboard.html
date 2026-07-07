@@ -35,10 +35,10 @@
     </div>
 </div>
 
-<!-- ===== 4 STAT CARDS - REVENUE SOURCES ===== -->
+<!-- ===== 5 STAT CARDS - REVENUE SOURCES ===== -->
 <div class="row g-4 mb-4 stagger">
     <!-- ===== 1. TOTAL REVENUE (ALL SOURCES) ===== -->
-    <div class="col-xl-3 col-lg-6">
+    <div class="col-xxl-2 col-xl-4 col-lg-6">
         <div class="stat-card blue">
             <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
             <div class="stat-number" data-count="{{ total_revenue_today }}" data-currency="true">PKR 0</div>
@@ -46,13 +46,13 @@
                 {% if current_lang == 'ur' %}آج کی کل ریونیو{% else %}Today's Total Revenue{% endif %}
             </div>
             <small>
-                {% if current_lang == 'ur' %}سیل + کاپی + والیٹ منافع{% else %}Sales + Copy + Wallet Profit{% endif %}
+                {% if current_lang == 'ur' %}تمام ذرائع{% else %}All Sources{% endif %}
             </small>
         </div>
     </div>
     
     <!-- ===== 2. PRODUCT SALES ===== -->
-    <div class="col-xl-3 col-lg-6">
+    <div class="col-xxl-2 col-xl-4 col-lg-6">
         <div class="stat-card" style="border-left-color: #667eea;">
             <div class="stat-icon" style="background: #667eea;"><i class="fas fa-shopping-cart"></i></div>
             <div class="stat-number" data-count="{{ total_sales_today }}" data-currency="true">PKR 0</div>
@@ -66,7 +66,7 @@
     </div>
     
     <!-- ===== 3. PHOTOCOPY REVENUE ===== -->
-    <div class="col-xl-3 col-lg-6">
+    <div class="col-xxl-2 col-xl-4 col-lg-6">
         <div class="stat-card" style="border-left-color: #00b894;">
             <div class="stat-icon" style="background: #00b894;"><i class="fas fa-copy"></i></div>
             <div class="stat-number" data-count="{{ total_photocopy_revenue }}" data-currency="true">PKR 0</div>
@@ -79,17 +79,30 @@
         </div>
     </div>
     
-    <!-- ===== 4. MOBILE WALLET REVENUE (TODAY'S PROFIT) ===== -->
-    <div class="col-xl-3 col-lg-6">
+    <!-- ===== 4. MOBILE WALLET REVENUE ===== -->
+    <div class="col-xxl-2 col-xl-4 col-lg-6">
         <div class="stat-card" style="border-left-color: #fdcb6e;">
             <div class="stat-icon" style="background: #fdcb6e;"><i class="fas fa-mobile-alt"></i></div>
-            <!-- ✅ FIXED: Aaj ka wallet profit (Send 1% + Receive 2%) -->
             <div class="stat-number" data-count="{{ today_wallet_profit }}" data-currency="true">PKR 0</div>
             <div class="stat-label">
                 {% if current_lang == 'ur' %}موبائل والیٹ ریونیو{% else %}Mobile Wallet Revenue{% endif %}
             </div>
             <small>
                 {% if current_lang == 'ur' %}آج کا منافع (بھیجنا 1% | وصول 2%){% else %}Today's Profit (Send 1% | Receive 2%){% endif %}
+            </small>
+        </div>
+    </div>
+    
+    <!-- ===== 5. DATA REVENUE (NEW) ===== -->
+    <div class="col-xxl-2 col-xl-4 col-lg-6">
+        <div class="stat-card" style="border-left-color: #e17055;">
+            <div class="stat-icon" style="background: #e17055;"><i class="fas fa-film"></i></div>
+            <div class="stat-number" data-count="{{ total_data_revenue_today }}" data-currency="true">PKR 0</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}ڈیٹا ریونیو{% else %}Data Revenue{% endif %}
+            </div>
+            <small>
+                {% if current_lang == 'ur' %}موویز + گانے + کارٹون + وغیرہ{% else %}Movies + Songs + Cartoon + etc{% endif %}
             </small>
         </div>
     </div>
