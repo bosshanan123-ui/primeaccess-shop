@@ -1,0 +1,104 @@
+<!-- templates/edit_paper_stock.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}کاغذ اپ ڈیٹ کریں - شاپ مینجمنٹ{% else %}Edit Paper - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-edit text-primary me-2"></i>
+                {% if current_lang == 'ur' %}کاغذ اپ ڈیٹ کریں{% else %}Edit Paper{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('paper_stock') }}">
+                        {% if current_lang == 'ur' %}کاغذ کا اسٹاک{% else %}Paper Stock{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}اپ ڈیٹ{% else %}Edit{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('update_paper_stock', paper_id=paper.id) }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}
+                        </label>
+                        <input type="text" class="form-control" value="{% if paper.paper_type == 'color' %}{% if current_lang == 'ur' %}رنگین{% else %}Color{% endif %}{% else %}{% if current_lang == 'ur' %}سیاہ و سفید{% else %}Black & White{% endif %}{% endif %}" disabled>
+                        <small class="text-muted">{% if current_lang == 'ur' %}قسم تبدیل نہیں کی جا سکتی{% else %}Type cannot be changed{% endif %}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            {% if current_lang == 'ur' %}سائز{% else %}Size{% endif %}
+                        </label>
+                        <input type="text" class="form-control" value="{{ paper.paper_size }}" disabled>
+                        <small class="text-muted">{% if current_lang == 'ur' %}سائز تبدیل نہیں کیا جا سکتا{% else %}Size cannot be changed{% endif %}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            {% if current_lang == 'ur' %}کل شیٹس{% else %}Total Sheets{% endif %} 
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control" name="total_sheets" required min="1" value="{{ paper.total_sheets }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            {% if current_lang == 'ur' %}استعمال شدہ شیٹس{% else %}Used Sheets{% endif %}
+                        </label>
+                        <input type="number" class="form-control" value="{{ paper.used_sheets }}" disabled>
+                        <small class="text-muted">{% if current_lang == 'ur' %}استعمال شدہ خودکار اپ ڈیٹ ہوتا ہے{% else %}Used sheets are auto-updated{% endif %}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            {% if current_lang == 'ur' %}کم لیول (الرٹ){% else %}Min Level (Alert){% endif %}
+                        </label>
+                        <input type="number" class="form-control" name="min_level" value="{{ paper.min_level }}" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            {% if current_lang == 'ur' %}زیادہ لیول{% else %}Max Level{% endif %}
+                        </label>
+                        <input type="number" class="form-control" name="max_level" value="{{ paper.max_level }}" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                        </label>
+                        <div>
+                            {% if paper.total_sheets - paper.used_sheets <= paper.min_level %}
+                                <span class="badge bg-danger">{% if current_lang == 'ur' %}کم{% else %}Low{% endif %}</span>
+                            {% else %}
+                                <span class="badge bg-success">{% if current_lang == 'ur' %}کافی{% else %}Sufficient{% endif %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>
+                            {% if current_lang == 'ur' %}اپ ڈیٹ کریں{% else %}Update{% endif %}
+                        </button>
+                        <a href="{{ url_for('paper_stock') }}" class="btn btn-secondary px-4">
+                            <i class="fas fa-times me-2"></i>
+                            {% if current_lang == 'ur' %}منسوخ کریں{% else %}Cancel{% endif %}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
