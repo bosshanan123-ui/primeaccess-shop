@@ -37,31 +37,66 @@
 
 <!-- Quick Stats with Animation -->
 <div class="row g-4 mb-4 stagger">
+    <!-- ===== 1. TOTAL REVENUE (ALL SOURCES) ===== -->
     <div class="col-xl-3 col-lg-6">
         <div class="stat-card blue">
             <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+            <div class="stat-number" data-count="{{ total_revenue_today }}" data-currency="true">PKR 0</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}آج کی کل ریونیو{% else %}Today's Total Revenue{% endif %}
+            </div>
+            <small>
+                {% if current_lang == 'ur' %}سیل + کاپی + والیٹ{% else %}Sales + Copy + Wallet{% endif %}
+            </small>
+        </div>
+    </div>
+    
+    <!-- ===== 2. PRODUCT SALES ===== -->
+    <div class="col-xl-3 col-lg-6">
+        <div class="stat-card" style="border-left-color: #667eea;">
+            <div class="stat-icon" style="background: #667eea;"><i class="fas fa-shopping-cart"></i></div>
             <div class="stat-number" data-count="{{ total_sales_today }}" data-currency="true">PKR 0</div>
             <div class="stat-label">
-                {% if current_lang == 'ur' %}آج کی سیل ریونیو{% else %}Today's Sales Revenue{% endif %}
+                {% if current_lang == 'ur' %}پروڈکٹ سیلز{% else %}Product Sales{% endif %}
             </div>
             <small>{{ total_sales_count }} 
                 {% if current_lang == 'ur' %}آرڈرز{% else %}orders{% endif %}
             </small>
         </div>
     </div>
+    
+    <!-- ===== 3. PHOTOCOPY REVENUE ===== -->
     <div class="col-xl-3 col-lg-6">
-        <div class="stat-card green">
-            <div class="stat-icon"><i class="fas fa-print"></i></div>
-            <div class="stat-number" data-count="{{ total_prints_today }}">0</div>
+        <div class="stat-card" style="border-left-color: #00b894;">
+            <div class="stat-icon" style="background: #00b894;"><i class="fas fa-copy"></i></div>
+            <div class="stat-number" data-count="{{ total_photocopy_revenue }}" data-currency="true">PKR 0</div>
             <div class="stat-label">
-                {% if current_lang == 'ur' %}آج کی پرنٹس{% else %}Today's Prints{% endif %}
+                {% if current_lang == 'ur' %}فوٹو کاپی ریونیو{% else %}Photocopy Revenue{% endif %}
             </div>
-            <small>
-                {% if current_lang == 'ur' %}ریونیو:{% else %}Revenue:{% endif %} 
-                PKR {{ "%.0f"|format(total_photocopy_revenue) }}
+            <small>{{ total_prints_today }} 
+                {% if current_lang == 'ur' %}پرنٹس{% else %}prints{% endif %}
             </small>
         </div>
     </div>
+    
+    <!-- ===== 4. WALLET RECEIVE ===== -->
+    <div class="col-xl-3 col-lg-6">
+        <div class="stat-card" style="border-left-color: #fdcb6e;">
+            <div class="stat-icon" style="background: #fdcb6e;"><i class="fas fa-mobile-alt"></i></div>
+            <div class="stat-number" data-count="{{ total_wallet_receive_today }}" data-currency="true">PKR 0</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}موبائل والیٹ وصول{% else %}Mobile Wallet Receive{% endif %}
+            </div>
+            <small>
+                {% if current_lang == 'ur' %}جازکیش + ایزی پیسہ{% else %}JazzCash + EasyPaisa{% endif %}
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Second Row - Net Profit & Expenses -->
+<div class="row g-4 mb-4">
+    <!-- ===== 5. NET PROFIT ===== -->
     <div class="col-xl-3 col-lg-6">
         <div class="stat-card orange">
             <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
@@ -70,11 +105,12 @@
                 {% if current_lang == 'ur' %}آج کا خالص منافع{% else %}Net Profit Today{% endif %}
             </div>
             <small>
-                {% if current_lang == 'ur' %}اخراجات:{% else %}Expenses:{% endif %} 
-                PKR {{ "%.0f"|format(total_expenses_today) }}
+                {% if current_lang == 'ur' %}ریونیو - اخراجات{% else %}Revenue - Expenses{% endif %}
             </small>
         </div>
     </div>
+    
+    <!-- ===== 6. LOW STOCK ALERTS ===== -->
     <div class="col-xl-3 col-lg-6">
         <div class="stat-card red">
             <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
@@ -84,6 +120,34 @@
             </div>
             <small>{{ out_of_stock_count }} 
                 {% if current_lang == 'ur' %}آؤٹ آف اسٹاک{% else %}out of stock{% endif %}
+            </small>
+        </div>
+    </div>
+    
+    <!-- ===== 7. TOTAL WALLET BALANCE ===== -->
+    <div class="col-xl-3 col-lg-6">
+        <div class="stat-card" style="border-left-color: #8B5CF6;">
+            <div class="stat-icon" style="background: #8B5CF6;"><i class="fas fa-wallet"></i></div>
+            <div class="stat-number" data-count="{{ total_wallet_balance }}" data-currency="true">PKR 0</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل والیٹ بیلنس{% else %}Total Wallet Balance{% endif %}
+            </div>
+            <small>
+                {% if current_lang == 'ur' %}جازکیش + ایزی پیسہ{% else %}JazzCash + EasyPaisa{% endif %}
+            </small>
+        </div>
+    </div>
+    
+    <!-- ===== 8. DUE AMOUNT ===== -->
+    <div class="col-xl-3 col-lg-6">
+        <div class="stat-card" style="border-left-color: #E11D48;">
+            <div class="stat-icon" style="background: #E11D48;"><i class="fas fa-clock"></i></div>
+            <div class="stat-number" data-count="{{ due_amount_today }}" data-currency="true">PKR 0</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}بقایا رقم{% else %}Due Amount{% endif %}
+            </div>
+            <small>
+                {% if current_lang == 'ur' %}آج کی واجبات{% else %}Today's dues{% endif %}
             </small>
         </div>
     </div>
