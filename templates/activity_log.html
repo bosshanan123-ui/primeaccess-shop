@@ -1,0 +1,719 @@
+<!-- templates/activity_log.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}سرگرمی لاگ - شاپ مینجمنٹ{% else %}Activity Log - Shop Management{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .activity-search-section {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .activity-search-section .search-input {
+        position: relative;
+    }
+    
+    .activity-search-section .search-input input {
+        width: 100%;
+        padding: 14px 20px 14px 50px;
+        border-radius: var(--radius-md);
+        border: 2px solid var(--border-color);
+        background: var(--bg-input);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all var(--transition-fast);
+    }
+    
+    .activity-search-section .search-input input:focus {
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+        outline: none;
+    }
+    
+    .activity-search-section .search-input .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+    
+    .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 50px;
+        border: 1.5px solid var(--border-color);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        font-weight: 500;
+    }
+    
+    .filter-chip:hover {
+        border-color: var(--brand-primary);
+        color: var(--brand-primary);
+    }
+    
+    .filter-chip.active {
+        background: var(--brand-gradient);
+        color: white;
+        border-color: transparent;
+    }
+    
+    .filter-chip .badge-count {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 0 8px;
+        border-radius: 50px;
+        font-size: 0.6rem;
+    }
+    
+    .filter-chip:not(.active) .badge-count {
+        background: var(--bg-card-hover);
+        color: var(--text-muted);
+    }
+    
+    .activity-timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .activity-timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--border-color);
+    }
+    
+    .activity-item {
+        position: relative;
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        transition: all var(--transition-fast);
+        cursor: pointer;
+    }
+    
+    .activity-item:hover {
+        transform: translateX(4px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--brand-primary);
+    }
+    
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: -24px;
+        top: 20px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 3px solid var(--border-color);
+        background: var(--bg-card);
+    }
+    
+    .activity-item.sale::before { border-color: #667eea; background: #667eea; }
+    .activity-item.wallet::before { border-color: #fdcb6e; background: #fdcb6e; }
+    .activity-item.photocopy::before { border-color: #00b894; background: #00b894; }
+    .activity-item.data::before { border-color: #e17055; background: #e17055; }
+    .activity-item.customer::before { border-color: #a29bfe; background: #a29bfe; }
+    .activity-item.product::before { border-color: #fd79a8; background: #fd79a8; }
+    
+    .activity-item .activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 6px;
+    }
+    
+    .activity-item .activity-type {
+        font-weight: 600;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .activity-item .activity-type .badge-type {
+        padding: 2px 10px;
+        border-radius: 50px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .activity-item .activity-time {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+    
+    .activity-item .activity-details {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+    }
+    
+    .activity-item .activity-details strong {
+        color: var(--text-primary);
+    }
+    
+    .activity-item .activity-amount {
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+    
+    .activity-item .activity-amount.positive { color: #00b894; }
+    .activity-item .activity-amount.negative { color: #e17055; }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .stats-grid .stat-box {
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        padding: 16px 20px;
+        border: 1px solid var(--border-color);
+        text-align: center;
+        transition: all var(--transition-fast);
+    }
+    
+    .stats-grid .stat-box:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .stats-grid .stat-box .stat-number {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--brand-primary);
+        line-height: 1.2;
+    }
+    
+    .stats-grid .stat-box .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 2px;
+    }
+    
+    .activity-item .expand-details {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-color);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        display: none;
+    }
+    
+    .activity-item.expanded .expand-details {
+        display: block;
+    }
+    
+    .activity-item .expand-btn {
+        background: none;
+        border: none;
+        color: var(--brand-primary);
+        cursor: pointer;
+        font-size: 0.7rem;
+        padding: 4px 0;
+    }
+    
+    .activity-item .expand-btn:hover {
+        text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .activity-item .activity-header {
+            flex-direction: column;
+            gap: 4px;
+        }
+        .activity-item .activity-time {
+            font-size: 0.55rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-search text-primary me-2"></i>
+                {% if current_lang == 'ur' %}سرگرمی لاگ{% else %}Activity Log{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}سرگرمی لاگ{% else %}Activity Log{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="exportActivity()">
+                <i class="fas fa-file-export me-2"></i>
+                {% if current_lang == 'ur' %}ایکسپورٹ{% else %}Export{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MONTHLY STATS ===== -->
+<div class="stats-grid" id="monthlyStats">
+    <div class="stat-box">
+        <div class="stat-number" id="totalRevenue">PKR 0</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}کل ریونیو (ماہانہ){% else %}Total Revenue (Monthly){% endif %}</div>
+    </div>
+    <div class="stat-box" style="border-left-color: #667eea;">
+        <div class="stat-number" style="color: #667eea;" id="totalSales">0</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}کل سیلز{% else %}Total Sales{% endif %}</div>
+    </div>
+    <div class="stat-box" style="border-left-color: #00b894;">
+        <div class="stat-number" style="color: #00b894;" id="totalPhotocopy">0</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}فوٹو کاپی جابز{% else %}Photocopy Jobs{% endif %}</div>
+    </div>
+    <div class="stat-box" style="border-left-color: #fdcb6e;">
+        <div class="stat-number" style="color: #fdcb6e;" id="totalWallet">PKR 0</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}والیٹ منافع{% else %}Wallet Profit{% endif %}</div>
+    </div>
+    <div class="stat-box" style="border-left-color: #e17055;">
+        <div class="stat-number" style="color: #e17055;" id="totalData">PKR 0</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}ڈیٹا ریونیو{% else %}Data Revenue{% endif %}</div>
+    </div>
+    <div class="stat-box" style="border-left-color: #a29bfe;">
+        <div class="stat-number" style="color: #a29bfe;" id="totalCustomers">0</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}کل کسٹمرز{% else %}Total Customers{% endif %}</div>
+    </div>
+</div>
+
+<!-- ===== SEARCH & FILTERS ===== -->
+<div class="activity-search-section">
+    <div class="row g-3">
+        <div class="col-md-5">
+            <div class="search-input">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="globalSearch" 
+                       placeholder="{% if current_lang == 'ur' %}کسٹمر، پروڈکٹ، رقم، یا کسی بھی چیز کو تلاش کریں...{% else %}Search customer, product, amount, or anything...{% endif %}"
+                       oninput="filterActivities()">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="typeFilter" onchange="filterActivities()">
+                <option value="all">{% if current_lang == 'ur' %}تمام اقسام{% else %}All Types{% endif %}</option>
+                <option value="sale">{% if current_lang == 'ur' %}سیلز{% else %}Sales{% endif %}</option>
+                <option value="wallet">{% if current_lang == 'ur' %}والیٹ{% else %}Wallet{% endif %}</option>
+                <option value="photocopy">{% if current_lang == 'ur' %}فوٹو کاپی{% else %}Photocopy{% endif %}</option>
+                <option value="data">{% if current_lang == 'ur' %}ڈیٹا{% else %}Data{% endif %}</option>
+                <option value="customer">{% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}</option>
+                <option value="product">{% if current_lang == 'ur' %}پروڈکٹ{% else %}Product{% endif %}</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="month" class="form-control" id="monthFilter" value="{{ now.strftime('%Y-%m') }}" onchange="filterActivities()">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                <i class="fas fa-undo me-1"></i>
+                {% if current_lang == 'ur' %}ری سیٹ{% else %}Reset{% endif %}
+            </button>
+        </div>
+    </div>
+    
+    <!-- Filter Chips -->
+    <div class="mt-3 d-flex flex-wrap gap-2" id="filterChips">
+        <span class="filter-chip active" data-filter="all" onclick="setChipFilter('all')">
+            <i class="fas fa-th-list"></i> 
+            {% if current_lang == 'ur' %}سب{% else %}All{% endif %}
+            <span class="badge-count" id="countAll">0</span>
+        </span>
+        <span class="filter-chip" data-filter="sale" onclick="setChipFilter('sale')">
+            <i class="fas fa-shopping-cart"></i> 
+            {% if current_lang == 'ur' %}سیلز{% else %}Sales{% endif %}
+            <span class="badge-count" id="countSale">0</span>
+        </span>
+        <span class="filter-chip" data-filter="wallet" onclick="setChipFilter('wallet')">
+            <i class="fas fa-mobile-alt"></i> 
+            {% if current_lang == 'ur' %}والیٹ{% else %}Wallet{% endif %}
+            <span class="badge-count" id="countWallet">0</span>
+        </span>
+        <span class="filter-chip" data-filter="photocopy" onclick="setChipFilter('photocopy')">
+            <i class="fas fa-copy"></i> 
+            {% if current_lang == 'ur' %}فوٹو کاپی{% else %}Photocopy{% endif %}
+            <span class="badge-count" id="countPhotocopy">0</span>
+        </span>
+        <span class="filter-chip" data-filter="data" onclick="setChipFilter('data')">
+            <i class="fas fa-film"></i> 
+            {% if current_lang == 'ur' %}ڈیٹا{% else %}Data{% endif %}
+            <span class="badge-count" id="countData">0</span>
+        </span>
+        <span class="filter-chip" data-filter="customer" onclick="setChipFilter('customer')">
+            <i class="fas fa-user"></i> 
+            {% if current_lang == 'ur' %}کسٹمرز{% else %}Customers{% endif %}
+            <span class="badge-count" id="countCustomer">0</span>
+        </span>
+    </div>
+</div>
+
+<!-- ===== ACTIVITY TIMELINE ===== -->
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-clock me-2 text-primary"></i>
+                {% if current_lang == 'ur' %}سرگرمیاں{% else %}Activities{% endif %}
+                <span class="badge bg-primary ms-2" id="activityCount">0</span>
+            </span>
+            <span id="selectedMonth" class="text-muted" style="font-size:0.8rem;">
+                {{ now.strftime('%B %Y') }}
+            </span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="activity-timeline" id="activityTimeline">
+            <!-- Activities loaded via JavaScript -->
+            <div class="text-center text-muted py-5" id="loadingActivities">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>{% if current_lang == 'ur' %}سرگرمیاں لوڈ ہو رہی ہیں...{% else %}Loading activities...{% endif %}</p>
+            </div>
+        </div>
+        <div class="text-center p-3" id="loadMoreContainer">
+            <button class="btn btn-outline-primary btn-sm" id="loadMoreBtn" onclick="loadMore()">
+                <i class="fas fa-chevron-down me-2"></i>
+                {% if current_lang == 'ur' %}مزید لوڈ کریں{% else %}Load More{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ============================================
+// ACTIVITY LOG - COMPLETE JAVASCRIPT
+// ============================================
+
+let allActivities = [];
+let filteredActivities = [];
+let currentPage = 0;
+const PAGE_SIZE = 20;
+let currentFilter = 'all';
+let currentMonth = '{{ now.strftime("%Y-%m") }}';
+
+// ============ LOAD ACTIVITIES ============
+function loadActivities() {
+    const month = document.getElementById('monthFilter').value || currentMonth;
+    currentMonth = month;
+    
+    document.getElementById('selectedMonth').textContent = new Date(month + '-01').toLocaleString('default', { month: 'long', year: 'numeric' });
+    
+    fetch(`/api/activities?month=${month}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                allActivities = data.activities;
+                updateStats(data.stats);
+                filterActivities();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading activities:', error);
+            document.getElementById('loadingActivities').innerHTML = `
+                <i class="fas fa-exclamation-circle fa-2x mb-3 text-danger"></i>
+                <p>{% if current_lang == 'ur' %}سرگرمیاں لوڈ کرنے میں خرابی{% else %}Error loading activities{% endif %}</p>
+                <button class="btn btn-primary btn-sm" onclick="loadActivities()">
+                    <i class="fas fa-redo me-2"></i>{% if current_lang == 'ur' %}دوبارہ کوشش کریں{% else %}Retry{% endif %}
+                </button>
+            `;
+        });
+}
+
+// ============ UPDATE STATS ============
+function updateStats(stats) {
+    document.getElementById('totalRevenue').textContent = 'PKR ' + formatNumber(stats.total_revenue || 0);
+    document.getElementById('totalSales').textContent = stats.total_sales || 0;
+    document.getElementById('totalPhotocopy').textContent = stats.total_photocopy || 0;
+    document.getElementById('totalWallet').textContent = 'PKR ' + formatNumber(stats.total_wallet || 0);
+    document.getElementById('totalData').textContent = 'PKR ' + formatNumber(stats.total_data || 0);
+    document.getElementById('totalCustomers').textContent = stats.total_customers || 0;
+}
+
+// ============ FILTER ACTIVITIES ============
+function filterActivities() {
+    const searchTerm = document.getElementById('globalSearch').value.toLowerCase().trim();
+    const typeFilter = document.getElementById('typeFilter').value;
+    const chipFilter = currentFilter;
+    
+    // Use chip filter if not 'all', otherwise use dropdown
+    const activeType = chipFilter !== 'all' ? chipFilter : typeFilter;
+    
+    filteredActivities = allActivities.filter(activity => {
+        // Type filter
+        if (activeType !== 'all' && activity.type !== activeType) {
+            return false;
+        }
+        
+        // Search filter
+        if (searchTerm) {
+            const searchable = [
+                activity.customer,
+                activity.product,
+                activity.description,
+                activity.amount,
+                activity.category,
+                activity.phone,
+                activity.invoice
+            ].join(' ').toLowerCase();
+            if (!searchable.includes(searchTerm)) {
+                return false;
+            }
+        }
+        
+        return true;
+    });
+    
+    // Update chip counts
+    updateChipCounts();
+    
+    // Reset pagination
+    currentPage = 0;
+    renderActivities();
+}
+
+// ============ RENDER ACTIVITIES ============
+function renderActivities() {
+    const container = document.getElementById('activityTimeline');
+    const start = 0;
+    const end = (currentPage + 1) * PAGE_SIZE;
+    const pageActivities = filteredActivities.slice(start, end);
+    
+    if (filteredActivities.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-search fa-3x mb-3" style="opacity:0.3;"></i>
+                <p>{% if current_lang == 'ur' %}کوئی سرگرمی نہیں ملی{% else %}No activities found{% endif %}</p>
+            </div>
+        `;
+        document.getElementById('loadMoreContainer').style.display = 'none';
+        document.getElementById('activityCount').textContent = '0';
+        return;
+    }
+    
+    document.getElementById('activityCount').textContent = filteredActivities.length;
+    
+    let html = '';
+    pageActivities.forEach((activity, index) => {
+        html += createActivityHTML(activity, index);
+    });
+    
+    container.innerHTML = html;
+    
+    // Show/hide load more button
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+    if (end < filteredActivities.length) {
+        loadMoreContainer.style.display = 'block';
+    } else {
+        loadMoreContainer.style.display = 'none';
+    }
+}
+
+// ============ CREATE ACTIVITY HTML ============
+function createActivityHTML(activity, index) {
+    const typeColors = {
+        sale: 'sale',
+        wallet: 'wallet',
+        photocopy: 'photocopy',
+        data: 'data',
+        customer: 'customer',
+        product: 'product'
+    };
+    
+    const typeIcons = {
+        sale: 'fa-shopping-cart',
+        wallet: 'fa-mobile-alt',
+        photocopy: 'fa-copy',
+        data: 'fa-film',
+        customer: 'fa-user-plus',
+        product: 'fa-box'
+    };
+    
+    const typeLabels = {
+        sale: 'Sale',
+        wallet: 'Wallet',
+        photocopy: 'Photocopy',
+        data: 'Data',
+        customer: 'Customer',
+        product: 'Product'
+    };
+    
+    const typeClass = typeColors[activity.type] || 'sale';
+    const icon = typeIcons[activity.type] || 'fa-info-circle';
+    const label = typeLabels[activity.type] || activity.type;
+    
+    const amountClass = activity.amount > 0 ? 'positive' : (activity.amount < 0 ? 'negative' : '');
+    const formattedAmount = activity.amount ? 'PKR ' + formatNumber(activity.amount) : '';
+    
+    const customerName = activity.customer || 'Walk-in';
+    const productName = activity.product || '';
+    const description = activity.description || '';
+    const time = activity.time || '';
+    const invoice = activity.invoice || '';
+    const phone = activity.phone || '';
+    const category = activity.category || '';
+    const details = activity.details || {};
+    
+    // Build detail rows
+    let detailRows = '';
+    if (invoice) detailRows += `<div><strong>Invoice:</strong> ${invoice}</div>`;
+    if (phone) detailRows += `<div><strong>Phone:</strong> ${phone}</div>`;
+    if (category) detailRows += `<div><strong>Category:</strong> ${category}</div>`;
+    if (productName) detailRows += `<div><strong>Product:</strong> ${productName}</div>`;
+    if (description && description !== activity.customer) detailRows += `<div><strong>Details:</strong> ${description}</div>`;
+    
+    return `
+        <div class="activity-item ${typeClass} ${index % 2 === 0 ? '' : ''}" onclick="toggleExpand(this)">
+            <div class="activity-header">
+                <div class="activity-type">
+                    <i class="fas ${icon}"></i>
+                    <span class="badge-type" style="background: var(--bg-card-hover); color: var(--text-secondary);">
+                        ${label}
+                    </span>
+                    <strong>${customerName}</strong>
+                </div>
+                <div class="activity-time">
+                    <i class="far fa-clock me-1"></i>${time}
+                </div>
+            </div>
+            <div class="activity-details">
+                ${productName ? `<strong>${productName}</strong> ` : ''}
+                ${description ? description : ''}
+                ${formattedAmount ? `<span class="activity-amount ${amountClass}">${formattedAmount}</span>` : ''}
+            </div>
+            ${detailRows ? `
+                <div class="expand-details">
+                    ${detailRows}
+                </div>
+                <button class="expand-btn" onclick="event.stopPropagation(); toggleExpand(this.closest('.activity-item'))">
+                    <i class="fas fa-chevron-down"></i> 
+                    {% if current_lang == 'ur' %}مزید دیکھیں{% else %}View Details{% endif %}
+                </button>
+            ` : ''}
+        </div>
+    `;
+}
+
+// ============ TOGGLE EXPAND ============
+function toggleExpand(element) {
+    element.classList.toggle('expanded');
+    const btn = element.querySelector('.expand-btn');
+    if (btn) {
+        btn.innerHTML = element.classList.contains('expanded') 
+            ? '<i class="fas fa-chevron-up"></i> {% if current_lang == 'ur' %}چھپائیں{% else %}Hide{% endif %}' 
+            : '<i class="fas fa-chevron-down"></i> {% if current_lang == 'ur' %}مزید دیکھیں{% else %}View Details{% endif %}';
+    }
+}
+
+// ============ LOAD MORE ============
+function loadMore() {
+    currentPage++;
+    renderActivities();
+}
+
+// ============ CHIP FILTERS ============
+function setChipFilter(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.filter === filter);
+    });
+    // Reset dropdown to 'all' when chip is used
+    document.getElementById('typeFilter').value = 'all';
+    filterActivities();
+}
+
+function updateChipCounts() {
+    const counts = {
+        all: allActivities.length,
+        sale: 0,
+        wallet: 0,
+        photocopy: 0,
+        data: 0,
+        customer: 0,
+        product: 0
+    };
+    
+    allActivities.forEach(a => {
+        if (counts[a.type] !== undefined) counts[a.type]++;
+    });
+    
+    document.getElementById('countAll').textContent = counts.all;
+    document.getElementById('countSale').textContent = counts.sale;
+    document.getElementById('countWallet').textContent = counts.wallet;
+    document.getElementById('countPhotocopy').textContent = counts.photocopy;
+    document.getElementById('countData').textContent = counts.data;
+    document.getElementById('countCustomer').textContent = counts.customer;
+}
+
+// ============ RESET FILTERS ============
+function resetFilters() {
+    document.getElementById('globalSearch').value = '';
+    document.getElementById('typeFilter').value = 'all';
+    document.getElementById('monthFilter').value = '{{ now.strftime("%Y-%m") }}';
+    currentFilter = 'all';
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.filter === 'all');
+    });
+    currentMonth = '{{ now.strftime("%Y-%m") }}';
+    loadActivities();
+}
+
+// ============ EXPORT ACTIVITY ============
+function exportActivity() {
+    const month = document.getElementById('monthFilter').value || currentMonth;
+    window.location.href = `/api/activities/export?month=${month}`;
+}
+
+// ============ UTILITY FUNCTIONS ============
+function formatNumber(num) {
+    return num.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded', function() {
+    loadActivities();
+});
+
+// Load on month change
+document.getElementById('monthFilter').addEventListener('change', function() {
+    loadActivities();
+});
+
+console.log('📊 Activity Log loaded successfully!');
+</script>
+{% endblock %}
