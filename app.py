@@ -1981,12 +1981,15 @@ def reports():
 from sqlalchemy import extract, func, and_, or_
 from datetime import datetime, timedelta
 
+# ============ REPORTS SALES ROUTE - COMPLETE ============
+
 @app.route('/reports/sales')
 @login_required
 def reports_sales():
+    """Complete Sales Report with all revenue sources"""
     try:
-        # PostgreSQL compatible monthly grouping
-        monthly_data = db.session.query(
+        # ============ 1. PRODUCT SALES (Monthly) ============
+        product_sales_data = db.session.query(
             func.to_char(Sale.created_at, 'YYYY-MM').label('month'),
             func.sum(Sale.total_amount).label('total_sales'),
             func.count(Sale.id).label('total_orders')
@@ -1996,67 +1999,144 @@ def reports_sales():
             func.to_char(Sale.created_at, 'YYYY-MM')
         ).all()
         
-        # Convert to list of dicts
+        # ============ 2. PHOTOCOPY REVENUE (Monthly) ============
+        photocopy_data = db.session.query(
+            func.to_char(PhotocopyJob.created_at, 'YYYY-MM').label('month'),
+            func.sum(PhotocopyJob.total_amount).label('total_photocopy'),
+            func.count(PhotocopyJob.id).label('total_jobs')
+        ).group_by(
+            func.to_char(PhotocopyJob.created_at, 'YYYY-MM')
+        ).order_by(
+            func.to_char(PhotocopyJob.created_at, 'YYYY-MM')
+        ).all()
+        
+        # ============ 3. WALLET REVENUE (Monthly - Receive only) ============
+        wallet_data = db.session.query(
+            func.to_char(MobileWalletTransaction.created_at, 'YYYY-MM').label('month'),
+            func.sum(MobileWalletTransaction.amount).label('total_wallet'),
+            func.count(MobileWalletTransaction.id).label('total_wallet_txns')
+        ).filter(
+            MobileWalletTransaction.transaction_type == 'receive'
+        ).group_by(
+            func.to_char(MobileWalletTransaction.created_at, 'YYYY-MM')
+        ).order_by(
+            func.to_char(MobileWalletTransaction.created_at, 'YYYY-MM')
+        ).all()
+        
+        # ============ 4. WALLET PROFIT (Monthly) ============
+        wallet_profit_data = db.session.query(
+            func.to_char(MobileWalletTransaction.created_at, 'YYYY-MM').label('month'),
+            func.sum(MobileWalletTransaction.amount).label('total_amount'),
+            MobileWalletTransaction.transaction_type
+        ).group_by(
+            func.to_char(MobileWalletTransaction.created_at, 'YYYY-MM'),
+            MobileWalletTransaction.transaction_type
+        ).order_by(
+            func.to_char(MobileWalletTransaction.created_at, 'YYYY-MM')
+        ).all()
+        
+        # ============ 5. COMBINE ALL DATA ============
+        # Get all unique months
+        all_months = set()
+        for data in product_sales_data:
+            all_months.add(data.month)
+        for data in photocopy_data:
+            all_months.add(data.month)
+        for data in wallet_data:
+            all_months.add(data.month)
+        
+        # Create combined data
         sales_data = []
-        total_sales = 0
+        total_product_sales = 0
+        total_photocopy_revenue = 0
+        total_wallet_revenue = 0
         total_orders = 0
+        total_jobs = 0
         
-        for data in monthly_data:
+        for month in sorted(all_months):
+            # Product sales for this month
+            product = next((d for d in product_sales_data if d.month == month), None)
+            product_amount = float(product.total_sales) if product else 0
+            product_orders = product.total_orders if product else 0
+            
+            # Photocopy for this month
+            copy = next((d for d in photocopy_data if d.month == month), None)
+            copy_amount = float(copy.total_photocopy) if copy else 0
+            copy_jobs = copy.total_jobs if copy else 0
+            
+            # Wallet for this month
+            wallet = next((d for d in wallet_data if d.month == month), None)
+            wallet_amount = float(wallet.total_wallet) if wallet else 0
+            wallet_txns = wallet.total_wallet_txns if wallet else 0
+            
+            # Wallet profit for this month
+            month_wallet_profit = 0
+            for wd in wallet_profit_data:
+                if wd.month == month:
+                    if wd.transaction_type == 'send':
+                        month_wallet_profit += float(wd.total_amount) * 0.01
+                    else:
+                        month_wallet_profit += float(wd.total_amount) * 0.02
+            
+            # Monthly totals
+            monthly_total = product_amount + copy_amount + wallet_amount
+            
             sales_data.append({
-                'month': data.month,
-                'total_sales': float(data.total_sales or 0),
-                'total_orders': data.total_orders or 0
+                'month': month,
+                'product_sales': product_amount,
+                'photocopy_revenue': copy_amount,
+                'wallet_revenue': wallet_amount,
+                'wallet_profit': month_wallet_profit,
+                'total_revenue': monthly_total,
+                'orders': product_orders,
+                'jobs': copy_jobs,
+                'wallet_txns': wallet_txns
             })
-            total_sales += float(data.total_sales or 0)
-            total_orders += data.total_orders or 0
+            
+            # Grand totals
+            total_product_sales += product_amount
+            total_photocopy_revenue += copy_amount
+            total_wallet_revenue += wallet_amount
+            total_orders += product_orders
+            total_jobs += copy_jobs
         
-        avg_order_value = total_sales / total_orders if total_orders > 0 else 0
+        # ============ 6. GRAND TOTALS ============
+        total_revenue_all = total_product_sales + total_photocopy_revenue + total_wallet_revenue
         
+        # Wallet profit (overall)
+        total_wallet_send = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+            MobileWalletTransaction.transaction_type == 'send'
+        ).scalar() or 0
+        
+        total_wallet_receive = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+            MobileWalletTransaction.transaction_type == 'receive'
+        ).scalar() or 0
+        
+        total_wallet_profit = (total_wallet_send * 0.01) + (total_wallet_receive * 0.02)
+        
+        # ============ 7. RENDER ============
         return render_template('reports_sales.html', 
                              sales_data=sales_data,
-                             total_sales=total_sales,
+                             total_product_sales=total_product_sales,
+                             total_photocopy_revenue=total_photocopy_revenue,
+                             total_wallet_revenue=total_wallet_revenue,
+                             total_revenue_all=total_revenue_all,
                              total_orders=total_orders,
-                             avg_order_value=avg_order_value)
+                             total_jobs=total_jobs,
+                             total_wallet_profit=total_wallet_profit)
+                             
     except Exception as e:
         print(f"Sales Report Error: {str(e)}")
-        # Fallback: Get total sales without grouping
-        try:
-            total_sales = db.session.query(func.sum(Sale.total_amount)).scalar() or 0
-            total_orders = db.session.query(func.count(Sale.id)).scalar() or 0
-            avg_order_value = total_sales / total_orders if total_orders > 0 else 0
-            
-            # Try to get monthly data with alternative method
-            monthly_data = []
-            # Get last 6 months
-            for i in range(6, 0, -1):
-                month_date = datetime.now() - timedelta(days=30*i)
-                month_start = month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                month_end = (month_start + timedelta(days=32)).replace(day=1)
-                
-                month_sales = Sale.query.filter(
-                    Sale.created_at >= month_start,
-                    Sale.created_at < month_end
-                ).all()
-                
-                monthly_data.append({
-                    'month': month_start.strftime('%Y-%m'),
-                    'total_sales': sum(s.total_amount for s in month_sales),
-                    'total_orders': len(month_sales)
-                })
-            
-            return render_template('reports_sales.html', 
-                                 sales_data=monthly_data,
-                                 total_sales=total_sales,
-                                 total_orders=total_orders,
-                                 avg_order_value=avg_order_value)
-        except Exception as e2:
-            print(f"Sales Report Fallback Error: {str(e2)}")
-            return render_template('reports_sales.html', 
-                                 sales_data=[], 
-                                 total_sales=0, 
-                                 total_orders=0, 
-                                 avg_order_value=0)
-
+        flash(f'Error loading sales report: {str(e)}', 'danger')
+        return render_template('reports_sales.html', 
+                             sales_data=[], 
+                             total_product_sales=0,
+                             total_photocopy_revenue=0,
+                             total_wallet_revenue=0,
+                             total_revenue_all=0,
+                             total_orders=0,
+                             total_jobs=0,
+                             total_wallet_profit=0)
 @app.route('/reports/profit')
 @login_required
 def reports_profit():
