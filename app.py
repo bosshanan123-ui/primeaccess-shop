@@ -161,6 +161,7 @@ class Supplier(db.Model):
     
     purchases = db.relationship('Purchase', backref='supplier', lazy=True)
     created_user = db.relationship('User', backref='created_suppliers')
+
 # ==================== NOTES MODEL ====================
 
 class Note(db.Model):
@@ -172,6 +173,7 @@ class Note(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     user = db.relationship('User', backref='notes')
+
 class Customer(db.Model):
     __tablename__ = 'customers'
     id = db.Column(db.Integer, primary_key=True)
@@ -1093,6 +1095,7 @@ def bulk_delete_products():
     db.session.commit()
     flash('Products deleted successfully!', 'success')
     return jsonify({'status': 'success'})
+
 # ============ NOTES ROUTES - DATABASE VERSION ============
 
 @app.route('/notes')
@@ -1163,7 +1166,8 @@ def clear_note():
         'status': 'success',
         'message': 'Note cleared successfully'
     })
-    # ============ PAPER STOCK ROUTES ============
+
+# ============ PAPER STOCK ROUTES ============
 
 @app.route('/paper_stock')
 @login_required
@@ -1172,10 +1176,16 @@ def paper_stock():
     papers = PaperStock.query.all()
     return render_template('paper_stock.html', papers=papers)
 
+@app.route('/paper_stock/add')
+@login_required
+def add_paper_stock_page():
+    """Add paper stock page"""
+    return render_template('add_paper_stock.html')
+
 @app.route('/paper_stock/add', methods=['POST'])
 @login_required
 def add_paper_stock():
-    """Add paper stock"""
+    """Add paper stock - POST"""
     paper_type = request.form.get('paper_type')
     paper_size = request.form.get('paper_size')
     total_sheets = int(request.form.get('total_sheets'))
@@ -1196,10 +1206,17 @@ def add_paper_stock():
     flash('✅ Paper stock added successfully!', 'success')
     return redirect(url_for('paper_stock'))
 
+@app.route('/paper_stock/edit/<int:paper_id>')
+@login_required
+def edit_paper_stock_page(paper_id):
+    """Edit paper stock page"""
+    paper = PaperStock.query.get_or_404(paper_id)
+    return render_template('edit_paper_stock.html', paper=paper)
+
 @app.route('/paper_stock/update/<int:paper_id>', methods=['POST'])
 @login_required
 def update_paper_stock(paper_id):
-    """Update paper stock"""
+    """Update paper stock - POST"""
     paper = PaperStock.query.get_or_404(paper_id)
     paper.total_sheets = int(request.form.get('total_sheets'))
     paper.min_level = int(request.form.get('min_level'))
@@ -1208,6 +1225,23 @@ def update_paper_stock(paper_id):
     
     flash('✅ Paper stock updated successfully!', 'success')
     return redirect(url_for('paper_stock'))
+
+@app.route('/api/paper_stock/<int:paper_id>')
+@login_required
+def api_paper_stock(paper_id):
+    """Get paper stock data for editing"""
+    paper = PaperStock.query.get_or_404(paper_id)
+    return jsonify({
+        'status': 'success',
+        'id': paper.id,
+        'paper_type': paper.paper_type,
+        'paper_size': paper.paper_size,
+        'total_sheets': paper.total_sheets,
+        'used_sheets': paper.used_sheets,
+        'min_level': paper.min_level,
+        'max_level': paper.max_level
+    })
+
 # ---------- Sale Routes ----------
 
 @app.route('/sales')
@@ -1818,23 +1852,7 @@ def customer_due_payment(customer_id):
     return redirect(url_for('view_customer', customer_id=customer_id))
 
 # ---------- Supplier Routes ----------
-# ============ PAPER STOCK API ROUTE ============
 
-@app.route('/api/paper_stock/<int:paper_id>')
-@login_required
-def api_paper_stock(paper_id):
-    """Get paper stock data for editing"""
-    paper = PaperStock.query.get_or_404(paper_id)
-    return jsonify({
-        'status': 'success',
-        'id': paper.id,
-        'paper_type': paper.paper_type,
-        'paper_size': paper.paper_size,
-        'total_sheets': paper.total_sheets,
-        'used_sheets': paper.used_sheets,
-        'min_level': paper.min_level,
-        'max_level': paper.max_level
-    })
 @app.route('/suppliers')
 @login_required
 def suppliers():
@@ -2198,6 +2216,7 @@ def reports_sales():
                              total_orders=0,
                              total_jobs=0,
                              total_wallet_profit=0)
+
 @app.route('/reports/profit')
 @login_required
 def reports_profit():
@@ -2728,8 +2747,6 @@ def set_language(lang):
     if referer:
         return redirect(referer)
     return redirect(url_for('settings'))
-
-# ---------- Mobile Wallet Routes ----------
 
 # ---------- Mobile Wallet Routes ----------
 
