@@ -24,14 +24,24 @@
             </nav>
         </div>
         <div class="col-auto">
-            <button class="btn btn-success" onclick="window.location.href='{{ url_for('new_photocopy') }}'">
-                <i class="fas fa-plus me-2"></i>
-                {% if current_lang == 'ur' %}نیا جاب{% else %}New Job{% endif %}
-            </button>
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="window.location.href='{{ url_for('new_photocopy') }}'">
+                    <i class="fas fa-plus me-2"></i>
+                    {% if current_lang == 'ur' %}نیا جاب{% else %}New Job{% endif %}
+                </button>
+                <!-- ============ 🆕 PAPER STOCK BUTTON ============ -->
+                <button class="btn btn-info" onclick="window.location.href='{{ url_for('paper_stock') }}'">
+                    <i class="fas fa-file-alt me-2"></i>
+                    {% if current_lang == 'ur' %}کاغذ کا اسٹاک{% else %}Paper Stock{% endif %}
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- ============ REST OF THE PAGE (SAME AS BEFORE) ============ -->
+
+<!-- Stats -->
 <div class="row g-4 mb-4">
     <div class="col-md-3">
         <div class="stat-card" style="border-left-color: #00b894;">
@@ -67,36 +77,21 @@
     </div>
 </div>
 
+<!-- Photocopy Jobs Table -->
 <div class="card">
     <div class="card-body">
         <div class="table-container">
             <table class="table table-hover" id="photocopyTable">
                 <thead>
                     <tr>
-                        <th>
-                            {% if current_lang == 'ur' %}جاب #{% else %}Job #{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}صفحات{% else %}Pages{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}رقم{% else %}Amount{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
-                        </th>
+                        <th>{% if current_lang == 'ur' %}جاب #{% else %}Job #{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}صفحات{% else %}Pages{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}رقم{% else %}Amount{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -108,9 +103,7 @@
                                 {% if job.customer %}
                                     {{ job.customer.name }}
                                 {% else %}
-                                    <span class="text-muted">
-                                        {% if current_lang == 'ur' %}واک ان{% else %}Walk-in{% endif %}
-                                    </span>
+                                    <span class="text-muted">{% if current_lang == 'ur' %}واک ان{% else %}Walk-in{% endif %}</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -122,14 +115,10 @@
                                     {% endif %}
                                 </span>
                                 {% if job.double_sided %}
-                                    <span class="badge bg-info">
-                                        {% if current_lang == 'ur' %}دو طرفہ{% else %}Duplex{% endif %}
-                                    </span>
+                                    <span class="badge bg-info">{% if current_lang == 'ur' %}دو طرفہ{% else %}Duplex{% endif %}</span>
                                 {% endif %}
                             </td>
-                            <td>{{ job.total_pages }} ({{ job.copies }} 
-                                {% if current_lang == 'ur' %}کاپیاں{% else %}copies{% endif %})
-                            </td>
+                            <td>{{ job.total_pages }} ({{ job.copies }} {% if current_lang == 'ur' %}کاپیاں{% else %}copies{% endif %})</td>
                             <td class="fw-bold">{{ "%.0f"|format(job.total_amount) }}</td>
                             <td>
                                 <span class="badge {% if job.status == 'completed' %}bg-success{% elif job.status == 'pending' %}bg-warning{% else %}bg-secondary{% endif %}">
