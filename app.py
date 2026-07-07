@@ -3103,6 +3103,8 @@ def api_notifications_clear():
     return jsonify({'success': True, 'count': len(notifications)})
 # ============ ACTIVITY LOG API - FIXED ============
 
+# ============ ACTIVITY LOG API - FIXED ============
+
 @app.route('/api/activities')
 @login_required
 def api_activities():
@@ -3123,15 +3125,16 @@ def api_activities():
         try:
             sales = Sale.query.filter(Sale.created_at.between(month_start, month_end)).all()
             for sale in sales:
+                item_count = len(sale.items) if sale.items else 0
                 activities.append({
                     'type': 'sale',
                     'customer': sale.customer.name if sale.customer else 'Walk-in',
                     'invoice': sale.invoice_number,
-                    'amount': sale.total_amount,
-                    'description': f'Sale of {len(sale.items)} items',
+                    'amount': float(sale.total_amount or 0),
+                    'description': f'Sale of {item_count} items',
                     'time': sale.created_at.strftime('%d/%m/%Y %I:%M %p'),
                     'details': {
-                        'items': len(sale.items),
+                        'items': item_count,
                         'payment': sale.payment_method,
                         'status': sale.payment_status
                     }
@@ -3145,17 +3148,17 @@ def api_activities():
                 MobileWalletTransaction.created_at.between(month_start, month_end)
             ).all()
             for w in wallet:
-                profit = w.amount * 0.01 if w.transaction_type == 'send' else w.amount * 0.02
+                profit = float(w.amount or 0) * 0.01 if w.transaction_type == 'send' else float(w.amount or 0) * 0.02
                 activities.append({
                     'type': 'wallet',
                     'customer': w.customer.name if w.customer else w.customer_name or 'Unknown',
-                    'phone': w.phone_number,
+                    'phone': w.phone_number or '',
                     'amount': profit,
                     'description': f'{w.transaction_type.title()} - {w.wallet_type.title()}',
                     'category': w.wallet_type,
                     'time': w.created_at.strftime('%d/%m/%Y %I:%M %p'),
                     'details': {
-                        'transaction_id': w.transaction_id,
+                        'transaction_id': w.transaction_id or '',
                         'type': w.transaction_type,
                         'wallet': w.wallet_type
                     }
@@ -3172,15 +3175,15 @@ def api_activities():
                 activities.append({
                     'type': 'photocopy',
                     'customer': p.customer.name if p.customer else 'Walk-in',
-                    'amount': p.total_amount,
-                    'description': f'{p.total_pages} pages, {p.copies} copies',
-                    'category': p.page_type,
+                    'amount': float(p.total_amount or 0),
+                    'description': f'{p.total_pages or 0} pages, {p.copies or 1} copies',
+                    'category': p.page_type or '',
                     'time': p.created_at.strftime('%d/%m/%Y %I:%M %p'),
                     'details': {
-                        'job_number': p.job_number,
-                        'pages': p.total_pages,
-                        'copies': p.copies,
-                        'paper_used': p.paper_used
+                        'job_number': p.job_number or '',
+                        'pages': p.total_pages or 0,
+                        'copies': p.copies or 1,
+                        'paper_used': p.paper_used or 0
                     }
                 })
         except Exception as e:
@@ -3198,13 +3201,13 @@ def api_activities():
                     activities.append({
                         'type': 'data',
                         'customer': d.customer_name or 'Unknown',
-                        'phone': d.phone,
-                        'amount': d.amount,
-                        'description': d.description or d.category,
-                        'category': d.category,
+                        'phone': d.phone or '',
+                        'amount': float(d.amount or 0),
+                        'description': d.description or d.category or '',
+                        'category': d.category or '',
                         'time': d.created_at.strftime('%d/%m/%Y %I:%M %p'),
                         'details': {
-                            'category': d.category
+                            'category': d.category or ''
                         }
                     })
         except Exception as e:
@@ -3218,13 +3221,13 @@ def api_activities():
             for c in customers:
                 activities.append({
                     'type': 'customer',
-                    'customer': c.name,
-                    'phone': c.phone,
-                    'description': f'New customer registered',
+                    'customer': c.name or '',
+                    'phone': c.phone or '',
+                    'description': 'New customer registered',
                     'time': c.created_at.strftime('%d/%m/%Y %I:%M %p'),
                     'details': {
-                        'phone': c.phone,
-                        'type': c.customer_type
+                        'phone': c.phone or '',
+                        'type': c.customer_type or 'regular'
                     }
                 })
         except Exception as e:
@@ -3238,31 +3241,31 @@ def api_activities():
             for p in products:
                 activities.append({
                     'type': 'product',
-                    'product': p.name,
-                    'category': p.category,
-                    'description': f'New product added - {p.sku}',
-                    'amount': p.selling_price,
+                    'product': p.name or '',
+                    'category': p.category or '',
+                    'description': f'New product added - {p.sku or ""}',
+                    'amount': float(p.selling_price or 0),
                     'time': p.created_at.strftime('%d/%m/%Y %I:%M %p'),
                     'details': {
-                        'sku': p.sku,
-                        'category': p.category,
-                        'stock': p.stock_quantity
+                        'sku': p.sku or '',
+                        'category': p.category or '',
+                        'stock': p.stock_quantity or 0
                     }
                 })
         except Exception as e:
             print(f"Products error: {str(e)}")
         
         # Sort by time (newest first)
-        activities.sort(key=lambda x: x['time'], reverse=True)
+        activities.sort(key=lambda x: x.get('time', ''), reverse=True)
         
         # ===== STATS =====
         stats = {
-            'total_revenue': sum(a.get('amount', 0) for a in activities if a['type'] in ['sale', 'photocopy', 'wallet', 'data']),
-            'total_sales': len([a for a in activities if a['type'] == 'sale']),
-            'total_photocopy': len([a for a in activities if a['type'] == 'photocopy']),
-            'total_wallet': sum(a.get('amount', 0) for a in activities if a['type'] == 'wallet'),
-            'total_data': sum(a.get('amount', 0) for a in activities if a['type'] == 'data'),
-            'total_customers': len([a for a in activities if a['type'] == 'customer'])
+            'total_revenue': sum(a.get('amount', 0) for a in activities if a.get('type') in ['sale', 'photocopy', 'wallet', 'data']),
+            'total_sales': len([a for a in activities if a.get('type') == 'sale']),
+            'total_photocopy': len([a for a in activities if a.get('type') == 'photocopy']),
+            'total_wallet': sum(a.get('amount', 0) for a in activities if a.get('type') == 'wallet'),
+            'total_data': sum(a.get('amount', 0) for a in activities if a.get('type') == 'data'),
+            'total_customers': len([a for a in activities if a.get('type') == 'customer'])
         }
         
         return jsonify({
@@ -3274,11 +3277,42 @@ def api_activities():
         
     except Exception as e:
         print(f"Activity API Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'status': 'error',
             'message': str(e),
             'activities': [],
             'stats': {}
+        }), 500
+        # ============ DEBUG ROUTE ============
+
+@app.route('/api/debug')
+@login_required
+def api_debug():
+    """Debug endpoint - check database tables"""
+    try:
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
+        
+        # Check each table for data
+        table_data = {}
+        for table in tables:
+            try:
+                count = db.session.execute(f'SELECT COUNT(*) FROM {table}').scalar()
+                table_data[table] = count
+            except:
+                table_data[table] = 'Error'
+        
+        return jsonify({
+            'status': 'success',
+            'tables': tables,
+            'table_counts': table_data
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
         }), 500
 # ============================================
 # NOTIFICATION HELPER FUNCTIONS
