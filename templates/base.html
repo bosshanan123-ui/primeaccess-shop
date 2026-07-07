@@ -1410,6 +1410,13 @@
         </div>
 
         <div class="menu-label">Sales &amp; Inventory</div>
+        <!-- ===== ACTIVITY LOG - SIDEBAR LINK ===== -->
+<div class="nav-item {% if request.endpoint == 'activity_log' %}active{% endif %}">
+    <a class="nav-link" href="{{ url_for('activity_log') }}">
+        <i class="fas fa-search"></i>
+        <span>Activity Log</span>
+    </a>
+</div>
         <div class="nav-item {% if request.endpoint in ['products', 'add_product', 'update_product'] %}active{% endif %}">
             <a class="nav-link" href="{{ url_for('products') }}">
                 <i class="fas fa-box"></i>
