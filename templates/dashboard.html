@@ -94,64 +94,7 @@
     </div>
 </div>
 
-<!-- Second Row - Net Profit & Expenses -->
-<div class="row g-4 mb-4">
-    <!-- ===== 5. NET PROFIT ===== -->
-    <div class="col-xl-3 col-lg-6">
-        <div class="stat-card orange">
-            <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
-            <div class="stat-number" data-count="{{ net_profit_today }}" data-currency="true">PKR 0</div>
-            <div class="stat-label">
-                {% if current_lang == 'ur' %}آج کا خالص منافع{% else %}Net Profit Today{% endif %}
-            </div>
-            <small>
-                {% if current_lang == 'ur' %}ریونیو - اخراجات{% else %}Revenue - Expenses{% endif %}
-            </small>
-        </div>
-    </div>
-    
-    <!-- ===== 6. LOW STOCK ALERTS ===== -->
-    <div class="col-xl-3 col-lg-6">
-        <div class="stat-card red">
-            <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
-            <div class="stat-number" data-count="{{ low_stock_count + out_of_stock_count }}">0</div>
-            <div class="stat-label">
-                {% if current_lang == 'ur' %}کم اسٹاک الرٹس{% else %}Low Stock Alerts{% endif %}
-            </div>
-            <small>{{ out_of_stock_count }} 
-                {% if current_lang == 'ur' %}آؤٹ آف اسٹاک{% else %}out of stock{% endif %}
-            </small>
-        </div>
-    </div>
-    
-    <!-- ===== 7. TOTAL WALLET BALANCE ===== -->
-    <div class="col-xl-3 col-lg-6">
-        <div class="stat-card" style="border-left-color: #8B5CF6;">
-            <div class="stat-icon" style="background: #8B5CF6;"><i class="fas fa-wallet"></i></div>
-            <div class="stat-number" data-count="{{ total_wallet_balance }}" data-currency="true">PKR 0</div>
-            <div class="stat-label">
-                {% if current_lang == 'ur' %}کل والیٹ بیلنس{% else %}Total Wallet Balance{% endif %}
-            </div>
-            <small>
-                {% if current_lang == 'ur' %}جازکیش + ایزی پیسہ{% else %}JazzCash + EasyPaisa{% endif %}
-            </small>
-        </div>
-    </div>
-    
-    <!-- ===== 8. DUE AMOUNT ===== -->
-    <div class="col-xl-3 col-lg-6">
-        <div class="stat-card" style="border-left-color: #E11D48;">
-            <div class="stat-icon" style="background: #E11D48;"><i class="fas fa-clock"></i></div>
-            <div class="stat-number" data-count="{{ due_amount_today }}" data-currency="true">PKR 0</div>
-            <div class="stat-label">
-                {% if current_lang == 'ur' %}بقایا رقم{% else %}Due Amount{% endif %}
-            </div>
-            <small>
-                {% if current_lang == 'ur' %}آج کی واجبات{% else %}Today's dues{% endif %}
-            </small>
-        </div>
-    </div>
-</div>
+
 
 <!-- Charts Row - Sales & Forecast Side by Side -->
 <div class="row g-4">
