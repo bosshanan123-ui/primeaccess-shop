@@ -2590,11 +2590,15 @@ def set_language(lang):
 
 # ---------- Mobile Wallet Routes ----------
 
+# ---------- Mobile Wallet Routes ----------
+
 @app.route('/mobile_wallet')
 @login_required
 def mobile_wallet():
+    """Mobile Wallet Management - With Profit Calculation"""
     transactions = MobileWalletTransaction.query.order_by(MobileWalletTransaction.created_at.desc()).all()
     
+    # ============ JAZZCASH ============
     total_received_jazz = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
         MobileWalletTransaction.wallet_type == 'jazzcash',
         MobileWalletTransaction.transaction_type == 'receive'
@@ -2605,6 +2609,9 @@ def mobile_wallet():
         MobileWalletTransaction.transaction_type == 'send'
     ).scalar() or 0
     
+    balance_jazz = total_received_jazz - total_sent_jazz
+    
+    # ============ EASYPAISA ============
     total_received_easy = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
         MobileWalletTransaction.wallet_type == 'easypaisa',
         MobileWalletTransaction.transaction_type == 'receive'
@@ -2615,30 +2622,93 @@ def mobile_wallet():
         MobileWalletTransaction.transaction_type == 'send'
     ).scalar() or 0
     
-    balance_jazz = total_received_jazz - total_sent_jazz
     balance_easy = total_received_easy - total_sent_easy
     
+    # ============ WALLET PROFIT CALCULATION ============
+    # Rule: Send = 1% profit, Receive = 2% profit
+    
+    # Total send transactions (both wallets)
+    total_wallet_send = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.transaction_type == 'send'
+    ).scalar() or 0
+    
+    # Total receive transactions (both wallets)
+    total_wallet_receive = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.transaction_type == 'receive'
+    ).scalar() or 0
+    
+    # Calculate profit
+    # Send: 1% profit (1000 → 10)
+    # Receive: 2% profit (1000 → 20)
+    wallet_profit = (total_wallet_send * 0.01) + (total_wallet_receive * 0.02)
+    
+    # Today's wallet profit
+    today = datetime.now().date()
+    today_start = datetime.combine(today, datetime.min.time())
+    today_end = datetime.combine(today, datetime.max.time())
+    
+    today_wallet_send = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.created_at.between(today_start, today_end),
+        MobileWalletTransaction.transaction_type == 'send'
+    ).scalar() or 0
+    
+    today_wallet_receive = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.created_at.between(today_start, today_end),
+        MobileWalletTransaction.transaction_type == 'receive'
+    ).scalar() or 0
+    
+    today_wallet_profit = (today_wallet_send * 0.01) + (today_wallet_receive * 0.02)
+    
+    # ============ TODAY'S TRANSACTIONS ============
+    today_transactions = MobileWalletTransaction.query.filter(
+        MobileWalletTransaction.created_at.between(today_start, today_end)
+    ).all()
+    
+    today_total_received = sum(t.amount for t in today_transactions if t.transaction_type == 'receive')
+    today_total_sent = sum(t.amount for t in today_transactions if t.transaction_type == 'send')
+    
+    # ============ CUSTOMERS ============
     customers = Customer.query.filter_by(is_active=True).all()
     
     return render_template('mobile_wallet.html', 
+                         # === TRANSACTIONS ===
                          transactions=transactions,
+                         today_transactions=today_transactions,
+                         
+                         # === JAZZCASH ===
                          total_received_jazz=total_received_jazz,
                          total_sent_jazz=total_sent_jazz,
                          balance_jazz=balance_jazz,
+                         
+                         # === EASYPAISA ===
                          total_received_easy=total_received_easy,
                          total_sent_easy=total_sent_easy,
                          balance_easy=balance_easy,
+                         
+                         # === PROFIT ===
+                         wallet_profit=wallet_profit,
+                         today_wallet_profit=today_wallet_profit,
+                         total_wallet_send=total_wallet_send,
+                         total_wallet_receive=total_wallet_receive,
+                         
+                         # === TODAY ===
+                         today_total_received=today_total_received,
+                         today_total_sent=today_total_sent,
+                         
+                         # === OTHER ===
                          customers=customers)
 
 @app.route('/mobile_wallet/receipt/<int:transaction_id>')
 @login_required
 def mobile_wallet_receipt(transaction_id):
+    """Print receipt for mobile wallet transaction"""
     transaction = MobileWalletTransaction.query.get_or_404(transaction_id)
     return render_template('mobile_wallet_receipt.html', transaction=transaction)
 
 @app.route('/mobile_wallet/add', methods=['POST'])
 @login_required
 def add_mobile_wallet():
+    """Add new mobile wallet transaction"""
     wallet_type = request.form.get('wallet_type')
     transaction_type = request.form.get('transaction_type')
     customer_id = request.form.get('customer_id')
@@ -2662,18 +2732,27 @@ def add_mobile_wallet():
     
     db.session.add(transaction)
     
+    # If receive transaction, deduct from customer due
     if transaction_type == 'receive' and customer_id:
         customer = Customer.query.get(int(customer_id))
         if customer:
             customer.total_due -= amount
     
     db.session.commit()
-    flash(f'{wallet_type.title()} transaction added successfully!', 'success')
+    
+    # Calculate profit for this transaction
+    if transaction_type == 'send':
+        profit = amount * 0.01  # 1%
+    else:
+        profit = amount * 0.02  # 2%
+    
+    flash(f'{wallet_type.title()} transaction added! Profit: PKR {profit:,.0f}', 'success')
     return redirect(url_for('mobile_wallet'))
 
 @app.route('/mobile_wallet/delete/<int:transaction_id>', methods=['POST'])
 @login_required
 def delete_mobile_wallet(transaction_id):
+    """Delete mobile wallet transaction"""
     transaction = MobileWalletTransaction.query.get_or_404(transaction_id)
     db.session.delete(transaction)
     db.session.commit()
