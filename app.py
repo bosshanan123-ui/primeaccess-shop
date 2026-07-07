@@ -1818,7 +1818,23 @@ def customer_due_payment(customer_id):
     return redirect(url_for('view_customer', customer_id=customer_id))
 
 # ---------- Supplier Routes ----------
+# ============ PAPER STOCK API ROUTE ============
 
+@app.route('/api/paper_stock/<int:paper_id>')
+@login_required
+def api_paper_stock(paper_id):
+    """Get paper stock data for editing"""
+    paper = PaperStock.query.get_or_404(paper_id)
+    return jsonify({
+        'status': 'success',
+        'id': paper.id,
+        'paper_type': paper.paper_type,
+        'paper_size': paper.paper_size,
+        'total_sheets': paper.total_sheets,
+        'used_sheets': paper.used_sheets,
+        'min_level': paper.min_level,
+        'max_level': paper.max_level
+    })
 @app.route('/suppliers')
 @login_required
 def suppliers():
