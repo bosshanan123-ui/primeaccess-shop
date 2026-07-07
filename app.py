@@ -801,14 +801,52 @@ def dashboard():
     balance_easy = total_received_easy - total_sent_easy
     total_wallet_balance = balance_jazz + balance_easy
     
+    # ============ 18. WALLET PROFIT CALCULATION ============
+    # Rule: Send = 1% profit, Receive = 2% profit
+    
+    # Total send transactions
+    total_wallet_send = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.transaction_type == 'send'
+    ).scalar() or 0
+    
+    # Total receive transactions
+    total_wallet_receive = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.transaction_type == 'receive'
+    ).scalar() or 0
+    
+    # Calculate profit
+    # Send: 1% profit (1000 → 10)
+    # Receive: 2% profit (1000 → 20)
+    wallet_profit = (total_wallet_send * 0.01) + (total_wallet_receive * 0.02)
+    
+    # Today's wallet profit
+    today_wallet_send = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.created_at.between(today_start, today_end),
+        MobileWalletTransaction.transaction_type == 'send'
+    ).scalar() or 0
+    
+    today_wallet_receive = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
+        MobileWalletTransaction.created_at.between(today_start, today_end),
+        MobileWalletTransaction.transaction_type == 'receive'
+    ).scalar() or 0
+    
+    today_wallet_profit = (today_wallet_send * 0.01) + (today_wallet_receive * 0.02)
+    
+    # ============ CONTEXT ============
     context = {
         # ===== REVENUE =====
         'total_sales_today': total_sales_today,
         'total_sales_count': total_sales_count,
         'total_photocopy_revenue': total_photocopy_revenue,
         'total_wallet_receive_today': total_wallet_receive_today,
-        'total_revenue_today': total_revenue_today,  # ← NEW: All sources combined
+        'total_revenue_today': total_revenue_today,
         'total_prints_today': total_prints_today,
+        
+        # ===== WALLET PROFIT =====
+        'wallet_profit': wallet_profit,
+        'today_wallet_profit': today_wallet_profit,
+        'total_wallet_send': total_wallet_send,
+        'total_wallet_receive': total_wallet_receive,
         
         # ===== EXPENSES & PROFIT =====
         'total_expenses_today': total_expenses_today,
