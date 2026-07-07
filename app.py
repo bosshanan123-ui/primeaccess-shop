@@ -1163,6 +1163,51 @@ def clear_note():
         'status': 'success',
         'message': 'Note cleared successfully'
     })
+    # ============ PAPER STOCK ROUTES ============
+
+@app.route('/paper_stock')
+@login_required
+def paper_stock():
+    """Paper stock management"""
+    papers = PaperStock.query.all()
+    return render_template('paper_stock.html', papers=papers)
+
+@app.route('/paper_stock/add', methods=['POST'])
+@login_required
+def add_paper_stock():
+    """Add paper stock"""
+    paper_type = request.form.get('paper_type')
+    paper_size = request.form.get('paper_size')
+    total_sheets = int(request.form.get('total_sheets'))
+    min_level = int(request.form.get('min_level', 100))
+    max_level = int(request.form.get('max_level', 5000))
+    
+    paper = PaperStock(
+        paper_type=paper_type,
+        paper_size=paper_size,
+        total_sheets=total_sheets,
+        used_sheets=0,
+        min_level=min_level,
+        max_level=max_level
+    )
+    db.session.add(paper)
+    db.session.commit()
+    
+    flash('✅ Paper stock added successfully!', 'success')
+    return redirect(url_for('paper_stock'))
+
+@app.route('/paper_stock/update/<int:paper_id>', methods=['POST'])
+@login_required
+def update_paper_stock(paper_id):
+    """Update paper stock"""
+    paper = PaperStock.query.get_or_404(paper_id)
+    paper.total_sheets = int(request.form.get('total_sheets'))
+    paper.min_level = int(request.form.get('min_level'))
+    paper.max_level = int(request.form.get('max_level'))
+    db.session.commit()
+    
+    flash('✅ Paper stock updated successfully!', 'success')
+    return redirect(url_for('paper_stock'))
 # ---------- Sale Routes ----------
 
 @app.route('/sales')
