@@ -2751,7 +2751,78 @@ def get_theme_preference():
     })
 
 # ---------- Settings Routes ----------
+# app.py mein yeh routes add karein (Data Revenue ke baad)
 
+# ============ BILL PAYMENT ROUTES ============
+
+@app.route('/bill_payment')
+@login_required
+def bill_payment():
+    """Bill Payment page"""
+    bills = BillPayment.query.order_by(BillPayment.created_at.desc()).all()
+    total_bills = len(bills)
+    total_profit = db.session.query(func.sum(BillPayment.profit_amount)).scalar() or 0
+    
+    # Count by type
+    bill_counts = {}
+    for bill_type in ['electricity', 'gas', 'water']:
+        count = BillPayment.query.filter_by(bill_type=bill_type).count()
+        bill_counts[bill_type] = count
+    
+    return render_template('bill_payment.html', 
+                         bills=bills, 
+                         total_bills=total_bills,
+                         total_profit=total_profit,
+                         bill_counts=bill_counts)
+
+@app.route('/bill_payment/add', methods=['POST'])
+@login_required
+def add_bill_payment():
+    """Add new bill payment"""
+    bill_type = request.form.get('bill_type')
+    bill_amount = float(request.form.get('bill_amount'))
+    customer_name = request.form.get('customer_name')
+    phone = request.form.get('phone')
+    reference_number = request.form.get('reference_number')
+    notes = request.form.get('notes')
+    
+    # Calculate profit
+    profit_amount = 20 if bill_amount < 5000 else 50
+    
+    bill = BillPayment(
+        bill_type=bill_type,
+        customer_name=customer_name,
+        phone=phone,
+        bill_amount=bill_amount,
+        profit_amount=profit_amount,
+        reference_number=reference_number,
+        notes=notes,
+        created_by=current_user.id
+    )
+    
+    db.session.add(bill)
+    db.session.commit()
+    
+    create_notification(
+        user_id=None,
+        title="📄 New Bill Payment!",
+        message=f"{bill_type.title()} bill - Profit: PKR {profit_amount:,.0f}",
+        type='payment',
+        link='/bill_payment'
+    )
+    db.session.commit()
+    
+    flash(f'✅ Bill payment added! Profit: PKR {profit_amount:,.0f}', 'success')
+    return redirect(url_for('bill_payment'))
+
+@app.route('/bill_payment/delete/<int:bill_id>', methods=['POST'])
+@login_required
+def delete_bill_payment(bill_id):
+    """Delete bill payment"""
+    bill = BillPayment.query.get_or_404(bill_id)
+    db.session.delete(bill)
+    db.session.commit()
+    return jsonify({'status': 'success'})
 @app.route('/settings')
 @login_required
 def settings():
