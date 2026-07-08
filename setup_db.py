@@ -1,4 +1,4 @@
-# setup_db.py - Complete Fixed Version
+# setup_db.py - Complete Fixed Version with Bill Payments (No Sample Data)
 import sys
 try:
     import sqlite3
@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 def hash_password(password):
     salt = secrets.token_hex(16)
     combined = password + salt
-    hash_obj = hashlib.sha256(combined.encode())
+   hash_obj = hashlib.sha256(combined.encode())
     password_hash = hash_obj.hexdigest()
     return f"{salt}${password_hash}"
 
@@ -238,24 +238,7 @@ def create_database():
         )
     ''')
     print("✅ Purchases table created")
-# setup_db.py mein yeh table add karein (products ke baad)
 
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS bill_payments (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        bill_type TEXT NOT NULL,
-        customer_name TEXT,
-        phone TEXT,
-        bill_amount REAL NOT NULL,
-        profit_amount REAL NOT NULL,
-        reference_number TEXT,
-        notes TEXT,
-        created_by INTEGER,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (created_by) REFERENCES users(id)
-    )
-''')
-print("✅ Bill Payments table created")
     # ============================================
     # PURCHASE ITEMS TABLE
     # ============================================
@@ -478,6 +461,26 @@ print("✅ Bill Payments table created")
     print("✅ Backups table created")
 
     # ============================================
+    # 🆕 BILL PAYMENTS TABLE
+    # ============================================
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS bill_payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            bill_type TEXT NOT NULL,
+            customer_name TEXT,
+            phone TEXT,
+            bill_amount REAL NOT NULL,
+            profit_amount REAL NOT NULL,
+            reference_number TEXT,
+            notes TEXT,
+            created_by INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (created_by) REFERENCES users(id)
+        )
+    ''')
+    print("✅ Bill Payments table created")
+
+    # ============================================
     # SAMPLE DATA
     # ============================================
     print("\n📝 Inserting sample data...")
@@ -554,12 +557,15 @@ print("✅ Bill Payments table created")
         cursor.execute('''INSERT OR IGNORE INTO expenses (category, sub_category, description, amount, payment_method, expense_date) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', e)
     print("✅ Sample expenses added")
 
+    # ⚠️ NO SAMPLE BILL PAYMENTS - User will add manually
+
     conn.commit()
     
     print("\n✅ Database setup completed successfully!")
     conn.close()
     print("\n🎉 Database is ready! Run 'python app.py' to start the server.")
     print("🔑 Login: admin / admin123")
+    print("📄 Bill Payment table created (no sample data)")
 
 if __name__ == '__main__':
     create_database()
