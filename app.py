@@ -1,6 +1,7 @@
 # app.py - Complete Main Application with Theme System
 # ============ IMPORTS ============
-from sqlalchemy import func, and_, or_, inspect
+from sqlalchemy import func, and_, or_, inspect, text
+import io
 import os
 import sys
 if sys.stdout.encoding != 'utf-8':
@@ -12,7 +13,7 @@ except ImportError:
     import pysqlite3 as sqlite3
     sys.modules['sqlite3'] = sqlite3
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file, make_response, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from datetime import datetime, timedelta
@@ -110,6 +111,7 @@ class User(UserMixin, db.Model):
     is_verified = db.Column(db.Boolean, default=False)
     reset_token = db.Column(db.String(100))
     reset_token_expiry = db.Column(db.DateTime)
+    theme_preference = db.Column(db.String(20), default='auto')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -154,6 +156,7 @@ class Product(db.Model):
     sale_items = db.relationship('SaleItem', backref='product', lazy=True)
     purchase_items = db.relationship('PurchaseItem', backref='product', lazy=True)
     stock_movements = db.relationship('StockMovement', backref='product', lazy=True)
+
 # ==================== DATA REVENUE MODEL ====================
 
 class DataRevenue(db.Model):
@@ -168,6 +171,7 @@ class DataRevenue(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     user = db.relationship('User', backref='data_revenues')
+
 class Supplier(db.Model):
     __tablename__ = 'suppliers'
     id = db.Column(db.Integer, primary_key=True)
@@ -444,7 +448,7 @@ class Notification(db.Model):
     __tablename__ = 'notifications'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     title = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text, nullable=False)
     type = db.Column(db.String(50), default='info')
@@ -720,6 +724,7 @@ def reset_password(token):
         return redirect(url_for('login'))
     
     return render_template('reset_password.html')
+
 # ============ DATA REVENUE ROUTES ============
 
 @app.route('/data_revenue')
@@ -777,6 +782,7 @@ def delete_data_revenue(revenue_id):
     db.session.commit()
     flash('✅ Data revenue deleted!', 'success')
     return jsonify({'status': 'success'})
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -931,15 +937,15 @@ def dashboard():
         'total_wallet_receive_today': total_wallet_receive_today,
         'total_wallet_send_today': total_wallet_send_today,
         'today_wallet_profit': today_wallet_profit,
-        'total_data_revenue_today': total_data_revenue_today,  # NEW
-        'total_revenue_today': total_revenue_today,  # UPDATED - includes Data Revenue
+        'total_data_revenue_today': total_data_revenue_today,
+        'total_revenue_today': total_revenue_today,
         'total_prints_today': total_prints_today,
         
         # ===== WALLET PROFIT (Overall) =====
         'wallet_profit': wallet_profit_all,
         
         # ===== DATA REVENUE (Overall) =====
-        'total_data_revenue_all': total_data_revenue_all,  # NEW
+        'total_data_revenue_all': total_data_revenue_all,
         
         # ===== EXPENSES & PROFIT =====
         'total_expenses_today': total_expenses_today,
@@ -2421,8 +2427,6 @@ def reports_inventory():
 
 # ============ 🆕 BACKUP ROUTES - UPDATED WITH SUPABASE STORAGE ============
 
-# ============ 🆕 BACKUP ROUTES - UPDATED WITH SUPABASE STORAGE ============
-
 @app.route('/backup', methods=['GET', 'POST'])
 @login_required
 def backup():
@@ -2674,6 +2678,7 @@ def delete_backup_api(backup_id):
             'status': 'error',
             'message': str(e)
         }), 500
+
 @app.route('/api/color-theme/<theme>')
 @login_required
 def api_color_theme(theme):
@@ -2695,17 +2700,38 @@ def api_theme_mode(mode):
     
     if mode in valid_modes:
         session['theme_mode'] = mode
-        session['theme'] = mode  # Keep backward compatibility
-        current_user.theme_preference = mode
+        session['theme'] = mode
+        
+        # Check if theme_preference column exists before setting
+        try:
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('users')]
+            if 'theme_preference' in columns:
+                current_user.theme_preference = mode
+        except Exception as e:
+            print(f"Theme column check error: {e}")
+            # Column might not exist yet, ignore
+        
         db.session.commit()
         return jsonify({'status': 'success', 'mode': mode})
+    
     return jsonify({'status': 'error', 'message': 'Invalid mode'}), 400
 
 @app.route('/api/theme/preference', methods=['GET'])
 @login_required
 def get_theme_preference():
     """Get user's theme preference"""
-    theme_mode = current_user.theme_preference or 'auto'
+    try:
+        # Check if column exists
+        inspector = inspect(db.engine)
+        columns = [col['name'] for col in inspector.get_columns('users')]
+        if 'theme_preference' in columns:
+            theme_mode = current_user.theme_preference or 'auto'
+        else:
+            theme_mode = 'auto'
+    except:
+        theme_mode = 'auto'
+    
     return jsonify({
         'status': 'success',
         'theme_mode': theme_mode
@@ -3016,194 +3042,7 @@ def delete_mobile_wallet(transaction_id):
     db.session.commit()
     flash('Transaction deleted successfully!', 'success')
     return jsonify({'status': 'success'})
-# ============ ACTIVITY LOG ROUTES ============
 
-@app.route('/activity_log')
-@login_required
-def activity_log():
-    """Activity Log page"""
-    return render_template('activity_log.html')
-
-
-@app.route('/api/activities')
-@login_required
-def api_activities():
-    """Get all activities for a month"""
-    month = request.args.get('month', datetime.now().strftime('%Y-%m'))
-    
-    try:
-        year, month_num = map(int, month.split('-'))
-        month_start = datetime(year, month_num, 1, 0, 0, 0)
-        if month_num == 12:
-            month_end = datetime(year + 1, 1, 1, 0, 0, 0)
-        else:
-            month_end = datetime(year, month_num + 1, 1, 0, 0, 0)
-        
-        activities = []
-        
-        # ===== 1. SALES =====
-        try:
-            sales = Sale.query.filter(Sale.created_at.between(month_start, month_end)).all()
-            for sale in sales:
-                item_count = len(sale.items) if sale.items else 0
-                activities.append({
-                    'type': 'sale',
-                    'customer': sale.customer.name if sale.customer else 'Walk-in',
-                    'invoice': sale.invoice_number,
-                    'amount': float(sale.total_amount or 0),
-                    'description': f'Sale of {item_count} items',
-                    'time': sale.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                    'details': {
-                        'items': item_count,
-                        'payment': sale.payment_method,
-                        'status': sale.payment_status
-                    }
-                })
-        except Exception as e:
-            print(f"Sales error: {str(e)}")
-        
-        # ===== 2. WALLET TRANSACTIONS =====
-        try:
-            wallet = MobileWalletTransaction.query.filter(
-                MobileWalletTransaction.created_at.between(month_start, month_end)
-            ).all()
-            for w in wallet:
-                profit = float(w.amount or 0) * 0.01 if w.transaction_type == 'send' else float(w.amount or 0) * 0.02
-                activities.append({
-                    'type': 'wallet',
-                    'customer': w.customer.name if w.customer else w.customer_name or 'Unknown',
-                    'phone': w.phone_number or '',
-                    'amount': profit,
-                    'description': f'{w.transaction_type.title()} - {w.wallet_type.title()}',
-                    'category': w.wallet_type,
-                    'time': w.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                    'details': {
-                        'transaction_id': w.transaction_id or '',
-                        'type': w.transaction_type,
-                        'wallet': w.wallet_type
-                    }
-                })
-        except Exception as e:
-            print(f"Wallet error: {str(e)}")
-        
-        # ===== 3. PHOTOCOPY JOBS =====
-        try:
-            photocopy = PhotocopyJob.query.filter(
-                PhotocopyJob.created_at.between(month_start, month_end)
-            ).all()
-            for p in photocopy:
-                activities.append({
-                    'type': 'photocopy',
-                    'customer': p.customer.name if p.customer else 'Walk-in',
-                    'amount': float(p.total_amount or 0),
-                    'description': f'{p.total_pages or 0} pages, {p.copies or 1} copies',
-                    'category': p.page_type or '',
-                    'time': p.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                    'details': {
-                        'job_number': p.job_number or '',
-                        'pages': p.total_pages or 0,
-                        'copies': p.copies or 1,
-                        'paper_used': p.paper_used or 0
-                    }
-                })
-        except Exception as e:
-            print(f"Photocopy error: {str(e)}")
-        
-        # ===== 4. DATA REVENUE =====
-        try:
-            inspector = inspect(db.engine)
-            if 'data_revenue' in inspector.get_table_names():
-                data_revenue = DataRevenue.query.filter(
-                    DataRevenue.created_at.between(month_start, month_end)
-                ).all()
-                for d in data_revenue:
-                    activities.append({
-                        'type': 'data',
-                        'customer': d.customer_name or 'Unknown',
-                        'phone': d.phone or '',
-                        'amount': float(d.amount or 0),
-                        'description': d.description or d.category or '',
-                        'category': d.category or '',
-                        'time': d.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                        'details': {
-                            'category': d.category or ''
-                        }
-                    })
-        except Exception as e:
-            print(f"Data Revenue error: {str(e)}")
-        
-        # ===== 5. CUSTOMERS =====
-        try:
-            customers = Customer.query.filter(
-                Customer.created_at.between(month_start, month_end)
-            ).all()
-            for c in customers:
-                activities.append({
-                    'type': 'customer',
-                    'customer': c.name or '',
-                    'phone': c.phone or '',
-                    'description': 'New customer registered',
-                    'time': c.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                    'details': {
-                        'phone': c.phone or '',
-                        'type': c.customer_type or 'regular'
-                    }
-                })
-        except Exception as e:
-            print(f"Customers error: {str(e)}")
-        
-        # ===== 6. PRODUCTS =====
-        try:
-            products = Product.query.filter(
-                Product.created_at.between(month_start, month_end)
-            ).all()
-            for p in products:
-                activities.append({
-                    'type': 'product',
-                    'product': p.name or '',
-                    'category': p.category or '',
-                    'description': f'New product added - {p.sku or ""}',
-                    'amount': float(p.selling_price or 0),
-                    'time': p.created_at.strftime('%d/%m/%Y %I:%M %p'),
-                    'details': {
-                        'sku': p.sku or '',
-                        'category': p.category or '',
-                        'stock': p.stock_quantity or 0
-                    }
-                })
-        except Exception as e:
-            print(f"Products error: {str(e)}")
-        
-        # Sort by time (newest first)
-        activities.sort(key=lambda x: x.get('time', ''), reverse=True)
-        
-        # ===== STATS =====
-        stats = {
-            'total_revenue': sum(a.get('amount', 0) for a in activities if a.get('type') in ['sale', 'photocopy', 'wallet', 'data']),
-            'total_sales': len([a for a in activities if a.get('type') == 'sale']),
-            'total_photocopy': len([a for a in activities if a.get('type') == 'photocopy']),
-            'total_wallet': sum(a.get('amount', 0) for a in activities if a.get('type') == 'wallet'),
-            'total_data': sum(a.get('amount', 0) for a in activities if a.get('type') == 'data'),
-            'total_customers': len([a for a in activities if a.get('type') == 'customer'])
-        }
-        
-        return jsonify({
-            'status': 'success',
-            'activities': activities,
-            'stats': stats,
-            'count': len(activities)
-        })
-        
-    except Exception as e:
-        print(f"Activity API Error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'status': 'error',
-            'message': str(e),
-            'activities': [],
-            'stats': {}
-        }), 500
 # ============================================
 # NOTIFICATION ROUTES
 # ============================================
@@ -3288,9 +3127,9 @@ def api_notifications_clear():
     
     db.session.commit()
     return jsonify({'success': True, 'count': len(notifications)})
-# ============ ACTIVITY LOG API - FIXED ============
 
-# ============ ACTIVITY LOG API - FIXED ============
+
+# ============ ACTIVITY LOG API ============
 
 @app.route('/api/activities')
 @login_required
@@ -3472,7 +3311,8 @@ def api_activities():
             'activities': [],
             'stats': {}
         }), 500
-        # ============ DEBUG ROUTE ============
+
+# ============ DEBUG ROUTE ============
 
 @app.route('/api/debug')
 @login_required
@@ -3501,6 +3341,7 @@ def api_debug():
             'status': 'error',
             'message': str(e)
         }), 500
+
 # ============================================
 # NOTIFICATION HELPER FUNCTIONS
 # ============================================
@@ -3909,23 +3750,20 @@ def api_sync():
 if __name__ == '__main__':
     with app.app_context():
         try:
-            import sqlite3
-            import os
-            if os.path.exists('shop_management.db'):
-                conn = sqlite3.connect('shop_management.db')
-                cursor = conn.cursor()
-                cursor.execute("PRAGMA table_info(users)")
-                columns = [col[1] for col in cursor.fetchall()]
-                if 'theme_preference' not in columns:
-                    cursor.execute("ALTER TABLE users ADD COLUMN theme_preference TEXT DEFAULT 'auto'")
+            from sqlalchemy import inspect, text
+            
+            # Check if theme_preference column exists
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('users')]
+            
+            if 'theme_preference' not in columns:
+                with db.engine.connect() as conn:
+                    conn.execute(text('ALTER TABLE users ADD COLUMN theme_preference TEXT DEFAULT \'auto\''))
                     conn.commit()
-                    print("✅ Theme preference column added to users table!")
-                else:
-                    print("✅ Theme preference column already exists!")
-                conn.close()
+                print("✅ Theme preference column added to users table!")
             else:
-                print("⚠️ Database not found! Please run: python setup_db.py")
-                exit(1)
+                print("✅ Theme preference column already exists!")
+                
         except Exception as e:
             print(f"❌ Error: {e}")
             print("⚠️ Please run: python setup_db.py")
@@ -3935,4 +3773,4 @@ if __name__ == '__main__':
         print("📊 Database URL:", app.config['SQLALCHEMY_DATABASE_URI'])
         print("🌐 Server running at: http://127.0.0.1:5000")
     
-    app.run(debug=True, host='0.0.0.0', port=5000, threaded=True)
+    app.run(debug=False, host='0.0.0.0', port=5000)
