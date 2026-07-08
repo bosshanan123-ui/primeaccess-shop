@@ -1484,6 +1484,12 @@
         <span>Data Revenue</span>
     </a>
 </div>
+<div class="nav-item {% if request.endpoint == 'bill_payment' %}active{% endif %}">
+    <a class="nav-link" href="{{ url_for('bill_payment') }}">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>Bill Payment</span>
+    </a>
+</div>
     <div class="nav-item {% if request.endpoint == 'notes' %}active{% endif %}">
     <a class="nav-link" href="{{ url_for('notes') }}">
         <i class="fas fa-sticky-note"></i>
