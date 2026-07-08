@@ -44,7 +44,7 @@
             <div class="stat-label">
                 {% if current_lang == 'ur' %}کل ریونیو (تمام ذرائع){% else %}Total Revenue (All Sources){% endif %}
             </div>
-            <small>{% if current_lang == 'ur' %}سیل + کاپی + والیٹ{% else %}Sales + Copy + Wallet{% endif %}</small>
+            <small>{% if current_lang == 'ur' %}سیل + کاپی + والیٹ + بل{% else %}Sales + Copy + Wallet + Bill{% endif %}</small>
         </div>
     </div>
     
@@ -82,6 +82,31 @@
     </div>
 </div>
 
+<!-- 🆕 Second Row - Bill Payment Stats -->
+<div class="row g-4 mb-4">
+    <!-- Bill Profit -->
+    <div class="col-md-4">
+        <div class="stat-card" style="border-left-color: #a29bfe;">
+            <div class="stat-number">PKR {{ "%.0f"|format(total_bill_profit_overall) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل بل منافع{% else %}Total Bill Profit{% endif %}
+            </div>
+            <small>{% if current_lang == 'ur' %}&lt; 5K = 20 | ≥ 5K = 50{% else %}&lt; 5K = 20 | ≥ 5K = 50{% endif %}</small>
+        </div>
+    </div>
+    
+    <!-- Total Bills -->
+    <div class="col-md-4">
+        <div class="stat-card" style="border-left-color: #e17055;">
+            <div class="stat-number">{{ total_bills_count or 0 }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل بلز{% else %}Total Bills{% endif %}
+            </div>
+            <small>{% if current_lang == 'ur' %}الیکٹریسی + گیس + پانی{% else %}Electricity + Gas + Water{% endif %}</small>
+        </div>
+    </div>
+</div>
+
 <!-- Monthly Breakdown -->
 <div class="card">
     <div class="card-header">
@@ -98,6 +123,7 @@
                         <th>{% if current_lang == 'ur' %}فوٹو کاپی{% else %}Photocopy{% endif %}</th>
                         <th>{% if current_lang == 'ur' %}والیٹ{% else %}Wallet{% endif %}</th>
                         <th>{% if current_lang == 'ur' %}والیٹ منافع{% else %}Wallet Profit{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}بل منافع{% else %}Bill Profit{% endif %}</th>
                         <th>{% if current_lang == 'ur' %}کل{% else %}Total{% endif %}</th>
                     </tr>
                 </thead>
@@ -109,11 +135,12 @@
                             <td>PKR {{ "%.0f"|format(data.photocopy_revenue) }}</td>
                             <td>PKR {{ "%.0f"|format(data.wallet_revenue) }}</td>
                             <td>PKR {{ "%.0f"|format(data.wallet_profit) }}</td>
+                            <td>PKR {{ "%.0f"|format(data.bill_profit) }}</td>
                             <td class="fw-bold">PKR {{ "%.0f"|format(data.total_revenue) }}</td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-3">
+                            <td colspan="7" class="text-center text-muted py-3">
                                 {% if current_lang == 'ur' %}کوئی ڈیٹا نہیں ملا{% else %}No data found{% endif %}
                             </td>
                         </tr>
@@ -126,6 +153,7 @@
                         <th class="fw-bold">PKR {{ "%.0f"|format(total_photocopy_revenue) }}</th>
                         <th class="fw-bold">PKR {{ "%.0f"|format(total_wallet_revenue) }}</th>
                         <th class="fw-bold">PKR {{ "%.0f"|format(total_wallet_profit) }}</th>
+                        <th class="fw-bold">PKR {{ "%.0f"|format(total_bill_profit) }}</th>
                         <th class="fw-bold">PKR {{ "%.0f"|format(total_revenue_all) }}</th>
                     </tr>
                 </tfoot>
