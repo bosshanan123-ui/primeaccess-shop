@@ -1,0 +1,226 @@
+<!-- templates/bill_payment.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}بل ادائیگی - شاپ مینجمنٹ{% else %}Bill Payment - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-file-invoice-dollar text-primary me-2"></i>
+                {% if current_lang == 'ur' %}بل ادائیگی{% else %}Bill Payment{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}بل ادائیگی{% else %}Bill Payment{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #667eea;">
+            <div class="stat-number">{{ total_bills }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل بلز{% else %}Total Bills{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #00b894;">
+            <div class="stat-number">PKR {{ "%.0f"|format(total_profit) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل منافع{% else %}Total Profit{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #fdcb6e;">
+            <div class="stat-number">{{ bill_counts.electricity or 0 }}</div>
+            <div class="stat-label">⚡ Electricity</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #e17055;">
+            <div class="stat-number">{{ bill_counts.gas or 0 }}</div>
+            <div class="stat-label">🔥 Gas</div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Bill Payment Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-plus me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}نیا بل ادائیگی{% else %}New Bill Payment{% endif %}
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('add_bill_payment') }}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}بل کی قسم{% else %}Bill Type{% endif %}
+                    </label>
+                    <select class="form-select" name="bill_type" required onchange="updateProfit()">
+                        <option value="electricity">⚡ {% if current_lang == 'ur' %}بجلی{% else %}Electricity{% endif %}</option>
+                        <option value="gas">🔥 {% if current_lang == 'ur' %}گیس{% else %}Gas{% endif %}</option>
+                        <option value="water">💧 {% if current_lang == 'ur' %}پانی{% else %}Water{% endif %}</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}بل کی رقم (PKR){% else %}Bill Amount (PKR){% endif %}
+                    </label>
+                    <input type="number" class="form-control" name="bill_amount" id="billAmount" required step="0.01" min="0" placeholder="0.00" onchange="updateProfit()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}منافع (PKR){% else %}Profit (PKR){% endif %}
+                    </label>
+                    <input type="number" class="form-control" id="profitAmount" readonly style="background: #f8f9fa; font-weight: bold; color: #00b894;">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}کسٹمر کا نام{% else %}Customer Name{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="customer_name" placeholder="{% if current_lang == 'ur' %}نام{% else %}Name{% endif %}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}فون{% else %}Phone{% endif %}
+                    </label>
+                    <input type="tel" class="form-control" name="phone" placeholder="03XX-XXXXXXX">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}حوالہ نمبر{% else %}Reference Number{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="reference_number" placeholder="REF-XXXXX">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}نوٹس{% else %}Notes{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="notes" placeholder="{% if current_lang == 'ur' %}اختیاری{% else %}Optional{% endif %}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save me-2"></i>
+                        {% if current_lang == 'ur' %}بل جمع کریں{% else %}Submit Bill{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bill History -->
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-history me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}بل کی ہسٹری{% else %}Bill History{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="billTable">
+                <thead>
+                    <tr>
+                        <th>{% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}بل کی رقم{% else %}Bill Amount{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}منافع{% else %}Profit{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}حوالہ{% else %}Reference{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bill in bills %}
+                        <tr>
+                            <td>{{ bill.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <span class="badge {% if bill.bill_type == 'electricity' %}bg-warning{% elif bill.bill_type == 'gas' %}bg-danger{% else %}bg-info{% endif %}">
+                                    {% if bill.bill_type == 'electricity' %}⚡ Electricity{% elif bill.bill_type == 'gas' %}🔥 Gas{% else %}💧 Water{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ bill.customer_name or '-' }}</td>
+                            <td>PKR {{ "%.0f"|format(bill.bill_amount) }}</td>
+                            <td class="fw-bold text-success">PKR {{ "%.0f"|format(bill.profit_amount) }}</td>
+                            <td>{{ bill.reference_number or '-' }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteBill({{ bill.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-3">
+                                {% if current_lang == 'ur' %}ابھی تک کوئی بل نہیں{% else %}No bills yet{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#billTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[0, 'desc']]
+        });
+    });
+    
+    function updateProfit() {
+        const amount = parseFloat(document.getElementById('billAmount').value) || 0;
+        const profit = amount < 5000 ? 20 : 50;
+        document.getElementById('profitAmount').value = profit;
+    }
+    
+    function deleteBill(id) {
+        const lang = '{{ current_lang }}';
+        Swal.fire({
+            title: lang === 'ur' ? 'بل حذف کریں؟' : 'Delete Bill?',
+            text: lang === 'ur' ? 'یہ عمل واپس نہیں کیا جا سکتا۔' : 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e17055',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: lang === 'ur' ? 'ہاں، حذف کریں!' : 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/bill_payment/delete/' + id, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const msg = lang === 'ur' ? '✅ بل حذف ہو گیا!' : '✅ Bill deleted!';
+                        showToast(msg, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}
