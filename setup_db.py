@@ -238,7 +238,24 @@ def create_database():
         )
     ''')
     print("✅ Purchases table created")
+# setup_db.py mein yeh table add karein (products ke baad)
 
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS bill_payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bill_type TEXT NOT NULL,
+        customer_name TEXT,
+        phone TEXT,
+        bill_amount REAL NOT NULL,
+        profit_amount REAL NOT NULL,
+        reference_number TEXT,
+        notes TEXT,
+        created_by INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+''')
+print("✅ Bill Payments table created")
     # ============================================
     # PURCHASE ITEMS TABLE
     # ============================================
