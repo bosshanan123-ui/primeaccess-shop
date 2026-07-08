@@ -35,7 +35,7 @@
     </div>
 </div>
 
-<!-- ===== 5 STAT CARDS - REVENUE SOURCES ===== -->
+<!-- ===== 6 STAT CARDS - REVENUE SOURCES (ALL IN ONE ROW) ===== -->
 <div class="row g-4 mb-4 stagger">
     <!-- ===== 1. TOTAL REVENUE (ALL SOURCES) ===== -->
     <div class="col-xxl-2 col-xl-4 col-lg-6">
@@ -106,20 +106,22 @@
             </small>
         </div>
     </div>
-</div>
-<!-- ===== 6. BILL PAYMENT PROFIT (NEW) ===== -->
-<div class="col-xxl-2 col-xl-4 col-lg-6">
-    <div class="stat-card" style="border-left-color: #a29bfe;">
-        <div class="stat-icon" style="background: #a29bfe;"><i class="fas fa-file-invoice-dollar"></i></div>
-        <div class="stat-number" data-count="{{ today_bill_profit }}" data-currency="true">PKR 0</div>
-        <div class="stat-label">
-            {% if current_lang == 'ur' %}بل ادائیگی منافع{% else %}Bill Payment Profit{% endif %}
+
+    <!-- ===== 6. BILL PAYMENT PROFIT (NEW) ===== -->
+    <div class="col-xxl-2 col-xl-4 col-lg-6">
+        <div class="stat-card" style="border-left-color: #a29bfe;">
+            <div class="stat-icon" style="background: #a29bfe;"><i class="fas fa-file-invoice-dollar"></i></div>
+            <div class="stat-number" data-count="{{ today_bill_profit }}" data-currency="true">PKR 0</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}بل ادائیگی منافع{% else %}Bill Payment Profit{% endif %}
+            </div>
+            <small>
+                {% if current_lang == 'ur' %}&lt; 5K = 20 | ≥ 5K = 50{% else %}&lt; 5K = 20 | ≥ 5K = 50{% endif %}
+            </small>
         </div>
-        <small>
-            {% if current_lang == 'ur' %}&lt; 5K = 20 | ≥ 5K = 50{% else %}&lt; 5K = 20 | ≥ 5K = 50{% endif %}
-        </small>
     </div>
 </div>
+
 <!-- Charts Row - Sales & Forecast Side by Side -->
 <div class="row g-4">
     <!-- Sales Chart -->
