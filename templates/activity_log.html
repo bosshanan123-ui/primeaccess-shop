@@ -135,6 +135,7 @@
     .activity-item.data::before { border-color: #e17055; background: #e17055; }
     .activity-item.customer::before { border-color: #a29bfe; background: #a29bfe; }
     .activity-item.product::before { border-color: #fd79a8; background: #fd79a8; }
+    .activity-item.bill::before { border-color: #a29bfe; background: #a29bfe; }
     
     .activity-item .activity-header {
         display: flex;
@@ -313,6 +314,11 @@
         <div class="stat-number" style="color: #a29bfe;" id="totalCustomers">0</div>
         <div class="stat-label">{% if current_lang == 'ur' %}کل کسٹمرز{% else %}Total Customers{% endif %}</div>
     </div>
+    <!-- 🆕 BILL PAYMENT PROFIT -->
+    <div class="stat-box" style="border-left-color: #a29bfe;">
+        <div class="stat-number" style="color: #a29bfe;" id="totalBillProfit">PKR 0</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}بل منافع{% else %}Bill Profit{% endif %}</div>
+    </div>
 </div>
 
 <!-- ===== SEARCH & FILTERS ===== -->
@@ -335,6 +341,7 @@
                 <option value="data">{% if current_lang == 'ur' %}ڈیٹا{% else %}Data{% endif %}</option>
                 <option value="customer">{% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}</option>
                 <option value="product">{% if current_lang == 'ur' %}پروڈکٹ{% else %}Product{% endif %}</option>
+                <option value="bill">{% if current_lang == 'ur' %}بل{% else %}Bill{% endif %}</option>
             </select>
         </div>
         <div class="col-md-2">
@@ -379,6 +386,12 @@
             <i class="fas fa-user"></i> 
             {% if current_lang == 'ur' %}کسٹمرز{% else %}Customers{% endif %}
             <span class="badge-count" id="countCustomer">0</span>
+        </span>
+        <!-- 🆕 BILL PAYMENT CHIP -->
+        <span class="filter-chip" data-filter="bill" onclick="setChipFilter('bill')">
+            <i class="fas fa-file-invoice-dollar"></i> 
+            {% if current_lang == 'ur' %}بل{% else %}Bill{% endif %}
+            <span class="badge-count" id="countBill">0</span>
         </span>
     </div>
 </div>
@@ -463,6 +476,8 @@ function updateStats(stats) {
     document.getElementById('totalWallet').textContent = 'PKR ' + formatNumber(stats.total_wallet || 0);
     document.getElementById('totalData').textContent = 'PKR ' + formatNumber(stats.total_data || 0);
     document.getElementById('totalCustomers').textContent = stats.total_customers || 0;
+    // 🆕 Bill Profit
+    document.getElementById('totalBillProfit').textContent = 'PKR ' + formatNumber(stats.total_bill_profit || 0);
 }
 
 // ============ FILTER ACTIVITIES ============
@@ -489,7 +504,9 @@ function filterActivities() {
                 activity.amount,
                 activity.category,
                 activity.phone,
-                activity.invoice
+                activity.invoice,
+                activity.bill_amount,
+                activity.reference
             ].join(' ').toLowerCase();
             if (!searchable.includes(searchTerm)) {
                 return false;
@@ -552,7 +569,8 @@ function createActivityHTML(activity, index) {
         photocopy: 'photocopy',
         data: 'data',
         customer: 'customer',
-        product: 'product'
+        product: 'product',
+        bill: 'bill'
     };
     
     const typeIcons = {
@@ -561,7 +579,8 @@ function createActivityHTML(activity, index) {
         photocopy: 'fa-copy',
         data: 'fa-film',
         customer: 'fa-user-plus',
-        product: 'fa-box'
+        product: 'fa-box',
+        bill: 'fa-file-invoice-dollar'
     };
     
     const typeLabels = {
@@ -570,7 +589,8 @@ function createActivityHTML(activity, index) {
         photocopy: 'Photocopy',
         data: 'Data',
         customer: 'Customer',
-        product: 'Product'
+        product: 'Product',
+        bill: 'Bill'
     };
     
     const typeClass = typeColors[activity.type] || 'sale';
@@ -589,13 +609,24 @@ function createActivityHTML(activity, index) {
     const category = activity.category || '';
     const details = activity.details || {};
     
+    // 🆕 Bill specific details
+    let billDetails = '';
+    if (activity.type === 'bill') {
+        billDetails = `
+            <div><strong>Bill Type:</strong> ${category ? category.charAt(0).toUpperCase() + category.slice(1) : ''}</div>
+            <div><strong>Bill Amount:</strong> PKR ${activity.bill_amount ? formatNumber(activity.bill_amount) : '0'}</div>
+            ${activity.reference ? `<div><strong>Reference:</strong> ${activity.reference}</div>` : ''}
+        `;
+    }
+    
     // Build detail rows
     let detailRows = '';
     if (invoice) detailRows += `<div><strong>Invoice:</strong> ${invoice}</div>`;
     if (phone) detailRows += `<div><strong>Phone:</strong> ${phone}</div>`;
-    if (category) detailRows += `<div><strong>Category:</strong> ${category}</div>`;
+    if (category && activity.type !== 'bill') detailRows += `<div><strong>Category:</strong> ${category}</div>`;
     if (productName) detailRows += `<div><strong>Product:</strong> ${productName}</div>`;
     if (description && description !== activity.customer) detailRows += `<div><strong>Details:</strong> ${description}</div>`;
+    if (billDetails) detailRows += billDetails;
     
     return `
         <div class="activity-item ${typeClass} ${index % 2 === 0 ? '' : ''}" onclick="toggleExpand(this)">
@@ -665,7 +696,8 @@ function updateChipCounts() {
         photocopy: 0,
         data: 0,
         customer: 0,
-        product: 0
+        product: 0,
+        bill: 0  // 🆕
     };
     
     allActivities.forEach(a => {
@@ -678,6 +710,7 @@ function updateChipCounts() {
     document.getElementById('countPhotocopy').textContent = counts.photocopy;
     document.getElementById('countData').textContent = counts.data;
     document.getElementById('countCustomer').textContent = counts.customer;
+    document.getElementById('countBill').textContent = counts.bill;  // 🆕
 }
 
 // ============ RESET FILTERS ============
@@ -714,6 +747,6 @@ document.getElementById('monthFilter').addEventListener('change', function() {
     loadActivities();
 });
 
-console.log('📊 Activity Log loaded successfully!');
+console.log('📊 Activity Log loaded successfully with Bill Payment!');
 </script>
 {% endblock %}
