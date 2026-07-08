@@ -402,7 +402,20 @@ class PaperStock(db.Model):
     brand = db.Column(db.String(100))
     cost_per_sheet = db.Column(db.Float)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+class BillPayment(db.Model):
+    __tablename__ = 'bill_payments'
+    id = db.Column(db.Integer, primary_key=True)
+    bill_type = db.Column(db.String(50), nullable=False)  # pani, gas, electricity
+    customer_name = db.Column(db.String(200))
+    phone = db.Column(db.String(20))
+    bill_amount = db.Column(db.Float, nullable=False)
+    profit_amount = db.Column(db.Float, nullable=False)  # 20 ya 50
+    reference_number = db.Column(db.String(100))
+    notes = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref='bill_payments')
 class StockMovement(db.Model):
     __tablename__ = 'stock_movements'
     id = db.Column(db.Integer, primary_key=True)
