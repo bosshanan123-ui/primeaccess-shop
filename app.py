@@ -3129,6 +3129,15 @@ def api_notifications_clear():
     return jsonify({'success': True, 'count': len(notifications)})
 
 
+# ============ ACTIVITY LOG PAGE ============
+
+@app.route('/activity_log')
+@login_required
+def activity_log():
+    """Activity Log page"""
+    return render_template('activity_log.html')
+
+
 # ============ ACTIVITY LOG API ============
 
 @app.route('/api/activities')
