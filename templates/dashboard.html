@@ -106,6 +106,29 @@
             </small>
         </div>
     </div>
+    <!-- ===== 7. REPAIR REVENUE ===== -->
+<div class="col-xxl-2 col-xl-4 col-lg-6">
+    <div class="stat-card" style="border-left-color: #f39c12;">
+        <div class="stat-icon" style="background: #f39c12;"><i class="fas fa-tools"></i></div>
+        <div class="stat-number" data-count="{{ today_repair_profit }}" data-currency="true">PKR 0</div>
+        <div class="stat-label">
+            {% if current_lang == 'ur' %}ریپیئر منافع{% else %}Repair Profit{% endif %}
+        </div>
+        <small>{% if current_lang == 'ur' %}کسٹمر قیمت - پارٹس خرچ{% else %}Customer Price - Parts Cost{% endif %}</small>
+    </div>
+</div>
+
+<!-- ===== 8. OTHER REVENUE ===== -->
+<div class="col-xxl-2 col-xl-4 col-lg-6">
+    <div class="stat-card" style="border-left-color: #e74c3c;">
+        <div class="stat-icon" style="background: #e74c3c;"><i class="fas fa-plus-circle"></i></div>
+        <div class="stat-number" data-count="{{ today_other_revenue }}" data-currency="true">PKR 0</div>
+        <div class="stat-label">
+            {% if current_lang == 'ur' %}دیگر ریونیو{% else %}Other Revenue{% endif %}
+        </div>
+        <small>{% if current_lang == 'ur' %}ایپس + لوازمات + وغیرہ{% else %}Apps + Accessories + etc{% endif %}</small>
+    </div>
+</div>
 
     <!-- ===== 6. BILL PAYMENT PROFIT (NEW) ===== -->
     <div class="col-xxl-2 col-xl-4 col-lg-6">
