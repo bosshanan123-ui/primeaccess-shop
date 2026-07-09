@@ -136,6 +136,8 @@
     .activity-item.customer::before { border-color: #a29bfe; background: #a29bfe; }
     .activity-item.product::before { border-color: #fd79a8; background: #fd79a8; }
     .activity-item.bill::before { border-color: #a29bfe; background: #a29bfe; }
+    .activity-item.repair::before { border-color: #f39c12; background: #f39c12; }
+    .activity-item.other::before { border-color: #e74c3c; background: #e74c3c; }
     
     .activity-item .activity-header {
         display: flex;
@@ -186,15 +188,15 @@
     
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
         margin-bottom: 24px;
     }
     
     .stats-grid .stat-box {
         background: var(--bg-card);
         border-radius: var(--radius-md);
-        padding: 16px 20px;
+        padding: 14px 16px;
         border: 1px solid var(--border-color);
         text-align: center;
         transition: all var(--transition-fast);
@@ -206,14 +208,14 @@
     }
     
     .stats-grid .stat-box .stat-number {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
         font-weight: 800;
         color: var(--brand-primary);
         line-height: 1.2;
     }
     
     .stats-grid .stat-box .stat-label {
-        font-size: 0.7rem;
+        font-size: 0.6rem;
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -292,32 +294,39 @@
 <div class="stats-grid" id="monthlyStats">
     <div class="stat-box">
         <div class="stat-number" id="totalRevenue">PKR 0</div>
-        <div class="stat-label">{% if current_lang == 'ur' %}کل ریونیو (ماہانہ){% else %}Total Revenue (Monthly){% endif %}</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}کل ریونیو{% else %}Total Revenue{% endif %}</div>
     </div>
     <div class="stat-box" style="border-left-color: #667eea;">
         <div class="stat-number" style="color: #667eea;" id="totalSales">0</div>
-        <div class="stat-label">{% if current_lang == 'ur' %}کل سیلز{% else %}Total Sales{% endif %}</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}سیلز{% else %}Sales{% endif %}</div>
     </div>
     <div class="stat-box" style="border-left-color: #00b894;">
         <div class="stat-number" style="color: #00b894;" id="totalPhotocopy">0</div>
-        <div class="stat-label">{% if current_lang == 'ur' %}فوٹو کاپی جابز{% else %}Photocopy Jobs{% endif %}</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}فوٹو کاپی{% else %}Photocopy{% endif %}</div>
     </div>
     <div class="stat-box" style="border-left-color: #fdcb6e;">
         <div class="stat-number" style="color: #fdcb6e;" id="totalWallet">PKR 0</div>
-        <div class="stat-label">{% if current_lang == 'ur' %}والیٹ منافع{% else %}Wallet Profit{% endif %}</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}والیٹ{% else %}Wallet{% endif %}</div>
     </div>
     <div class="stat-box" style="border-left-color: #e17055;">
         <div class="stat-number" style="color: #e17055;" id="totalData">PKR 0</div>
-        <div class="stat-label">{% if current_lang == 'ur' %}ڈیٹا ریونیو{% else %}Data Revenue{% endif %}</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}ڈیٹا{% else %}Data{% endif %}</div>
+    </div>
+    <div class="stat-box" style="border-left-color: #a29bfe;">
+        <div class="stat-number" style="color: #a29bfe;" id="totalBill">PKR 0</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}بل{% else %}Bill{% endif %}</div>
+    </div>
+    <div class="stat-box" style="border-left-color: #f39c12;">
+        <div class="stat-number" style="color: #f39c12;" id="totalRepair">PKR 0</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}ریپیئر{% else %}Repair{% endif %}</div>
+    </div>
+    <div class="stat-box" style="border-left-color: #e74c3c;">
+        <div class="stat-number" style="color: #e74c3c;" id="totalOther">PKR 0</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}دیگر{% else %}Other{% endif %}</div>
     </div>
     <div class="stat-box" style="border-left-color: #a29bfe;">
         <div class="stat-number" style="color: #a29bfe;" id="totalCustomers">0</div>
-        <div class="stat-label">{% if current_lang == 'ur' %}کل کسٹمرز{% else %}Total Customers{% endif %}</div>
-    </div>
-    <!-- 🆕 BILL PAYMENT PROFIT -->
-    <div class="stat-box" style="border-left-color: #a29bfe;">
-        <div class="stat-number" style="color: #a29bfe;" id="totalBillProfit">PKR 0</div>
-        <div class="stat-label">{% if current_lang == 'ur' %}بل منافع{% else %}Bill Profit{% endif %}</div>
+        <div class="stat-label">{% if current_lang == 'ur' %}کسٹمرز{% else %}Customers{% endif %}</div>
     </div>
 </div>
 
@@ -339,9 +348,11 @@
                 <option value="wallet">{% if current_lang == 'ur' %}والیٹ{% else %}Wallet{% endif %}</option>
                 <option value="photocopy">{% if current_lang == 'ur' %}فوٹو کاپی{% else %}Photocopy{% endif %}</option>
                 <option value="data">{% if current_lang == 'ur' %}ڈیٹا{% else %}Data{% endif %}</option>
+                <option value="bill">{% if current_lang == 'ur' %}بل{% else %}Bill{% endif %}</option>
+                <option value="repair">{% if current_lang == 'ur' %}ریپیئر{% else %}Repair{% endif %}</option>
+                <option value="other">{% if current_lang == 'ur' %}دیگر{% else %}Other{% endif %}</option>
                 <option value="customer">{% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}</option>
                 <option value="product">{% if current_lang == 'ur' %}پروڈکٹ{% else %}Product{% endif %}</option>
-                <option value="bill">{% if current_lang == 'ur' %}بل{% else %}Bill{% endif %}</option>
             </select>
         </div>
         <div class="col-md-2">
@@ -382,16 +393,25 @@
             {% if current_lang == 'ur' %}ڈیٹا{% else %}Data{% endif %}
             <span class="badge-count" id="countData">0</span>
         </span>
-        <span class="filter-chip" data-filter="customer" onclick="setChipFilter('customer')">
-            <i class="fas fa-user"></i> 
-            {% if current_lang == 'ur' %}کسٹمرز{% else %}Customers{% endif %}
-            <span class="badge-count" id="countCustomer">0</span>
-        </span>
-        <!-- 🆕 BILL PAYMENT CHIP -->
         <span class="filter-chip" data-filter="bill" onclick="setChipFilter('bill')">
             <i class="fas fa-file-invoice-dollar"></i> 
             {% if current_lang == 'ur' %}بل{% else %}Bill{% endif %}
             <span class="badge-count" id="countBill">0</span>
+        </span>
+        <span class="filter-chip" data-filter="repair" onclick="setChipFilter('repair')">
+            <i class="fas fa-tools"></i> 
+            {% if current_lang == 'ur' %}ریپیئر{% else %}Repair{% endif %}
+            <span class="badge-count" id="countRepair">0</span>
+        </span>
+        <span class="filter-chip" data-filter="other" onclick="setChipFilter('other')">
+            <i class="fas fa-plus-circle"></i> 
+            {% if current_lang == 'ur' %}دیگر{% else %}Other{% endif %}
+            <span class="badge-count" id="countOther">0</span>
+        </span>
+        <span class="filter-chip" data-filter="customer" onclick="setChipFilter('customer')">
+            <i class="fas fa-user"></i> 
+            {% if current_lang == 'ur' %}کسٹمرز{% else %}Customers{% endif %}
+            <span class="badge-count" id="countCustomer">0</span>
         </span>
     </div>
 </div>
@@ -475,9 +495,10 @@ function updateStats(stats) {
     document.getElementById('totalPhotocopy').textContent = stats.total_photocopy || 0;
     document.getElementById('totalWallet').textContent = 'PKR ' + formatNumber(stats.total_wallet || 0);
     document.getElementById('totalData').textContent = 'PKR ' + formatNumber(stats.total_data || 0);
+    document.getElementById('totalBill').textContent = 'PKR ' + formatNumber(stats.total_bill_profit || 0);
+    document.getElementById('totalRepair').textContent = 'PKR ' + formatNumber(stats.total_repair_profit || 0);
+    document.getElementById('totalOther').textContent = 'PKR ' + formatNumber(stats.total_other_revenue || 0);
     document.getElementById('totalCustomers').textContent = stats.total_customers || 0;
-    // 🆕 Bill Profit
-    document.getElementById('totalBillProfit').textContent = 'PKR ' + formatNumber(stats.total_bill_profit || 0);
 }
 
 // ============ FILTER ACTIVITIES ============
@@ -506,7 +527,9 @@ function filterActivities() {
                 activity.phone,
                 activity.invoice,
                 activity.bill_amount,
-                activity.reference
+                activity.reference,
+                activity.device,
+                activity.issue
             ].join(' ').toLowerCase();
             if (!searchable.includes(searchTerm)) {
                 return false;
@@ -570,7 +593,9 @@ function createActivityHTML(activity, index) {
         data: 'data',
         customer: 'customer',
         product: 'product',
-        bill: 'bill'
+        bill: 'bill',
+        repair: 'repair',
+        other: 'other'
     };
     
     const typeIcons = {
@@ -580,7 +605,9 @@ function createActivityHTML(activity, index) {
         data: 'fa-film',
         customer: 'fa-user-plus',
         product: 'fa-box',
-        bill: 'fa-file-invoice-dollar'
+        bill: 'fa-file-invoice-dollar',
+        repair: 'fa-tools',
+        other: 'fa-plus-circle'
     };
     
     const typeLabels = {
@@ -590,7 +617,9 @@ function createActivityHTML(activity, index) {
         data: 'Data',
         customer: 'Customer',
         product: 'Product',
-        bill: 'Bill'
+        bill: 'Bill',
+        repair: 'Repair',
+        other: 'Other'
     };
     
     const typeClass = typeColors[activity.type] || 'sale';
@@ -609,16 +638,6 @@ function createActivityHTML(activity, index) {
     const category = activity.category || '';
     const details = activity.details || {};
     
-    // 🆕 Bill specific details
-    let billDetails = '';
-    if (activity.type === 'bill') {
-        billDetails = `
-            <div><strong>Bill Type:</strong> ${category ? category.charAt(0).toUpperCase() + category.slice(1) : ''}</div>
-            <div><strong>Bill Amount:</strong> PKR ${activity.bill_amount ? formatNumber(activity.bill_amount) : '0'}</div>
-            ${activity.reference ? `<div><strong>Reference:</strong> ${activity.reference}</div>` : ''}
-        `;
-    }
-    
     // Build detail rows
     let detailRows = '';
     if (invoice) detailRows += `<div><strong>Invoice:</strong> ${invoice}</div>`;
@@ -626,7 +645,26 @@ function createActivityHTML(activity, index) {
     if (category && activity.type !== 'bill') detailRows += `<div><strong>Category:</strong> ${category}</div>`;
     if (productName) detailRows += `<div><strong>Product:</strong> ${productName}</div>`;
     if (description && description !== activity.customer) detailRows += `<div><strong>Details:</strong> ${description}</div>`;
-    if (billDetails) detailRows += billDetails;
+    
+    // Bill specific details
+    if (activity.type === 'bill') {
+        detailRows += `
+            <div><strong>Bill Type:</strong> ${category ? category.charAt(0).toUpperCase() + category.slice(1) : ''}</div>
+            <div><strong>Bill Amount:</strong> PKR ${activity.bill_amount ? formatNumber(activity.bill_amount) : '0'}</div>
+            ${activity.reference ? `<div><strong>Reference:</strong> ${activity.reference}</div>` : ''}
+        `;
+    }
+    
+    // Repair specific details
+    if (activity.type === 'repair') {
+        detailRows += `
+            <div><strong>Device:</strong> ${details.device || ''}</div>
+            <div><strong>Issue:</strong> ${details.issue || ''}</div>
+            <div><strong>Customer Price:</strong> PKR ${details.customer_amount ? formatNumber(details.customer_amount) : '0'}</div>
+            <div><strong>Parts Cost:</strong> PKR ${details.parts_cost ? formatNumber(details.parts_cost) : '0'}</div>
+            <div><strong>Status:</strong> ${details.status || 'Pending'}</div>
+        `;
+    }
     
     return `
         <div class="activity-item ${typeClass} ${index % 2 === 0 ? '' : ''}" onclick="toggleExpand(this)">
@@ -695,9 +733,11 @@ function updateChipCounts() {
         wallet: 0,
         photocopy: 0,
         data: 0,
+        bill: 0,
+        repair: 0,
+        other: 0,
         customer: 0,
-        product: 0,
-        bill: 0  // 🆕
+        product: 0
     };
     
     allActivities.forEach(a => {
@@ -709,8 +749,10 @@ function updateChipCounts() {
     document.getElementById('countWallet').textContent = counts.wallet;
     document.getElementById('countPhotocopy').textContent = counts.photocopy;
     document.getElementById('countData').textContent = counts.data;
+    document.getElementById('countBill').textContent = counts.bill;
+    document.getElementById('countRepair').textContent = counts.repair;
+    document.getElementById('countOther').textContent = counts.other;
     document.getElementById('countCustomer').textContent = counts.customer;
-    document.getElementById('countBill').textContent = counts.bill;  // 🆕
 }
 
 // ============ RESET FILTERS ============
@@ -747,6 +789,6 @@ document.getElementById('monthFilter').addEventListener('change', function() {
     loadActivities();
 });
 
-console.log('📊 Activity Log loaded successfully with Bill Payment!');
+console.log('📊 Activity Log loaded successfully with all revenue types!');
 </script>
 {% endblock %}
