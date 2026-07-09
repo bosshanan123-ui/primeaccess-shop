@@ -3928,7 +3928,7 @@ def api_sync():
         print(f"Sync error: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 # ============================================
-# AI ASSISTANT ROUTES - COMPLETE
+# AI ASSISTANT ROUTES - FULL NATURAL LANGUAGE
 # ============================================
 
 @app.route('/ai_assistant')
@@ -3941,11 +3941,10 @@ def ai_assistant():
 @app.route('/api/ai/ask', methods=['POST'])
 @login_required
 def ai_ask():
-    """AI Assistant - Answer questions about shop data with date support"""
+    """AI Assistant - Natural Language Processing"""
     try:
         data = request.json
         question = data.get('question', '').strip()
-        history = data.get('history', [])
         
         if not question:
             return jsonify({
@@ -3959,8 +3958,8 @@ def ai_ask():
         # Get shop data for date range
         shop_data = get_shop_data_for_date_range(date_info)
         
-        # Generate response
-        response = generate_ai_response_with_date(question, shop_data, date_info)
+        # Generate intelligent response
+        response = generate_intelligent_response(question, shop_data, date_info)
         
         return jsonify({
             'status': 'success',
@@ -3978,7 +3977,7 @@ def ai_ask():
 
 
 def parse_date_from_question(question):
-    """Parse date from question - supports multiple formats"""
+    """Parse date from any question - supports natural language"""
     question_lower = question.lower()
     today = datetime.now().date()
     
@@ -3987,68 +3986,73 @@ def parse_date_from_question(question):
         'type': 'today',
         'start_date': today,
         'end_date': today,
-        'date_str': today.strftime('%Y-%m-%d'),
         'display': 'Today'
     }
     
-    # TODAY
-    if any(word in question_lower for word in ['today', 'aj', 'aaj', 'آج', "today's"]):
-        date_info = {
-            'type': 'today',
-            'start_date': today,
-            'end_date': today,
-            'date_str': today.strftime('%Y-%m-%d'),
-            'display': 'Today'
-        }
+    # ===== TODAY =====
+    if any(word in question_lower for word in ['today', 'aj', 'aaj', 'آج', "today's", 'current day']):
+        date_info = {'type': 'today', 'start_date': today, 'end_date': today, 'display': 'Today'}
     
-    # YESTERDAY
-    elif any(word in question_lower for word in ['yesterday', 'kal', 'کل']):
+    # ===== YESTERDAY =====
+    elif any(word in question_lower for word in ['yesterday', 'kal', 'کل', 'previous day']):
         yesterday = today - timedelta(days=1)
-        date_info = {
-            'type': 'yesterday',
-            'start_date': yesterday,
-            'end_date': yesterday,
-            'date_str': yesterday.strftime('%Y-%m-%d'),
-            'display': 'Yesterday'
-        }
+        date_info = {'type': 'yesterday', 'start_date': yesterday, 'end_date': yesterday, 'display': 'Yesterday'}
     
-    # THIS MONTH
-    elif any(word in question_lower for word in ['this month', 'is mahine', 'is maheene', 'اس مہینے', 'current month']):
-        month_start = today.replace(day=1)
-        date_info = {
-            'type': 'month',
-            'start_date': month_start,
-            'end_date': today,
-            'date_str': month_start.strftime('%Y-%m-%d'),
-            'display': f'This Month ({today.strftime("%B %Y")})'
-        }
+    # ===== TOMORROW =====
+    elif any(word in question_lower for word in ['tomorrow', 'kal', 'آنے والا کل']):
+        tomorrow = today + timedelta(days=1)
+        date_info = {'type': 'tomorrow', 'start_date': tomorrow, 'end_date': tomorrow, 'display': 'Tomorrow'}
     
-    # THIS YEAR
-    elif any(word in question_lower for word in ['this year', 'is saal', 'اس سال', 'current year']):
-        year_start = today.replace(month=1, day=1)
-        date_info = {
-            'type': 'year',
-            'start_date': year_start,
-            'end_date': today,
-            'date_str': year_start.strftime('%Y-%m-%d'),
-            'display': f'This Year ({today.year})'
-        }
+    # ===== THIS WEEK =====
+    elif any(word in question_lower for word in ['this week', 'is hafte', 'اس ہفتے', 'current week']):
+        week_start = today - timedelta(days=today.weekday())
+        date_info = {'type': 'week', 'start_date': week_start, 'end_date': today, 'display': f'This Week ({week_start.strftime("%d %b")} - {today.strftime("%d %b %Y")})'}
     
-    # LAST WEEK
-    elif any(word in question_lower for word in ['last week', 'pichle hafte', 'پچھلے ہفتے']):
+    # ===== LAST WEEK =====
+    elif any(word in question_lower for word in ['last week', 'pichle hafte', 'پچھلے ہفتے', 'previous week']):
         week_start = today - timedelta(days=today.weekday() + 7)
         week_end = week_start + timedelta(days=6)
-        date_info = {
-            'type': 'week',
-            'start_date': week_start,
-            'end_date': week_end,
-            'date_str': week_start.strftime('%Y-%m-%d'),
-            'display': f'Last Week ({week_start.strftime("%d %b")} - {week_end.strftime("%d %b %Y")})'
-        }
+        date_info = {'type': 'week', 'start_date': week_start, 'end_date': week_end, 'display': f'Last Week ({week_start.strftime("%d %b")} - {week_end.strftime("%d %b %Y")})'}
     
-    # SPECIFIC MONTH (e.g., "july 2026")
+    # ===== THIS MONTH =====
+    elif any(word in question_lower for word in ['this month', 'is mahine', 'اس مہینے', 'current month']):
+        month_start = today.replace(day=1)
+        date_info = {'type': 'month', 'start_date': month_start, 'end_date': today, 'display': f'This Month ({today.strftime("%B %Y")})'}
+    
+    # ===== LAST MONTH =====
+    elif any(word in question_lower for word in ['last month', 'pichle mahine', 'پچھلے مہینے', 'previous month']):
+        first_day_current = today.replace(day=1)
+        last_day_prev = first_day_current - timedelta(days=1)
+        first_day_prev = last_day_prev.replace(day=1)
+        date_info = {'type': 'month', 'start_date': first_day_prev, 'end_date': last_day_prev, 'display': f'Last Month ({last_day_prev.strftime("%B %Y")})'}
+    
+    # ===== THIS YEAR =====
+    elif any(word in question_lower for word in ['this year', 'is saal', 'اس سال', 'current year']):
+        year_start = today.replace(month=1, day=1)
+        date_info = {'type': 'year', 'start_date': year_start, 'end_date': today, 'display': f'This Year ({today.year})'}
+    
+    # ===== LAST YEAR =====
+    elif any(word in question_lower for word in ['last year', 'pichle saal', 'پچھلے سال', 'previous year']):
+        year_start = today.replace(month=1, day=1) - timedelta(days=365)
+        year_end = today.replace(month=1, day=1) - timedelta(days=1)
+        date_info = {'type': 'year', 'start_date': year_start, 'end_date': year_end, 'display': f'Last Year ({year_start.year})'}
+    
+    # ===== SPECIFIC MONTH (e.g., "july 2026") =====
     else:
         import re
+        months = {
+            'january': 1, 'february': 2, 'march': 3, 'april': 4,
+            'may': 5, 'june': 6, 'july': 7, 'august': 8,
+            'september': 9, 'october': 10, 'november': 11, 'december': 12
+        }
+        urdu_months = {
+            'جنوری': 'january', 'فروری': 'february', 'مارچ': 'march',
+            'اپریل': 'april', 'مئی': 'may', 'جون': 'june',
+            'جولائی': 'july', 'اگست': 'august', 'ستمبر': 'september',
+            'اکتوبر': 'october', 'نومبر': 'november', 'دسمبر': 'december'
+        }
+        
+        # Pattern: month_name year
         month_pattern = r'(january|february|march|april|may|june|july|august|september|october|november|december|جنوری|فروری|مارچ|اپریل|مئی|جون|جولائی|اگست|ستمبر|اکتوبر|نومبر|دسمبر)\s*(\d{4})?'
         month_match = re.search(month_pattern, question_lower)
         
@@ -4056,19 +4060,8 @@ def parse_date_from_question(question):
             month_name = month_match.group(1)
             year = int(month_match.group(2)) if month_match.group(2) else today.year
             
-            urdu_months = {
-                'جنوری': 'january', 'فروری': 'february', 'مارچ': 'march',
-                'اپریل': 'april', 'مئی': 'may', 'جون': 'june',
-                'جولائی': 'july', 'اگست': 'august', 'ستمبر': 'september',
-                'اکتوبر': 'october', 'نومبر': 'november', 'دسمبر': 'december'
-            }
             month_name = urdu_months.get(month_name, month_name)
-            
-            month_num = {
-                'january': 1, 'february': 2, 'march': 3, 'april': 4,
-                'may': 5, 'june': 6, 'july': 7, 'august': 8,
-                'september': 9, 'october': 10, 'november': 11, 'december': 12
-            }.get(month_name, today.month)
+            month_num = months.get(month_name, today.month)
             
             month_start = datetime(year, month_num, 1).date()
             if month_num == 12:
@@ -4080,11 +4073,10 @@ def parse_date_from_question(question):
                 'type': 'month',
                 'start_date': month_start,
                 'end_date': month_end,
-                'date_str': month_start.strftime('%Y-%m-%d'),
                 'display': f'{month_name.capitalize()} {year}'
             }
         
-        # SPECIFIC DATE (e.g., "10 july 2026")
+        # ===== SPECIFIC DATE (e.g., "10 july 2026") =====
         else:
             date_pattern = r'(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december|جنوری|فروری|مارچ|اپریل|مئی|جون|جولائی|اگست|ستمبر|اکتوبر|نومبر|دسمبر)\s*(\d{4})?'
             date_match = re.search(date_pattern, question_lower)
@@ -4094,19 +4086,8 @@ def parse_date_from_question(question):
                 month_name = date_match.group(2)
                 year = int(date_match.group(3)) if date_match.group(3) else today.year
                 
-                urdu_months = {
-                    'جنوری': 'january', 'فروری': 'february', 'مارچ': 'march',
-                    'اپریل': 'april', 'مئی': 'may', 'جون': 'june',
-                    'جولائی': 'july', 'اگست': 'august', 'ستمبر': 'september',
-                    'اکتوبر': 'october', 'نومبر': 'november', 'دسمبر': 'december'
-                }
                 month_name = urdu_months.get(month_name, month_name)
-                
-                month_num = {
-                    'january': 1, 'february': 2, 'march': 3, 'april': 4,
-                    'may': 5, 'june': 6, 'july': 7, 'august': 8,
-                    'september': 9, 'october': 10, 'november': 11, 'december': 12
-                }.get(month_name, today.month)
+                month_num = months.get(month_name, today.month)
                 
                 try:
                     specific_date = datetime(year, month_num, day).date()
@@ -4115,7 +4096,6 @@ def parse_date_from_question(question):
                             'type': 'specific',
                             'start_date': specific_date,
                             'end_date': specific_date,
-                            'date_str': specific_date.strftime('%Y-%m-%d'),
                             'display': specific_date.strftime('%d %B %Y')
                         }
                 except:
@@ -4125,64 +4105,76 @@ def parse_date_from_question(question):
 
 
 def get_shop_data_for_date_range(date_info):
-    """Get shop data for a specific date range"""
-    
+    """Get all shop data for date range"""
     start_date = date_info['start_date']
     end_date = date_info['end_date']
     
     start_datetime = datetime.combine(start_date, datetime.min.time())
     end_datetime = datetime.combine(end_date, datetime.max.time())
     
-    # SALES
+    # ===== SALES =====
     sales = Sale.query.filter(Sale.created_at.between(start_datetime, end_datetime)).all()
     total_sales = sum(s.total_amount for s in sales)
     sales_count = len(sales)
     
-    # PHOTOCOPY
+    # ===== PHOTOCOPY =====
     photocopy = PhotocopyJob.query.filter(PhotocopyJob.created_at.between(start_datetime, end_datetime)).all()
     total_photocopy = sum(j.total_amount for j in photocopy)
     photocopy_count = len(photocopy)
     
-    # WALLET PROFIT
+    # ===== WALLET =====
     wallet = MobileWalletTransaction.query.filter(
         MobileWalletTransaction.created_at.between(start_datetime, end_datetime)
     ).all()
-    wallet_profit = sum(
-        (w.amount * 0.01 if w.transaction_type == 'send' else w.amount * 0.02) 
-        for w in wallet
-    )
+    wallet_receive = sum(w.amount for w in wallet if w.transaction_type == 'receive')
+    wallet_send = sum(w.amount for w in wallet if w.transaction_type == 'send')
+    wallet_profit = (wallet_send * 0.01) + (wallet_receive * 0.02)
     wallet_count = len(wallet)
     
-    # DATA REVENUE
+    # ===== DATA REVENUE =====
     data_revenue = DataRevenue.query.filter(
         DataRevenue.created_at.between(start_datetime, end_datetime)
     ).all()
     total_data = sum(d.amount for d in data_revenue)
     data_count = len(data_revenue)
     
-    # BILL PROFIT
+    # ===== BILL PAYMENTS =====
     bills = BillPayment.query.filter(
         BillPayment.created_at.between(start_datetime, end_datetime)
     ).all()
     bill_profit = sum(b.profit_amount for b in bills)
     bill_count = len(bills)
     
-    # EXPENSES
+    # ===== EXPENSES =====
     expenses = Expense.query.filter(Expense.expense_date.between(start_datetime, end_datetime)).all()
     total_expenses = sum(e.amount for e in expenses)
     expense_count = len(expenses)
     
-    # TOTAL REVENUE
+    # ===== TOTALS =====
     total_revenue = total_sales + total_photocopy + wallet_profit + total_data + bill_profit
     net_profit = total_revenue - total_expenses
     
-    # CUSTOMERS
+    # ===== CUSTOMERS =====
     new_customers = Customer.query.filter(
         Customer.created_at.between(start_datetime, end_datetime)
     ).count()
     total_customers = Customer.query.count()
     
-    # TOP PRODUCTS
+    # ===== DUES =====
+    total_due = db.session.query(func.sum(Customer.total_due)).scalar() or 0
+    
+    # ===== PRODUCTS =====
+    total_products = Product.query.filter_by(is_active=True).count()
+    low_stock = Product.query.filter(
+        Product.stock_quantity <= Product.min_stock_level,
+        Product.is_active == True
+    ).count()
+    out_of_stock = Product.query.filter(
+        Product.stock_quantity == 0,
+        Product.is_active == True
+    ).count()
+    
+    # ===== TOP PRODUCTS =====
     top_products = db.session.query(
         Product.name,
         func.sum(SaleItem.quantity).label('total_sold'),
@@ -4191,7 +4183,7 @@ def get_shop_data_for_date_range(date_info):
         Sale.created_at.between(start_datetime, end_datetime)
     ).group_by(Product.id).order_by(func.sum(SaleItem.quantity).desc()).limit(5).all()
     
-    # TOP CUSTOMERS
+    # ===== TOP CUSTOMERS =====
     top_customers = db.session.query(
         Customer.name,
         func.sum(Sale.total_amount).label('total_spent')
@@ -4199,7 +4191,7 @@ def get_shop_data_for_date_range(date_info):
         Sale.created_at.between(start_datetime, end_datetime)
     ).group_by(Customer.id).order_by(func.sum(Sale.total_amount).desc()).limit(5).all()
     
-    # PAYMENT METHODS
+    # ===== PAYMENT METHODS =====
     payment_methods = db.session.query(
         Sale.payment_method,
         func.count(Sale.id).label('count'),
@@ -4219,6 +4211,8 @@ def get_shop_data_for_date_range(date_info):
         'sales_count': sales_count,
         'total_photocopy': total_photocopy,
         'photocopy_count': photocopy_count,
+        'wallet_receive': wallet_receive,
+        'wallet_send': wallet_send,
         'wallet_profit': wallet_profit,
         'wallet_count': wallet_count,
         'total_data': total_data,
@@ -4231,23 +4225,30 @@ def get_shop_data_for_date_range(date_info):
         'net_profit': net_profit,
         'new_customers': new_customers,
         'total_customers': total_customers,
+        'total_due': total_due,
+        'total_products': total_products,
+        'low_stock': low_stock,
+        'out_of_stock': out_of_stock,
         'top_products': top_products,
         'top_customers': top_customers,
         'payment_methods': payment_methods,
         'avg_daily_sales': avg_daily_sales,
-        'avg_daily_profit': avg_daily_profit
+        'avg_daily_profit': avg_daily_profit,
+        'start_date': start_date,
+        'end_date': end_date
     }
 
 
-def generate_ai_response_with_date(question, data, date_info):
-    """Generate AI response based on question and date"""
+def generate_intelligent_response(question, data, date_info):
+    """Generate intelligent response based on ANY question"""
     
     question_lower = question.lower()
     display_date = date_info['display']
     
-    # ===== GREETINGS =====
-    greetings = ['hi', 'hello', 'hey', 'salam', 'assalam', 'good morning', 'good evening', 'good afternoon', 'how are you']
-    if any(g in question_lower for g in greetings):
+    # ===== CHECK WHAT USER IS ASKING =====
+    
+    # 1. GREETINGS
+    if any(word in question_lower for word in ['hi', 'hello', 'hey', 'salam', 'assalam', 'good morning', 'good evening', 'good afternoon', 'how are you', 'kia hal', 'کیا حال']):
         return f"""Assalam o Alaikum Abdul Hanan! 👋
 
 I'm your shop assistant. Here's what I can help you with:
@@ -4257,164 +4258,186 @@ I'm your shop assistant. Here's what I can help you with:
 - Profit: PKR {data['net_profit']:,.0f}
 - Sales: {data['sales_count']} orders
 
-💬 **Ask me about any date:**
-- "Today's sales"
-- "Yesterday's profit"  
-- "July 2026 revenue"
+💬 **You can ask me ANYTHING about your shop:**
+- "Today kitni sale hui?"
+- "Aj ka profit kya hai?"
+- "Photocopy ka hisab batao"
 - "10 july 2026 ki sale"
-- "This month summary"
+- "This month ka revenue"
+- "Low stock items"
+- "Top customers"
+- "Expenses"
 
-Just type your question and I'll help you out! 😊"""
-    
-    # ===== TODAY'S SALES =====
-    if any(word in question_lower for word in ['today sales', 'today sale', 'sale today', 'aj ki sale', 'آج کی سیل']):
+Just type naturally, I'll understand! 😊"""
+
+    # 2. PHOTOCOPY (ANY VARIATION)
+    if any(word in question_lower for word in ['photocopy', 'photo copy', 'فوٹو کاپی', 'copy', 'prints', 'پرنٹس', 'photo state']):
+        return f"""🖨️ **Photocopy Report - {display_date}**
+
+📊 Total Jobs: {data['photocopy_count']}
+💰 Total Revenue: PKR {data['total_photocopy']:,.0f}
+📄 Average per Job: PKR {(data['total_photocopy'] / data['photocopy_count']) if data['photocopy_count'] > 0 else 0:,.0f}
+
+📈 **Performance:**
+{'🌟 Excellent photocopy business today!' if data['photocopy_count'] > 10 else '📈 Good number of jobs!' if data['photocopy_count'] > 5 else '📊 Keep promoting photocopy services!'}
+
+💡 **Tip:** {'Consider offering bulk discounts to increase jobs!' if data['photocopy_count'] < 10 else 'You\'re doing great with photocopy!'}"""
+
+    # 3. WALLET / MOBILE WALLET
+    if any(word in question_lower for word in ['wallet', 'mobile wallet', 'jazzcash', 'easypaisa', 'والیٹ', 'موبائل والیٹ']):
+        return f"""📱 **Mobile Wallet Report - {display_date}**
+
+💰 Total Transactions: {data['wallet_count']}
+📥 Received: PKR {data['wallet_receive']:,.0f}
+📤 Sent: PKR {data['wallet_send']:,.0f}
+✅ **Profit:** PKR {data['wallet_profit']:,.0f}
+
+📈 **Breakdown:**
+• Receive Profit (2%): PKR {data['wallet_receive'] * 0.02:,.0f}
+• Send Profit (1%): PKR {data['wallet_send'] * 0.01:,.0f}
+
+{'🌟 Great wallet business today!' if data['wallet_count'] > 5 else '📈 Keep promoting wallet services!'}"""
+
+    # 4. DATA REVENUE
+    if any(word in question_lower for word in ['data revenue', 'data', 'movies', 'songs', 'cartoon', 'ڈیٹا', 'موویز', 'گانے']):
+        return f"""🎬 **Data Revenue Report - {display_date}**
+
+💰 Total Revenue: PKR {data['total_data']:,.0f}
+📦 Total Entries: {data['data_count']}
+
+📊 **Categories:**
+• Movies 🎬
+• Songs 🎵
+• Cartoon 🎨
+• Vlogs 📹
+• Other 📦
+
+{'🌟 Strong data revenue today!' if data['total_data'] > 1000 else '📈 Keep adding data content!'}"""
+
+    # 5. BILL PAYMENT
+    if any(word in question_lower for word in ['bill', 'bills', 'bill payment', 'بل', 'بل ادائیگی']):
+        return f"""📄 **Bill Payment Report - {display_date}**
+
+💰 Total Profit: PKR {data['bill_profit']:,.0f}
+📦 Total Bills: {data['bill_count']}
+
+📊 **Rule:**
+• Bill < PKR 5,000 → Profit PKR 20
+• Bill ≥ PKR 5,000 → Profit PKR 50
+
+{'🌟 Good bill payment business!' if data['bill_count'] > 3 else '📈 Promote bill payment services!'}"""
+
+    # 6. EXPENSES
+    if any(word in question_lower for word in ['expense', 'expenses', 'خرچ', 'اخراجات', 'cost']):
+        return f"""💸 **Expenses Report - {display_date}**
+
+💰 Total Expenses: PKR {data['total_expenses']:,.0f}
+📋 Total Entries: {data['expense_count']}
+📊 Revenue: PKR {data['total_revenue']:,.0f}
+
+📈 **Expense Ratio:** {((data['total_expenses'] / data['total_revenue']) * 100) if data['total_revenue'] > 0 else 0:.1f}%
+
+{'🟢 Excellent expense management!' if (data['total_expenses'] / data['total_revenue']) < 0.3 else '🟡 Review your expenses' if (data['total_expenses'] / data['total_revenue']) < 0.5 else '🔴 High expenses! Check where you can save'}"""
+
+    # 7. STOCK
+    if any(word in question_lower for word in ['stock', 'inventory', 'اسٹاک', 'انوینٹری', 'products', 'products']):
+        return f"""📦 **Inventory Report - {display_date}**
+
+📦 Total Products: {data['total_products']}
+⚠️ Low Stock: {data['low_stock']}
+🚫 Out of Stock: {data['out_of_stock']}
+✅ In Stock: {data['total_products'] - data['low_stock'] - data['out_of_stock']}
+
+📊 **Status:**
+{'🟢 Healthy inventory!' if data['low_stock'] == 0 and data['out_of_stock'] == 0 else '🟡 Some items need attention!' if data['low_stock'] > 0 else '🔴 Out of stock items! Reorder immediately!'}
+
+💡 **Action Required:** {'Check products page and reorder items' if data['low_stock'] > 0 or data['out_of_stock'] > 0 else 'Keep up the good inventory management!'}"""
+
+    # 8. CUSTOMERS
+    if any(word in question_lower for word in ['customer', 'customers', 'کسٹمر', 'کسٹمرز', 'buyer']):
+        return f"""👥 **Customers Report - {display_date}**
+
+👤 Total Customers: {data['total_customers']}
+🆕 New Customers: {data['new_customers']}
+💰 Total Due: PKR {data['total_due']:,.0f}
+
+📊 **Top Customers:**
+{chr(10).join([f"• {c.name}: PKR {c.total_spent:,.0f}" for c in data['top_customers'][:5]]) if data['top_customers'] else '• No customer data available'}
+
+💡 **Tip:** {'Follow up with customers who have due payments!' if data['total_due'] > 0 else 'Great! No outstanding dues!'}"""
+
+    # 9. REVENUE / SALES
+    if any(word in question_lower for word in ['revenue', 'sales', 'sale', 'sell', 'sell', 'ریونیو', 'سیل', 'sell']):
         return f"""📊 **Sales Report - {display_date}**
 
-💰 Total Sales: PKR {data['total_sales']:,.0f}
+💰 Total Revenue: PKR {data['total_revenue']:,.0f}
 📦 Total Orders: {data['sales_count']}
-🖨️ Photocopy: PKR {data['total_photocopy']:,.0f} ({data['photocopy_count']} jobs)
-📱 Wallet Profit: PKR {data['wallet_profit']:,.0f}
-🎬 Data Revenue: PKR {data['total_data']:,.0f}
-📄 Bill Profit: PKR {data['bill_profit']:,.0f}
+📈 Average per Order: PKR {(data['total_sales'] / data['sales_count']) if data['sales_count'] > 0 else 0:,.0f}
 
-📈 **Total Revenue:** PKR {data['total_revenue']:,.0f}
-💸 **Expenses:** PKR {data['total_expenses']:,.0f}
+📋 **Breakdown:**
+• Product Sales: PKR {data['total_sales']:,.0f}
+• Photocopy: PKR {data['total_photocopy']:,.0f}
+• Wallet Profit: PKR {data['wallet_profit']:,.0f}
+• Data Revenue: PKR {data['total_data']:,.0f}
+• Bill Profit: PKR {data['bill_profit']:,.0f}
+
 ✅ **Net Profit:** PKR {data['net_profit']:,.0f}
 
-{'🟢 Great day! Excellent performance!' if data['net_profit'] > 10000 else '📈 Good progress! Keep it up!'}"""
-    
-    # ===== TODAY'S PROFIT =====
-    if any(word in question_lower for word in ['today profit', 'profit today', 'aj ka profit', 'آج کا منافع']):
+{'🌟 Excellent sales performance!' if data['total_revenue'] > 50000 else '📈 Good sales!' if data['total_revenue'] > 10000 else '📊 Keep pushing for more sales!'}"""
+
+    # 10. PROFIT
+    if any(word in question_lower for word in ['profit', 'منافع', 'earning', 'income']):
         return f"""💰 **Profit Report - {display_date}**
 
+✅ **Net Profit:** PKR {data['net_profit']:,.0f}
 📊 Total Revenue: PKR {data['total_revenue']:,.0f}
 💸 Total Expenses: PKR {data['total_expenses']:,.0f}
-✅ **Net Profit:** PKR {data['net_profit']:,.0f}
 
-📈 **Profit Breakdown:**
-• Sales: PKR {data['total_sales']:,.0f} ({data['sales_count']} orders)
+📈 **Profit Margin:** {((data['net_profit'] / data['total_revenue']) * 100) if data['total_revenue'] > 0 else 0:.1f}%
+
+📋 **Profit Breakdown:**
+• Sales: PKR {data['total_sales']:,.0f}
 • Photocopy: PKR {data['total_photocopy']:,.0f}
 • Wallet: PKR {data['wallet_profit']:,.0f}
 • Data: PKR {data['total_data']:,.0f}
 • Bills: PKR {data['bill_profit']:,.0f}
 
-{'🟢 Excellent profit today!' if data['net_profit'] > 5000 else '📈 Keep pushing for more!'}"""
-    
-    # ===== MONTHLY SUMMARY =====
-    if any(word in question_lower for word in ['this month', 'is mahine', 'اس مہینے', 'month summary']):
-        return f"""📊 **Monthly Summary - {display_date}**
+{'🌟 Excellent profit margin!' if data['net_profit'] > 10000 else '📈 Good profit!' if data['net_profit'] > 0 else '🔴 Loss! Review expenses and increase sales!'}"""
 
-💰 **Revenue:**
+    # 11. COMPARE TODAY VS YESTERDAY
+    if 'compare' in question_lower and ('today' in question_lower or 'yesterday' in question_lower):
+        # Get yesterday data
+        yesterday = datetime.now().date() - timedelta(days=1)
+        yesterday_info = {'type': 'yesterday', 'start_date': yesterday, 'end_date': yesterday, 'display': 'Yesterday'}
+        yesterday_data = get_shop_data_for_date_range(yesterday_info)
+        
+        diff_revenue = data['total_revenue'] - yesterday_data['total_revenue']
+        diff_profit = data['net_profit'] - yesterday_data['net_profit']
+        diff_sales = data['sales_count'] - yesterday_data['sales_count']
+        
+        return f"""📊 **Comparison: Today vs Yesterday**
+
+📅 **Today:** {data['total_revenue']:,.0f} revenue | {data['net_profit']:,.0f} profit | {data['sales_count']} orders
+📅 **Yesterday:** {yesterday_data['total_revenue']:,.0f} revenue | {yesterday_data['net_profit']:,.0f} profit | {yesterday_data['sales_count']} orders
+
+📈 **Difference:**
+• Revenue: {'+' if diff_revenue > 0 else ''}{diff_revenue:,.0f} ({'↑' if diff_revenue > 0 else '↓'})
+• Profit: {'+' if diff_profit > 0 else ''}{diff_profit:,.0f} ({'↑' if diff_profit > 0 else '↓'})
+• Orders: {'+' if diff_sales > 0 else ''}{diff_sales} ({'↑' if diff_sales > 0 else '↓'})
+
+{'🌟 Today is better than yesterday!' if diff_revenue > 0 else '📈 Keep pushing to improve!'}"""
+
+    # 12. SUMMARY (ANYTHING ELSE - FULL OVERVIEW)
+    return f"""📊 **Complete Shop Summary - {display_date}**
+
+💰 **Revenue & Profit:**
 • Total Revenue: PKR {data['total_revenue']:,.0f}
 • Net Profit: PKR {data['net_profit']:,.0f}
 • Expenses: PKR {data['total_expenses']:,.0f}
 
 📦 **Sales:**
-• Total Orders: {data['sales_count']}
-• Avg Daily Sales: PKR {data['avg_daily_sales']:,.0f}
-• Top Product: {data['top_products'][0].name if data['top_products'] else 'N/A'}
-
-👥 **Customers:**
-• New This Month: {data['new_customers']}
-• Total Customers: {data['total_customers']}
-
-📈 **Performance:**
-{'🚀 Excellent month!' if data['total_revenue'] > 100000 else '💪 Good progress! Keep going!'}"""
-    
-    # ===== SPECIFIC DATE =====
-    if date_info['type'] in ['specific', 'yesterday']:
-        return f"""📊 **Summary - {display_date}**
-
-💰 Revenue: PKR {data['total_revenue']:,.0f}
-💰 Profit: PKR {data['net_profit']:,.0f}
-📦 Sales: {data['sales_count']} orders
-🖨️ Photocopy: {data['photocopy_count']} jobs
-📱 Wallet: {data['wallet_count']} transactions
-📄 Bills: {data['bill_count']} payments
-
-💡 **Insight:** {'Strong performance on this day!' if data['net_profit'] > 0 else 'Check expenses on this day.'}"""
-    
-    # ===== TOP PRODUCTS =====
-    if any(word in question_lower for word in ['top product', 'best product', 'best selling']):
-        if data['top_products']:
-            products_text = ""
-            for i, p in enumerate(data['top_products'][:5], 1):
-                products_text += f"{'🥇' if i==1 else '🥈' if i==2 else '🥉' if i==3 else f'{i}.'} **{p.name}** - {p.total_sold} units (PKR {p.total_revenue:,.0f})\n"
-            return f"""📦 **Top Products - {display_date}**
-
-{products_text}
-
-💡 **Insight:** Consider promoting these products for even more sales!"""
-        return f"📦 No product sales data available for {display_date}."
-    
-    # ===== TOP CUSTOMERS =====
-    if any(word in question_lower for word in ['top customer', 'best customer', 'best buyer']):
-        if data['top_customers']:
-            customers_text = ""
-            for i, c in enumerate(data['top_customers'][:5], 1):
-                customers_text += f"{'🥇' if i==1 else '🥈' if i==2 else '🥉' if i==3 else f'{i}.'} **{c.name}** - PKR {c.total_spent:,.0f}\n"
-            return f"""🏆 **Top Customers - {display_date}**
-
-{customers_text}
-
-💡 **Tip:** Reward your top customers with special discounts!"""
-        return f"👥 No customer data available for {display_date}."
-    
-    # ===== EXPENSES =====
-    if 'expense' in question_lower:
-        return f"""💸 **Expenses - {display_date}**
-
-Total Expenses: PKR {data['total_expenses']:,.0f}
-Total Revenue: PKR {data['total_revenue']:,.0f}
-Expense Ratio: {((data['total_expenses'] / data['total_revenue']) * 100) if data['total_revenue'] > 0 else 0:.1f}%
-
-{'🟢 Good expense management!' if (data['total_expenses'] / data['total_revenue']) < 0.3 else '📊 Review your expenses.'}"""
-    
-    # ===== LOW STOCK =====
-    if any(word in question_lower for word in ['low stock', 'stock alert', 'out of stock']):
-        try:
-            low_stock = Product.query.filter(
-                Product.stock_quantity <= Product.min_stock_level,
-                Product.is_active == True
-            ).count()
-            out_of_stock = Product.query.filter(
-                Product.stock_quantity == 0,
-                Product.is_active == True
-            ).count()
-            total_products = Product.query.filter_by(is_active=True).count()
-            
-            if low_stock > 0 or out_of_stock > 0:
-                return f"""📦 **Stock Alert Report**
-
-⚠️ Low Stock Items: {low_stock}
-🚫 Out of Stock Items: {out_of_stock}
-📦 Total Products: {total_products}
-
-💡 **Recommendation:** Please check the Products page and reorder items with low stock."""
-            else:
-                return f"""📦 **Stock Status**
-
-✅ All products are well stocked!
-📦 Total Products: {total_products}
-💚 No low stock or out of stock items.
-
-🟢 Your inventory is healthy!"""
-        except:
-            return "📦 Stock information is currently unavailable."
-    
-    # ===== SUMMARY =====
-    if any(word in question_lower for word in ['summary', 'overview', 'report', 'all']):
-        return f"""📊 **Complete Summary - {display_date}**
-
-💰 **Revenue & Profit:**
-• Revenue: PKR {data['total_revenue']:,.0f}
-• Profit: PKR {data['net_profit']:,.0f}
-• Expenses: PKR {data['total_expenses']:,.0f}
-
-📦 **Sales:**
 • Orders: {data['sales_count']}
-• Avg Daily: PKR {data['avg_daily_sales']:,.0f}
-• Top Product: {data['top_products'][0].name if data['top_products'] else 'N/A'}
+• Avg per Order: PKR {(data['total_sales'] / data['sales_count']) if data['sales_count'] > 0 else 0:,.0f}
 
 🖨️ **Photocopy:**
 • Jobs: {data['photocopy_count']}
@@ -4431,28 +4454,16 @@ Expense Ratio: {((data['total_expenses'] / data['total_revenue']) * 100) if data
 👥 **Customers:**
 • New: {data['new_customers']}
 • Total: {data['total_customers']}
+• Due: PKR {data['total_due']:,.0f}
 
-{'🟢 Overall healthy business!' if data['net_profit'] > 0 else '📈 Focus on increasing sales!'}"""
-    
-    # ===== FALLBACK =====
-    return f"""🤖 **I can help you with any date!**
+📦 **Inventory:**
+• Total Products: {data['total_products']}
+• Low Stock: {data['low_stock']}
+• Out of Stock: {data['out_of_stock']}
 
-📊 **Date Examples:**
-• "Today's sales"
-• "Yesterday's profit"
-• "July 2026 revenue"
-• "10 july 2026 ki sale"
-• "This month summary"
+📈 **Overall Status:** {'🟢 Excellent business performance!' if data['net_profit'] > 10000 else '🟡 Good performance, keep improving!' if data['net_profit'] > 0 else '🔴 Focus on increasing revenue and reducing expenses!'}
 
-📋 **Topics:**
-• Sales, Profit, Revenue
-• Expenses, Payment Methods
-• Top Products, Top Customers
-• Photocopy, Wallet, Bills
-
-💡 **Try asking:** "Today's summary" or "This month sales report"
-
-Ask anything about your shop data! 🚀"""
+💡 **Recommendation:** {'Give discounts to top customers' if data['top_customers'] else 'Focus on building customer base'}"""
 # ==================== INITIALIZE DATABASE ====================
 
 if __name__ == '__main__':
