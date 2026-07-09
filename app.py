@@ -330,7 +330,39 @@ class PurchaseItem(db.Model):
     total_price = db.Column(db.Float, nullable=False)
     received_quantity = db.Column(db.Integer)
     is_returned = db.Column(db.Boolean, default=False)
+# ============ REPAIR REVENUE MODEL ============
+class RepairRevenue(db.Model):
+    __tablename__ = 'repair_revenue'
+    id = db.Column(db.Integer, primary_key=True)
+    customer_name = db.Column(db.String(200), nullable=False)
+    phone = db.Column(db.String(20))
+    device = db.Column(db.String(200), nullable=False)
+    issue = db.Column(db.Text, nullable=False)
+    customer_amount = db.Column(db.Float, nullable=False)
+    parts_cost = db.Column(db.Float, nullable=False)
+    profit = db.Column(db.Float, nullable=False)  # customer_amount - parts_cost
+    status = db.Column(db.String(50), default='pending')
+    notes = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    user = db.relationship('User', backref='repairs')
 
+
+# ============ OTHER REVENUE MODEL ============
+class OtherRevenue(db.Model):
+    __tablename__ = 'other_revenue'
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(200), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    category = db.Column(db.String(50), default='other')
+    customer_name = db.Column(db.String(200))
+    notes = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref='other_revenues')
 class Payment(db.Model):
     __tablename__ = 'payments'
     id = db.Column(db.Integer, primary_key=True)
