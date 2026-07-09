@@ -1404,7 +1404,15 @@
                 <span>Dashboard</span>
             </a>
         </div>
-
+    <!-- ===== AI ASSISTANT ===== -->
+<div class="menu-label">Smart Tools</div>
+<div class="nav-item {% if request.endpoint == 'ai_assistant' %}active{% endif %}">
+    <a class="nav-link" href="{{ url_for('ai_assistant') }}">
+        <i class="fas fa-robot"></i>
+        <span>AI Assistant</span>
+        <span class="badge bg-success">New</span>
+    </a>
+</div>
         <!-- ===== SALES & INVENTORY ===== -->
         <div class="menu-label">Sales &amp; Inventory</div>
         <div class="nav-item {% if request.endpoint == 'new_sale' %}active{% endif %}">
