@@ -638,7 +638,17 @@ def inject_language():
     }
 
 # ==================== ROUTES ====================
+# ===== REPAIR REVENUE (Today) =====
+today_repair = RepairRevenue.query.filter(
+    RepairRevenue.created_at.between(today_start, today_end)
+).all()
+today_repair_profit = sum(r.profit for r in today_repair)
 
+# ===== OTHER REVENUE (Today) =====
+today_other = OtherRevenue.query.filter(
+    OtherRevenue.created_at.between(today_start, today_end)
+).all()
+today_other_revenue = sum(o.amount for o in today_other)
 # ---------- Authentication Routes ----------
 
 @app.route('/')
