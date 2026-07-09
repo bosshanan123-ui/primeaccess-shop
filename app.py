@@ -4176,7 +4176,7 @@ def api_sync():
 
 
 # ============================================
-# AI ASSISTANT ROUTES - FULL NATURAL LANGUAGE
+# AI ASSISTANT ROUTES - ULTIMATE VERSION
 # ============================================
 
 @app.route('/ai_assistant')
@@ -4189,7 +4189,7 @@ def ai_assistant():
 @app.route('/api/ai/ask', methods=['POST'])
 @login_required
 def ai_ask():
-    """AI Assistant - Natural Language Processing"""
+    """AI Assistant - Ultimate Natural Language Processing"""
     try:
         data = request.json
         question = data.get('question', '').strip()
@@ -4206,8 +4206,8 @@ def ai_ask():
         # Get shop data for date range
         shop_data = get_shop_data_for_date_range(date_info)
         
-        # Generate intelligent response
-        response = generate_intelligent_response(question, shop_data, date_info)
+        # Generate ultimate intelligent response
+        response = generate_ultimate_response(question, shop_data, date_info)
         
         return jsonify({
             'status': 'success',
@@ -4393,13 +4393,27 @@ def get_shop_data_for_date_range(date_info):
     bill_profit = sum(b.profit_amount for b in bills)
     bill_count = len(bills)
     
+    # ===== REPAIR REVENUE =====
+    repairs = RepairRevenue.query.filter(
+        RepairRevenue.created_at.between(start_datetime, end_datetime)
+    ).all()
+    repair_profit = sum(r.profit for r in repairs)
+    repair_count = len(repairs)
+    
+    # ===== OTHER REVENUE =====
+    others = OtherRevenue.query.filter(
+        OtherRevenue.created_at.between(start_datetime, end_datetime)
+    ).all()
+    other_revenue = sum(o.amount for o in others)
+    other_count = len(others)
+    
     # ===== EXPENSES =====
     expenses = Expense.query.filter(Expense.expense_date.between(start_datetime, end_datetime)).all()
     total_expenses = sum(e.amount for e in expenses)
     expense_count = len(expenses)
     
     # ===== TOTALS =====
-    total_revenue = total_sales + total_photocopy + wallet_profit + total_data + bill_profit
+    total_revenue = total_sales + total_photocopy + wallet_profit + total_data + bill_profit + repair_profit + other_revenue
     net_profit = total_revenue - total_expenses
     
     # ===== CUSTOMERS =====
@@ -4452,6 +4466,38 @@ def get_shop_data_for_date_range(date_info):
     avg_daily_sales = total_sales / days_in_range if days_in_range > 0 else 0
     avg_daily_profit = net_profit / days_in_range if days_in_range > 0 else 0
     
+    # ===== INTELLIGENT INSIGHTS =====
+    insights = []
+    if net_profit > 0:
+        insights.append("🟢 Your business is profitable today!")
+    else:
+        insights.append("🔴 You are in loss today. Consider reducing expenses.")
+    
+    if sales_count > 10:
+        insights.append("📈 Excellent sales volume today!")
+    elif sales_count > 5:
+        insights.append("📊 Good sales volume, keep pushing!")
+    else:
+        insights.append("📉 Low sales today. Try promotions!")
+    
+    if wallet_profit > 100:
+        insights.append("💰 Strong mobile wallet business!")
+    
+    if bill_profit > 100:
+        insights.append("📄 Good bill payment commission!")
+    
+    if repair_profit > 500:
+        insights.append("🔧 Great repair revenue!")
+    
+    if total_due > 10000:
+        insights.append("⚠️ High customer dues! Follow up with customers.")
+    
+    if low_stock > 0 or out_of_stock > 0:
+        insights.append("📦 Some products are low in stock. Reorder soon!")
+    
+    if not insights:
+        insights.append("📊 Keep working hard! Success will follow.")
+    
     return {
         'date_info': date_info,
         'days_in_range': days_in_range,
@@ -4467,6 +4513,10 @@ def get_shop_data_for_date_range(date_info):
         'data_count': data_count,
         'bill_profit': bill_profit,
         'bill_count': bill_count,
+        'repair_profit': repair_profit,
+        'repair_count': repair_count,
+        'other_revenue': other_revenue,
+        'other_count': other_count,
         'total_revenue': total_revenue,
         'total_expenses': total_expenses,
         'expense_count': expense_count,
@@ -4482,179 +4532,314 @@ def get_shop_data_for_date_range(date_info):
         'payment_methods': payment_methods,
         'avg_daily_sales': avg_daily_sales,
         'avg_daily_profit': avg_daily_profit,
+        'insights': insights,
         'start_date': start_date,
         'end_date': end_date
     }
 
 
-def generate_intelligent_response(question, data, date_info):
-    """Generate intelligent response based on ANY question"""
+def generate_ultimate_response(question, data, date_info):
+    """Generate ULTIMATE response - Mind Blowing!"""
     
     question_lower = question.lower()
     display_date = date_info['display']
     
-    # ===== CHECK WHAT USER IS ASKING =====
+    # ============ INTELLIGENT ANALYSIS ============
+    
+    # Check what user is asking
+    is_greeting = any(word in question_lower for word in ['hi', 'hello', 'hey', 'salam', 'assalam', 'good morning', 'good evening', 'good afternoon', 'how are you', 'kia hal', 'کیا حال'])
+    is_sales = any(word in question_lower for word in ['sale', 'sales', 'sell', 'سیل', 'فروخت'])
+    is_profit = any(word in question_lower for word in ['profit', 'منافع', 'earning', 'income', 'کمائی'])
+    is_expense = any(word in question_lower for word in ['expense', 'expenses', 'خرچ', 'اخراجات', 'cost', 'لاگت'])
+    is_customer = any(word in question_lower for word in ['customer', 'customers', 'کسٹمر', 'buyer'])
+    is_stock = any(word in question_lower for word in ['stock', 'inventory', 'اسٹاک', 'انوینٹری'])
+    is_wallet = any(word in question_lower for word in ['wallet', 'mobile wallet', 'jazzcash', 'easypaisa', 'والیٹ'])
+    is_photocopy = any(word in question_lower for word in ['photocopy', 'copy', 'فوٹو کاپی', 'print', 'پرنٹ'])
+    is_bill = any(word in question_lower for word in ['bill', 'bills', 'بل', 'payment'])
+    is_repair = any(word in question_lower for word in ['repair', 'repairs', 'ریپیئر', 'fix', 'مرمت'])
+    is_other = any(word in question_lower for word in ['other', 'others', 'دیگر', 'misc'])
+    is_data = any(word in question_lower for word in ['data', 'movies', 'songs', 'cartoon', 'ڈیٹا'])
+    is_summary = any(word in question_lower for word in ['summary', 'overview', 'report', 'خلاصہ', 'رپورٹ'])
+    is_compare = 'compare' in question_lower or 'comparison' in question_lower
+    
+    # ============ GENERATE RESPONSE ============
     
     # 1. GREETINGS
-    if any(word in question_lower for word in ['hi', 'hello', 'hey', 'salam', 'assalam', 'good morning', 'good evening', 'good afternoon', 'how are you', 'kia hal', 'کیا حال']):
-        return f"""Assalam o Alaikum Abdul Hanan! 👋
+    if is_greeting:
+        return f"""🌟 **Assalam o Alaikum Abdul Hanan!** 🌟
 
-I'm your shop assistant. Here's what I can help you with:
+I am your **Ultimate AI Business Assistant** for PRIMEACCESS! 💪
 
-📊 **Quick Stats ({display_date}):**
-- Revenue: PKR {data['total_revenue']:,.0f}
-- Profit: PKR {data['net_profit']:,.0f}
-- Sales: {data['sales_count']} orders
+I have analyzed your entire business data and here's what I found:
 
-💬 **You can ask me ANYTHING about your shop:**
-- "Today kitni sale hui?"
-- "Aj ka profit kya hai?"
-- "Photocopy ka hisab batao"
-- "10 july 2026 ki sale"
-- "This month ka revenue"
-- "Low stock items"
-- "Top customers"
-- "Expenses"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 **LIVE BUSINESS SNAPSHOT**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Just type naturally, I'll understand! 😊"""
+💰 **Revenue:** PKR {data['total_revenue']:,.0f}
+💵 **Profit:** PKR {data['net_profit']:,.0f}
+📦 **Sales:** {data['sales_count']} orders
+👥 **Customers:** {data['total_customers']}
+📄 **Bills:** {data['bill_count']} (PKR {data['bill_profit']:,.0f} profit)
+🔧 **Repairs:** {data['repair_count']} (PKR {data['repair_profit']:,.0f} profit)
 
-    # 2. PHOTOCOPY (ANY VARIATION)
-    if any(word in question_lower for word in ['photocopy', 'photo copy', 'فوٹو کاپی', 'copy', 'prints', 'پرنٹس', 'photo state']):
-        return f"""🖨️ **Photocopy Report - {display_date}**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHTS**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 Total Jobs: {data['photocopy_count']}
-💰 Total Revenue: PKR {data['total_photocopy']:,.0f}
-📄 Average per Job: PKR {(data['total_photocopy'] / data['photocopy_count']) if data['photocopy_count'] > 0 else 0:,.0f}
+{chr(10).join(data['insights'])}
 
-📈 **Performance:**
-{'🌟 Excellent photocopy business today!' if data['photocopy_count'] > 10 else '📈 Good number of jobs!' if data['photocopy_count'] > 5 else '📊 Keep promoting photocopy services!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💡 **Tip:** {'Consider offering bulk discounts to increase jobs!' if data['photocopy_count'] < 10 else 'You\'re doing great with photocopy!'}"""
+🎯 **You can ask me ANYTHING:**
+• "Today ki sale batao"
+• "Profit kya hai?"
+• "Stock kaisa hai?"
+• "Top customers"
+• "10 july 2026 ki sale"
+• "This month ka revenue"
+• "Compare today and yesterday"
+• "Repair ka hisab"
+• "Bill payment profit"
 
-    # 3. WALLET / MOBILE WALLET
-    if any(word in question_lower for word in ['wallet', 'mobile wallet', 'jazzcash', 'easypaisa', 'والیٹ', 'موبائل والیٹ']):
-        return f"""📱 **Mobile Wallet Report - {display_date}**
+💬 Just type naturally - I understand Urdu & English!
 
-💰 Total Transactions: {data['wallet_count']}
-📥 Received: PKR {data['wallet_receive']:,.0f}
-📤 Sent: PKR {data['wallet_send']:,.0f}
-✅ **Profit:** PKR {data['wallet_profit']:,.0f}
+**Warning:** I'm not ChatGPT or Gemini... I'm **YOUR** business AI! 😎"""
+    
+    # 2. SALES
+    if is_sales:
+        if data['sales_count'] == 0:
+            return f"""📊 **SALES REPORT - {display_date}**
 
-📈 **Breakdown:**
-• Receive Profit (2%): PKR {data['wallet_receive'] * 0.02:,.0f}
-• Send Profit (1%): PKR {data['wallet_send'] * 0.01:,.0f}
+⚠️ **No sales recorded today!**
 
-{'🌟 Great wallet business today!' if data['wallet_count'] > 5 else '📈 Keep promoting wallet services!'}"""
+💡 **AI Suggestion:** 
+• Try offering discounts on popular items
+• Promote your best products
+• Reach out to regular customers
 
-    # 4. DATA REVENUE
-    if any(word in question_lower for word in ['data revenue', 'data', 'movies', 'songs', 'cartoon', 'ڈیٹا', 'موویز', 'گانے']):
-        return f"""🎬 **Data Revenue Report - {display_date}**
+🚀 **Don't worry! Tomorrow is a new day!**"""
+        
+        top_sales = data['top_products'][0] if data['top_products'] else None
+        
+        return f"""📊 **SALES REPORT - {display_date}**
 
-💰 Total Revenue: PKR {data['total_data']:,.0f}
-📦 Total Entries: {data['data_count']}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 **REVENUE:** PKR {data['total_sales']:,.0f}
+📦 **ORDERS:** {data['sales_count']}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 **Categories:**
-• Movies 🎬
-• Songs 🎵
-• Cartoon 🎨
-• Vlogs 📹
-• Other 📦
+🏆 **TOP PRODUCTS:**
+{chr(10).join([f"• {p.name}: {p.total_sold} units (PKR {p.total_revenue:,.0f})" for p in data['top_products'][:5]]) if data['top_products'] else "• No products sold yet"}
 
-{'🌟 Strong data revenue today!' if data['total_data'] > 1000 else '📈 Keep adding data content!'}"""
+📈 **AVERAGE PER ORDER:** PKR {(data['total_sales'] / data['sales_count']) if data['sales_count'] > 0 else 0:,.0f}
 
-    # 5. BILL PAYMENT
-    if any(word in question_lower for word in ['bill', 'bills', 'bill payment', 'بل', 'بل ادائیگی']):
-        return f"""📄 **Bill Payment Report - {display_date}**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHT:**
+{'🌟 Excellent sales! Keep it up!' if data['sales_count'] > 10 else '📈 Good sales! You can do even better!' if data['sales_count'] > 5 else '📊 Focus on increasing sales today!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 3. PROFIT
+    if is_profit:
+        profit_margin = (data['net_profit'] / data['total_revenue'] * 100) if data['total_revenue'] > 0 else 0
+        
+        return f"""💰 **PROFIT REPORT - {display_date}**
 
-💰 Total Profit: PKR {data['bill_profit']:,.0f}
-📦 Total Bills: {data['bill_count']}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ **NET PROFIT:** PKR {data['net_profit']:,.0f}
+📊 **REVENUE:** PKR {data['total_revenue']:,.0f}
+💸 **EXPENSES:** PKR {data['total_expenses']:,.0f}
+📈 **PROFIT MARGIN:** {profit_margin:.1f}%
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 **Rule:**
-• Bill < PKR 5,000 → Profit PKR 20
-• Bill ≥ PKR 5,000 → Profit PKR 50
-
-{'🌟 Good bill payment business!' if data['bill_count'] > 3 else '📈 Promote bill payment services!'}"""
-
-    # 6. EXPENSES
-    if any(word in question_lower for word in ['expense', 'expenses', 'خرچ', 'اخراجات', 'cost']):
-        return f"""💸 **Expenses Report - {display_date}**
-
-💰 Total Expenses: PKR {data['total_expenses']:,.0f}
-📋 Total Entries: {data['expense_count']}
-📊 Revenue: PKR {data['total_revenue']:,.0f}
-
-📈 **Expense Ratio:** {((data['total_expenses'] / data['total_revenue']) * 100) if data['total_revenue'] > 0 else 0:.1f}%
-
-{'🟢 Excellent expense management!' if (data['total_expenses'] / data['total_revenue']) < 0.3 else '🟡 Review your expenses' if (data['total_expenses'] / data['total_revenue']) < 0.5 else '🔴 High expenses! Check where you can save'}"""
-
-    # 7. STOCK
-    if any(word in question_lower for word in ['stock', 'inventory', 'اسٹاک', 'انوینٹری', 'products', 'products']):
-        return f"""📦 **Inventory Report - {display_date}**
-
-📦 Total Products: {data['total_products']}
-⚠️ Low Stock: {data['low_stock']}
-🚫 Out of Stock: {data['out_of_stock']}
-✅ In Stock: {data['total_products'] - data['low_stock'] - data['out_of_stock']}
-
-📊 **Status:**
-{'🟢 Healthy inventory!' if data['low_stock'] == 0 and data['out_of_stock'] == 0 else '🟡 Some items need attention!' if data['low_stock'] > 0 else '🔴 Out of stock items! Reorder immediately!'}
-
-💡 **Action Required:** {'Check products page and reorder items' if data['low_stock'] > 0 or data['out_of_stock'] > 0 else 'Keep up the good inventory management!'}"""
-
-    # 8. CUSTOMERS
-    if any(word in question_lower for word in ['customer', 'customers', 'کسٹمر', 'کسٹمرز', 'buyer']):
-        return f"""👥 **Customers Report - {display_date}**
-
-👤 Total Customers: {data['total_customers']}
-🆕 New Customers: {data['new_customers']}
-💰 Total Due: PKR {data['total_due']:,.0f}
-
-📊 **Top Customers:**
-{chr(10).join([f"• {c.name}: PKR {c.total_spent:,.0f}" for c in data['top_customers'][:5]]) if data['top_customers'] else '• No customer data available'}
-
-💡 **Tip:** {'Follow up with customers who have due payments!' if data['total_due'] > 0 else 'Great! No outstanding dues!'}"""
-
-    # 9. REVENUE / SALES
-    if any(word in question_lower for word in ['revenue', 'sales', 'sale', 'sell', 'sell', 'ریونیو', 'سیل', 'sell']):
-        return f"""📊 **Sales Report - {display_date}**
-
-💰 Total Revenue: PKR {data['total_revenue']:,.0f}
-📦 Total Orders: {data['sales_count']}
-📈 Average per Order: PKR {(data['total_sales'] / data['sales_count']) if data['sales_count'] > 0 else 0:,.0f}
-
-📋 **Breakdown:**
-• Product Sales: PKR {data['total_sales']:,.0f}
-• Photocopy: PKR {data['total_photocopy']:,.0f}
-• Wallet Profit: PKR {data['wallet_profit']:,.0f}
-• Data Revenue: PKR {data['total_data']:,.0f}
-• Bill Profit: PKR {data['bill_profit']:,.0f}
-
-✅ **Net Profit:** PKR {data['net_profit']:,.0f}
-
-{'🌟 Excellent sales performance!' if data['total_revenue'] > 50000 else '📈 Good sales!' if data['total_revenue'] > 10000 else '📊 Keep pushing for more sales!'}"""
-
-    # 10. PROFIT
-    if any(word in question_lower for word in ['profit', 'منافع', 'earning', 'income']):
-        return f"""💰 **Profit Report - {display_date}**
-
-✅ **Net Profit:** PKR {data['net_profit']:,.0f}
-📊 Total Revenue: PKR {data['total_revenue']:,.0f}
-💸 Total Expenses: PKR {data['total_expenses']:,.0f}
-
-📈 **Profit Margin:** {((data['net_profit'] / data['total_revenue']) * 100) if data['total_revenue'] > 0 else 0:.1f}%
-
-📋 **Profit Breakdown:**
+📋 **BREAKDOWN:**
 • Sales: PKR {data['total_sales']:,.0f}
 • Photocopy: PKR {data['total_photocopy']:,.0f}
 • Wallet: PKR {data['wallet_profit']:,.0f}
 • Data: PKR {data['total_data']:,.0f}
 • Bills: PKR {data['bill_profit']:,.0f}
+• Repairs: PKR {data['repair_profit']:,.0f}
+• Other: PKR {data['other_revenue']:,.0f}
 
-{'🌟 Excellent profit margin!' if data['net_profit'] > 10000 else '📈 Good profit!' if data['net_profit'] > 0 else '🔴 Loss! Review expenses and increase sales!'}"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHT:**
+{'🟢 EXCELLENT PROFIT! You are on fire today! 🔥' if data['net_profit'] > 10000 else '🟡 Good profit! Keep pushing for more!' if data['net_profit'] > 0 else '🔴 You are in loss. Reduce expenses or increase sales!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 4. EXPENSES
+    if is_expense:
+        expense_ratio = (data['total_expenses'] / data['total_revenue'] * 100) if data['total_revenue'] > 0 else 0
+        
+        return f"""💸 **EXPENSES REPORT - {display_date}**
 
-    # 11. COMPARE TODAY VS YESTERDAY
-    if 'compare' in question_lower and ('today' in question_lower or 'yesterday' in question_lower):
-        # Get yesterday data
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💳 **TOTAL EXPENSES:** PKR {data['total_expenses']:,.0f}
+📊 **EXPENSE RATIO:** {expense_ratio:.1f}%
+📋 **ENTRIES:** {data['expense_count']}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 **COMPARISON:**
+• Revenue: PKR {data['total_revenue']:,.0f}
+• Profit: PKR {data['net_profit']:,.0f}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHT:**
+{'🟢 EXCELLENT! Expense ratio is very low!' if expense_ratio < 20 else '🟡 Good but can improve!' if expense_ratio < 40 else '🔴 High expenses! Review each expense!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 5. CUSTOMERS
+    if is_customer:
+        due_text = f"⚠️ Total due: PKR {data['total_due']:,.0f}" if data['total_due'] > 0 else "✅ No outstanding dues!"
+        
+        return f"""👥 **CUSTOMER REPORT - {display_date}**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 **TOTAL CUSTOMERS:** {data['total_customers']}
+🆕 **NEW TODAY:** {data['new_customers']}
+💰 **TOTAL DUE:** PKR {data['total_due']:,.0f}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏆 **TOP CUSTOMERS:**
+{chr(10).join([f"• {c.name}: PKR {c.total_spent:,.0f}" for c in data['top_customers'][:5]]) if data['top_customers'] else "• No customer data available"}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHT:**
+{'🔥 Your top customers are loyal! Give them special discounts!' if data['top_customers'] else '📈 Focus on building customer relationships!'}
+{due_text}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 6. STOCK
+    if is_stock:
+        stock_status = "🟢 Healthy" if data['low_stock'] == 0 and data['out_of_stock'] == 0 else "🟡 Needs attention" if data['low_stock'] > 0 else "🔴 Urgent!"
+        
+        return f"""📦 **INVENTORY REPORT - {display_date}**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 **TOTAL PRODUCTS:** {data['total_products']}
+⚠️ **LOW STOCK:** {data['low_stock']}
+🚫 **OUT OF STOCK:** {data['out_of_stock']}
+✅ **IN STOCK:** {data['total_products'] - data['low_stock'] - data['out_of_stock']}
+📊 **STATUS:** {stock_status}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 **AI INSIGHT:**
+{'🟢 Your inventory is perfectly managed! Great job!' if data['low_stock'] == 0 and data['out_of_stock'] == 0 else '🟡 Some items need reordering. Check products page!' if data['low_stock'] > 0 else '🔴 URGENT! Out of stock items! Reorder immediately!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 7. WALLET
+    if is_wallet:
+        return f"""📱 **MOBILE WALLET REPORT - {display_date}**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 **TOTAL TRANSACTIONS:** {data['wallet_count']}
+📥 **RECEIVED:** PKR {data['wallet_receive']:,.0f}
+📤 **SENT:** PKR {data['wallet_send']:,.0f}
+✅ **PROFIT:** PKR {data['wallet_profit']:,.0f}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 **BREAKDOWN:**
+• Receive Profit (2%): PKR {data['wallet_receive'] * 0.02:,.0f}
+• Send Profit (1%): PKR {data['wallet_send'] * 0.01:,.0f}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHT:**
+{'🌟 EXCELLENT wallet business! Keep it up!' if data['wallet_count'] > 10 else '📈 Good wallet transactions!' if data['wallet_count'] > 5 else '📊 Promote wallet services more!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 8. PHOTOCOPY
+    if is_photocopy:
+        avg_per_job = (data['total_photocopy'] / data['photocopy_count']) if data['photocopy_count'] > 0 else 0
+        
+        return f"""🖨️ **PHOTOCOPY REPORT - {display_date}**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 **TOTAL JOBS:** {data['photocopy_count']}
+💰 **REVENUE:** PKR {data['total_photocopy']:,.0f}
+📊 **AVERAGE PER JOB:** PKR {avg_per_job:,.0f}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 **AI INSIGHT:**
+{'🌟 Excellent photocopy business! You are the king of copies! 👑' if data['photocopy_count'] > 20 else '📈 Good photocopy jobs! Keep promoting!' if data['photocopy_count'] > 10 else '📊 More photocopy promotions needed!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 9. BILL PAYMENT
+    if is_bill:
+        return f"""📄 **BILL PAYMENT REPORT - {display_date}**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 **TOTAL PROFIT:** PKR {data['bill_profit']:,.0f}
+📦 **TOTAL BILLS:** {data['bill_count']}
+📊 **AVERAGE PROFIT:** PKR {(data['bill_profit'] / data['bill_count']) if data['bill_count'] > 0 else 0:,.0f}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 **RULE:**
+• Bill < PKR 5,000 → Profit PKR 20
+• Bill ≥ PKR 5,000 → Profit PKR 50
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHT:**
+{'🌟 Great bill payment business! Customers trust you!' if data['bill_count'] > 5 else '📈 Promote bill payment services!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 10. REPAIR
+    if is_repair:
+        avg_repair_profit = (data['repair_profit'] / data['repair_count']) if data['repair_count'] > 0 else 0
+        
+        return f"""🔧 **REPAIR REPORT - {display_date}**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 **TOTAL REPAIRS:** {data['repair_count']}
+💰 **TOTAL PROFIT:** PKR {data['repair_profit']:,.0f}
+📊 **AVERAGE PROFIT:** PKR {avg_repair_profit:,.0f}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 **AI INSIGHT:**
+{'🌟 EXCELLENT repair business! You are a repair master! 🛠️' if data['repair_count'] > 5 else '📈 Good repair jobs! Keep building trust!' if data['repair_count'] > 0 else '📊 Promote repair services more!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 11. OTHER REVENUE
+    if is_other:
+        return f"""📦 **OTHER REVENUE REPORT - {display_date}**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 **TOTAL REVENUE:** PKR {data['other_revenue']:,.0f}
+📋 **TOTAL ENTRIES:** {data['other_count']}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 **CATEGORIES COVERED:**
+• Apps Download 📱
+• Game Top-up 🎮
+• Subscriptions 📺
+• Printing Services 🖨️
+• And more...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHT:**
+{'🌟 Diversified revenue! You are a business genius! 🧠' if data['other_count'] > 5 else '📈 Keep exploring new revenue streams!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 12. DATA REVENUE
+    if is_data:
+        return f"""🎬 **DATA REVENUE REPORT - {display_date}**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 **TOTAL REVENUE:** PKR {data['total_data']:,.0f}
+📦 **TOTAL ENTRIES:** {data['data_count']}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 **CATEGORIES:**
+• Movies 🎬• Songs 🎵
+• Cartoon 🎨
+• Vlogs 📹
+• Other 📦
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHT:**
+{'🌟 Data is the new oil! You are making good money from data!' if data['total_data'] > 1000 else '📈 Add more data content to increase revenue!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 13. COMPARE
+    if is_compare:
         yesterday = datetime.now().date() - timedelta(days=1)
         yesterday_info = {'type': 'yesterday', 'start_date': yesterday, 'end_date': yesterday, 'display': 'Yesterday'}
         yesterday_data = get_shop_data_for_date_range(yesterday_info)
@@ -4663,56 +4848,135 @@ Just type naturally, I'll understand! 😊"""
         diff_profit = data['net_profit'] - yesterday_data['net_profit']
         diff_sales = data['sales_count'] - yesterday_data['sales_count']
         
-        return f"""📊 **Comparison: Today vs Yesterday**
+        return f"""📊 **COMPARISON: Today vs Yesterday**
 
-📅 **Today:** {data['total_revenue']:,.0f} revenue | {data['net_profit']:,.0f} profit | {data['sales_count']} orders
-📅 **Yesterday:** {yesterday_data['total_revenue']:,.0f} revenue | {yesterday_data['net_profit']:,.0f} profit | {yesterday_data['sales_count']} orders
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 **TODAY:**
+💰 Revenue: PKR {data['total_revenue']:,.0f}
+💵 Profit: PKR {data['net_profit']:,.0f}
+📦 Sales: {data['sales_count']} orders
 
-📈 **Difference:**
-• Revenue: {'+' if diff_revenue > 0 else ''}{diff_revenue:,.0f} ({'↑' if diff_revenue > 0 else '↓'})
-• Profit: {'+' if diff_profit > 0 else ''}{diff_profit:,.0f} ({'↑' if diff_profit > 0 else '↓'})
-• Orders: {'+' if diff_sales > 0 else ''}{diff_sales} ({'↑' if diff_sales > 0 else '↓'})
+📅 **YESTERDAY:**
+💰 Revenue: PKR {yesterday_data['total_revenue']:,.0f}
+💵 Profit: PKR {yesterday_data['net_profit']:,.0f}
+📦 Sales: {yesterday_data['sales_count']} orders
 
-{'🌟 Today is better than yesterday!' if diff_revenue > 0 else '📈 Keep pushing to improve!'}"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📈 **DIFFERENCE:**
+• Revenue: {'+' if diff_revenue > 0 else ''}{diff_revenue:,.0f} ({'📈 Up' if diff_revenue > 0 else '📉 Down'})
+• Profit: {'+' if diff_profit > 0 else ''}{diff_profit:,.0f} ({'📈 Up' if diff_profit > 0 else '📉 Down'})
+• Sales: {'+' if diff_sales > 0 else ''}{diff_sales} ({'📈 Up' if diff_sales > 0 else '📉 Down'})
 
-    # 12. SUMMARY (ANYTHING ELSE - FULL OVERVIEW)
-    return f"""📊 **Complete Shop Summary - {display_date}**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHT:**
+{'🌟 TODAY IS BETTER! You are improving! Keep it up! 🚀' if diff_revenue > 0 else '📊 Yesterday was better. Analyze what went wrong and improve!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 14. SUMMARY (ULTIMATE)
+    if is_summary:
+        profit_margin = (data['net_profit'] / data['total_revenue'] * 100) if data['total_revenue'] > 0 else 0
+        
+        return f"""📊 **ULTIMATE BUSINESS SUMMARY - {display_date}**
 
-💰 **Revenue & Profit:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 **REVENUE & PROFIT**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Total Revenue: PKR {data['total_revenue']:,.0f}
 • Net Profit: PKR {data['net_profit']:,.0f}
+• Profit Margin: {profit_margin:.1f}%
 • Expenses: PKR {data['total_expenses']:,.0f}
 
-📦 **Sales:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 **SALES & ORDERS**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Orders: {data['sales_count']}
 • Avg per Order: PKR {(data['total_sales'] / data['sales_count']) if data['sales_count'] > 0 else 0:,.0f}
+• Top Product: {data['top_products'][0].name if data['top_products'] else 'N/A'}
 
-🖨️ **Photocopy:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🖨️ **PHOTOCOPY**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Jobs: {data['photocopy_count']}
 • Revenue: PKR {data['total_photocopy']:,.0f}
 
-📱 **Wallet:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📱 **WALLET**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Transactions: {data['wallet_count']}
 • Profit: PKR {data['wallet_profit']:,.0f}
 
-📄 **Bills:**
-• Payments: {data['bill_count']}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 **BILLS**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Bills: {data['bill_count']}
 • Profit: PKR {data['bill_profit']:,.0f}
 
-👥 **Customers:**
-• New: {data['new_customers']}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 **REPAIRS**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Repairs: {data['repair_count']}
+• Profit: PKR {data['repair_profit']:,.0f}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 **OTHER REVENUE**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Entries: {data['other_count']}
+• Revenue: PKR {data['other_revenue']:,.0f}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👥 **CUSTOMERS**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Total: {data['total_customers']}
+• New Today: {data['new_customers']}
 • Due: PKR {data['total_due']:,.0f}
 
-📦 **Inventory:**
-• Total Products: {data['total_products']}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 **INVENTORY**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Products: {data['total_products']}
 • Low Stock: {data['low_stock']}
 • Out of Stock: {data['out_of_stock']}
 
-📈 **Overall Status:** {'🟢 Excellent business performance!' if data['net_profit'] > 10000 else '🟡 Good performance, keep improving!' if data['net_profit'] > 0 else '🔴 Focus on increasing revenue and reducing expenses!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHTS**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{chr(10).join(data['insights'])}
 
-💡 **Recommendation:** {'Give discounts to top customers' if data['top_customers'] else 'Focus on building customer base'}"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏆 **OVERALL STATUS:**
+{'🟢 EXCELLENT BUSINESS PERFORMANCE! You are a genius! 🧠' if data['net_profit'] > 10000 else '🟡 GOOD PERFORMANCE! Keep improving! 📈' if data['net_profit'] > 0 else '🔴 FOCUS ON IMPROVEMENT! Reduce expenses and increase sales!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+    
+    # 15. FALLBACK - SMART RESPONSE
+    return f"""🤖 **I UNDERSTAND YOUR QUESTION!**
 
+Let me help you with that. Here's what I know about your business:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 **QUICK SNAPSHOT**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 Revenue: PKR {data['total_revenue']:,.0f}
+💵 Profit: PKR {data['net_profit']:,.0f}
+📦 Sales: {data['sales_count']} orders
+👥 Customers: {data['total_customers']}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 **AI INSIGHT:**
+{data['insights'][0] if data['insights'] else 'Keep working hard!'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💬 **You can ask me:**
+• "Today ki sale batao"
+• "Profit kya hai?"
+• "Stock report"
+• "Top customers"
+• "10 july 2026 ki sale"
+• "This month summary"
+• "Compare today and yesterday"
+
+I understand **Urdu** and **English**! 🚀
+Ask anything about your business!"""
 
 # ==================== INITIALIZE DATABASE ====================
 
