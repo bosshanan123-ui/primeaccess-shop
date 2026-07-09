@@ -1,0 +1,353 @@
+<!-- templates/repair_revenue.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}ریپیئر ریونیو - شاپ مینجمنٹ{% else %}Repair Revenue - Shop Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-tools text-primary me-2"></i>
+                {% if current_lang == 'ur' %}ریپیئر ریونیو{% else %}Repair Revenue{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}ریپیئر ریونیو{% else %}Repair Revenue{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #667eea;">
+            <div class="stat-number">{{ repairs|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل ریپیئرز{% else %}Total Repairs{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #00b894;">
+            <div class="stat-number">PKR {{ "%.0f"|format(total_profit) }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}کل منافع{% else %}Total Profit{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #fdcb6e;">
+            <div class="stat-number">{{ repairs|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #e17055;">
+            <div class="stat-number">{{ repairs|selectattr('status', 'equalto', 'completed')|list|length }}</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}مکمل شدہ{% else %}Completed{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Repair Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-plus me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}نیا ریپیئر شامل کریں{% else %}Add New Repair{% endif %}
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('add_repair') }}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}کسٹمر کا نام{% else %}Customer Name{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="customer_name" placeholder="{% if current_lang == 'ur' %}نام{% else %}Name{% endif %}" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}فون{% else %}Phone{% endif %}
+                    </label>
+                    <input type="tel" class="form-control" name="phone" placeholder="03XX-XXXXXXX">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}ڈیوائس{% else %}Device{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="device" placeholder="{% if current_lang == 'ur' %}مثال: iPhone 13{% else %}e.g., iPhone 13{% endif %}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}مسئلہ{% else %}Issue{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="issue" placeholder="{% if current_lang == 'ur' %}کیا مسئلہ ہے؟{% else %}What's the issue?{% endif %}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}کسٹمر کو قیمت{% else %}Customer Price{% endif %}
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">PKR</span>
+                        <input type="number" class="form-control" name="customer_amount" required step="0.01" min="0" placeholder="0.00" onchange="calculateProfit()">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}پارٹس کا خرچ{% else %}Parts Cost{% endif %}
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">PKR</span>
+                        <input type="number" class="form-control" name="parts_cost" required step="0.01" min="0" placeholder="0.00" onchange="calculateProfit()">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}منافع (PKR){% else %}Profit (PKR){% endif %}
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">PKR</span>
+                        <input type="number" class="form-control" id="repairProfit" readonly style="background: #f8f9fa; font-weight: bold; color: #00b894;">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}
+                    </label>
+                    <select class="form-select" name="status">
+                        <option value="pending">{% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}</option>
+                        <option value="completed">{% if current_lang == 'ur' %}مکمل{% else %}Completed{% endif %}</option>
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">
+                        {% if current_lang == 'ur' %}نوٹس{% else %}Notes{% endif %}
+                    </label>
+                    <input type="text" class="form-control" name="notes" placeholder="{% if current_lang == 'ur' %}اضافی نوٹس{% else %}Additional notes{% endif %}">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>
+                        {% if current_lang == 'ur' %}ریپیئر شامل کریں{% else %}Add Repair{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Repair History -->
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-history me-2 text-primary"></i>
+        {% if current_lang == 'ur' %}ریپیئر ہسٹری{% else %}Repair History{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="repairTable">
+                <thead>
+                    <tr>
+                        <th>{% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}ڈیوائس{% else %}Device{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}مسئلہ{% else %}Issue{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}کسٹمر قیمت{% else %}Customer Price{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}پارٹس خرچ{% else %}Parts Cost{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}منافع{% else %}Profit{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for repair in repairs %}
+                        <tr>
+                            <td>{{ repair.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ repair.customer_name }}</td>
+                            <td><span class="badge bg-info">{{ repair.device }}</span></td>
+                            <td>{{ repair.issue }}</td>
+                            <td>PKR {{ "%.0f"|format(repair.customer_amount) }}</td>
+                            <td>PKR {{ "%.0f"|format(repair.parts_cost) }}</td>
+                            <td class="fw-bold text-success">PKR {{ "%.0f"|format(repair.profit) }}</td>
+                            <td>
+                                <span class="badge {% if repair.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
+                                    {% if repair.status == 'completed' %}
+                                        {% if current_lang == 'ur' %}مکمل{% else %}Completed{% endif %}
+                                    {% else %}
+                                        {% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="editRepair({{ repair.id }})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteRepair({{ repair.id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-3">
+                                {% if current_lang == 'ur' %}ابھی تک کوئی ریپیئر نہیں{% else %}No repairs yet{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Repair Modal -->
+<div class="modal fade" id="editRepairModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2 text-primary"></i>
+                    {% if current_lang == 'ur' %}ریپیئر اپ ڈیٹ کریں{% else %}Update Repair{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editRepairForm" method="POST">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <input type="hidden" name="repair_id" id="editRepairId">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{% if current_lang == 'ur' %}کسٹمر{% else %}Customer{% endif %}</label>
+                            <input type="text" class="form-control" name="customer_name" id="editCustomer" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{% if current_lang == 'ur' %}فون{% else %}Phone{% endif %}</label>
+                            <input type="tel" class="form-control" name="phone" id="editPhone">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-semibold">{% if current_lang == 'ur' %}ڈیوائس{% else %}Device{% endif %}</label>
+                            <input type="text" class="form-control" name="device" id="editDevice" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">{% if current_lang == 'ur' %}مسئلہ{% else %}Issue{% endif %}</label>
+                            <input type="text" class="form-control" name="issue" id="editIssue" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{% if current_lang == 'ur' %}کسٹمر قیمت{% else %}Customer Price{% endif %}</label>
+                            <input type="number" class="form-control" name="customer_amount" id="editCustomerAmount" required step="0.01" min="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{% if current_lang == 'ur' %}پارٹس خرچ{% else %}Parts Cost{% endif %}</label>
+                            <input type="number" class="form-control" name="parts_cost" id="editPartsCost" required step="0.01" min="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{% if current_lang == 'ur' %}حالت{% else %}Status{% endif %}</label>
+                            <select class="form-select" name="status" id="editStatus">
+                                <option value="pending">{% if current_lang == 'ur' %}زیر التواء{% else %}Pending{% endif %}</option>
+                                <option value="completed">{% if current_lang == 'ur' %}مکمل{% else %}Completed{% endif %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">{% if current_lang == 'ur' %}نوٹس{% else %}Notes{% endif %}</label>
+                            <input type="text" class="form-control" name="notes" id="editNotes">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {% if current_lang == 'ur' %}منسوخ کریں{% else %}Cancel{% endif %}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>
+                        {% if current_lang == 'ur' %}اپ ڈیٹ کریں{% else %}Update{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#repairTable').DataTable({
+            pageLength: 25,
+            responsive: true,
+            order: [[0, 'desc']]
+        });
+    });
+    
+    function calculateProfit() {
+        const customerAmount = parseFloat(document.querySelector('input[name="customer_amount"]').value) || 0;
+        const partsCost = parseFloat(document.querySelector('input[name="parts_cost"]').value) || 0;
+        const profit = customerAmount - partsCost;
+        document.getElementById('repairProfit').value = profit.toFixed(2);
+    }
+    
+    function editRepair(id) {
+        fetch('/repair/' + id + '/edit')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('editRepairId').value = data.id;
+                    document.getElementById('editCustomer').value = data.customer_name;
+                    document.getElementById('editPhone').value = data.phone || '';
+                    document.getElementById('editDevice').value = data.device;
+                    document.getElementById('editIssue').value = data.issue;
+                    document.getElementById('editCustomerAmount').value = data.customer_amount;
+                    document.getElementById('editPartsCost').value = data.parts_cost;
+                    document.getElementById('editStatus').value = data.status;
+                    document.getElementById('editNotes').value = data.notes || '';
+                    
+                    document.getElementById('editRepairForm').action = '/repair/' + id + '/update';
+                    
+                    var modal = new bootstrap.Modal(document.getElementById('editRepairModal'));
+                    modal.show();
+                }
+            });
+    }
+    
+    function deleteRepair(id) {
+        const lang = '{{ current_lang }}';
+        Swal.fire({
+            title: lang === 'ur' ? 'ریپیئر حذف کریں؟' : 'Delete Repair?',
+            text: lang === 'ur' ? 'یہ عمل واپس نہیں کیا جا سکتا۔' : 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e17055',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: lang === 'ur' ? 'ہاں، حذف کریں!' : 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/repair/' + id + '/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const msg = lang === 'ur' ? '✅ ریپیئر حذف ہو گیا!' : '✅ Repair deleted!';
+                        showToast(msg, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}
