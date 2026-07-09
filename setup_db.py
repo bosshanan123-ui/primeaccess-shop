@@ -187,7 +187,42 @@ def create_database():
         )
     ''')
     print("✅ Sales table created")
+    # ============ REPAIR REVENUE TABLE ============
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS repair_revenue (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer_name TEXT NOT NULL,
+        phone TEXT,
+        device TEXT NOT NULL,
+        issue TEXT NOT NULL,
+        customer_amount REAL NOT NULL,
+        parts_cost REAL NOT NULL,
+        profit REAL NOT NULL,
+        status TEXT DEFAULT 'pending',
+        notes TEXT,
+        created_by INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+''')
+print("✅ Repair Revenue table created")
 
+# ============ OTHER REVENUE TABLE ============
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS other_revenue (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        description TEXT NOT NULL,
+        amount REAL NOT NULL,
+        category TEXT DEFAULT 'other',
+        customer_name TEXT,
+        notes TEXT,
+        created_by INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+''')
+print("✅ Other Revenue table created")
     # ============================================
     # SALE ITEMS TABLE
     # ============================================
