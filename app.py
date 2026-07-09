@@ -76,23 +76,11 @@ login_manager.login_message_category = 'info'
 SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://your-project.supabase.co')
 SUPABASE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', 'your-service-key')
 USEFUL_TABLES = [
-    'users',                    # Users
-    'products',                 # Products
-    'customers',                # Customers
-    'suppliers',                # Suppliers
-    'sales',                    # Sales
-    'sale_items',               # Sale Items
-    'purchases',                # Purchases
-    'purchase_items',           # Purchase Items
-    'expenses',                 # Expenses
-    'photocopy_jobs',           # Photocopy Jobs
-    'mobile_wallet_transactions', # Mobile Wallet
-    'data_revenue',             # Data Revenue
-    'notes',                    # Notes
-    'paper_stock',              # Paper Stock
-    'customer_dues',            # Customer Dues
-    'payments',                 # Payments
-    'bill_payments',            # 🆕 Bill Payments
+    'users', 'products', 'customers', 'suppliers', 
+    'sales', 'sale_items', 'purchases', 'purchase_items',
+    'expenses', 'photocopy_jobs', 'mobile_wallet_transactions',
+    'data_revenue', 'notes', 'paper_stock', 'customer_dues',
+    'payments', 'bill_payments', 'repair_revenue', 'other_revenue',  # 🆕
 ]
 
 # ==================== MODELS ====================
