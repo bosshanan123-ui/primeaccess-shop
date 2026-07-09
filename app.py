@@ -998,14 +998,19 @@ def dashboard():
     total_products = Product.query.filter_by(is_active=True).count()
     total_products_value = db.session.query(func.sum(Product.purchase_price * Product.stock_quantity)).scalar() or 0
     
-    # ============ 20. DAILY SALES DATA (for chart) ============
-    days = [(datetime.now() - timedelta(days=i)).date() for i in range(7, -1, -1)]
+    # ============ 🆕 20. DAILY SALES DATA (Last 7 days including today) ============
+    # Get last 7 days including today
+    day_names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     daily_sales_data = []
-    for day in days:
-        day_start = datetime.combine(day, datetime.min.time())
-        day_end = datetime.combine(day, datetime.max.time())
+    day_labels = []
+    
+    for i in range(6, -1, -1):  # 6,5,4,3,2,1,0 (6 days ago to today)
+        day_date = today - timedelta(days=i)
+        day_start = datetime.combine(day_date, datetime.min.time())
+        day_end = datetime.combine(day_date, datetime.max.time())
         day_sales = Sale.query.filter(Sale.created_at.between(day_start, day_end)).all()
         daily_sales_data.append(sum(sale.total_amount for sale in day_sales))
+        day_labels.append(day_date.strftime('%a'))  # Mon, Tue, Wed, etc.
     
     # ============ 21. TOP PRODUCTS ============
     top_products = db.session.query(
@@ -1117,6 +1122,7 @@ def dashboard():
         
         # ===== CHARTS =====
         'daily_sales_data': daily_sales_data,
+        'day_labels': day_labels,  # 🆕
         'days': days,
         'top_products': top_products,
         'payment_methods': payment_methods,
@@ -1128,7 +1134,6 @@ def dashboard():
     }
     
     return render_template('dashboard.html', **context)
-
 # ============================================
 # ALL OTHER ROUTES (Products, Sales, Purchases, Customers, Suppliers, Photocopy, Expenses, Reports, Backup, Settings, etc.)
 # ============================================
