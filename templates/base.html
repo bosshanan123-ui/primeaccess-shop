@@ -1400,143 +1400,155 @@
     </div>
 
     <!-- Sidebar Menu -->
-    <div class="sidebar-menu">
-        <div class="menu-label">Main</div>
-        <div class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('dashboard') }}">
-                <i class="fas fa-chart-pie"></i>
-                <span>Dashboard</span>
-            </a>
-        </div>
-
-        <div class="menu-label">Sales &amp; Inventory</div>
-        <!-- ===== ACTIVITY LOG - SIDEBAR LINK ===== -->
-
-        <div class="nav-item {% if request.endpoint in ['products', 'add_product', 'update_product'] %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('products') }}">
-                <i class="fas fa-box"></i>
-                <span>Products</span>
-                <span class="badge bg-primary">0</span>
-            </a>
-        </div>
-        <div class="nav-item {% if request.endpoint == 'new_sale' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('new_sale') }}">
-                <i class="fas fa-cart-plus"></i>
-                <span>New Sale</span>
-            </a>
-        </div>
-        <div class="nav-item {% if request.endpoint == 'sales' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('sales') }}">
-                <i class="fas fa-receipt"></i>
-                <span>Sales History</span>
-            </a>
-        </div>
-        <div class="nav-item {% if request.endpoint == 'new_purchase' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('new_purchase') }}">
-                <i class="fas fa-truck"></i>
-                <span>New Purchase</span>
-            </a>
-        </div>
-        <div class="nav-item {% if request.endpoint == 'purchases' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('purchases') }}">
-                <i class="fas fa-file-invoice"></i>
-                <span>Purchase History</span>
-            </a>
-        </div>
-        <div class="nav-item {% if request.endpoint == 'activity_log' %}active{% endif %}">
-    <a class="nav-link" href="{{ url_for('activity_log') }}">
-        <i class="fas fa-search"></i>
-        <span>Activity Log</span>
-    </a>
-</div>
-        <div class="menu-label">Photocopy</div>
-        <div class="nav-item {% if request.endpoint == 'new_photocopy' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('new_photocopy') }}">
-                <i class="fas fa-copy"></i>
-                <span>New Photocopy</span>
-            </a>
-        </div>
-        <div class="nav-item {% if request.endpoint == 'photocopy' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('photocopy') }}">
-                <i class="fas fa-print"></i>
-                <span>Photocopy Jobs</span>
-            </a>
-        </div>
-
-        <div class="menu-label">People</div>
-        <div class="nav-item {% if request.endpoint == 'customers' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('customers') }}">
-                <i class="fas fa-users"></i>
-                <span>Customers</span>
-            </a>
-        </div>
-        <div class="nav-item {% if request.endpoint == 'suppliers' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('suppliers') }}">
-                <i class="fas fa-handshake"></i>
-                <span>Suppliers</span>
-            </a>
-        </div>
-        <!-- ===== DATA REVENUE SECTION ===== -->
-<div class="menu-label">Revenue</div>
-<div class="nav-item {% if request.endpoint == 'data_revenue' %}active{% endif %}">
-    <a class="nav-link" href="{{ url_for('data_revenue') }}">
-        <i class="fas fa-film"></i>
-        <span>Data Revenue</span>
-    </a>
-</div>
-<div class="nav-item {% if request.endpoint == 'bill_payment' %}active{% endif %}">
-    <a class="nav-link" href="{{ url_for('bill_payment') }}">
-        <i class="fas fa-file-invoice-dollar"></i>
-        <span>Bill Payment</span>
-    </a>
-</div>
-    <div class="nav-item {% if request.endpoint == 'notes' %}active{% endif %}">
-    <a class="nav-link" href="{{ url_for('notes') }}">
-        <i class="fas fa-sticky-note"></i>
-        <span>Notepad</span>
-    </a>
-</div>
-        <div class="menu-label">Finance</div>
-        <div class="nav-item {% if request.endpoint == 'expenses' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('expenses') }}">
-                <i class="fas fa-money-bill-wave"></i>
-                <span>Expenses</span>
-            </a>
-        </div>
-        <div class="nav-item {% if request.endpoint == 'mobile_wallet' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('mobile_wallet') }}">
-                <i class="fas fa-mobile-alt"></i>
-                <span>Mobile Wallets</span>
-            </a>
-        </div>
-        <div class="nav-item {% if request.endpoint == 'reports' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('reports') }}">
-                <i class="fas fa-chart-bar"></i>
-                <span>Reports</span>
-            </a>
-        </div>
-
-        <div class="menu-label">System</div>
-        <div class="nav-item {% if request.endpoint == 'backup' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('backup') }}">
-                <i class="fas fa-database"></i>
-                <span>Backup</span>
-            </a>
-        </div>
-        <div class="nav-item {% if request.endpoint == 'settings' %}active{% endif %}">
-            <a class="nav-link" href="{{ url_for('settings') }}">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
-            </a>
-        </div>
-        <div class="nav-item">
-            <a class="nav-link" href="{{ url_for('logout') }}">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
-            </a>
-        </div>
+   <!-- Sidebar Menu -->
+<div class="sidebar-menu">
+    <!-- ===== MAIN ===== -->
+    <div class="menu-label">Main</div>
+    <div class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('dashboard') }}">
+            <i class="fas fa-chart-pie"></i>
+            <span>Dashboard</span>
+        </a>
     </div>
-</nav>
+
+    <!-- ===== SALES & INVENTORY ===== -->
+    <div class="menu-label">Sales &amp; Inventory</div>
+    <div class="nav-item {% if request.endpoint == 'new_sale' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('new_sale') }}">
+            <i class="fas fa-cart-plus"></i>
+            <span>New Sale</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'sales' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('sales') }}">
+            <i class="fas fa-receipt"></i>
+            <span>Sales History</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint in ['products', 'add_product', 'update_product'] %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('products') }}">
+            <i class="fas fa-box"></i>
+            <span>Products</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'new_purchase' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('new_purchase') }}">
+            <i class="fas fa-truck"></i>
+            <span>New Purchase</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'purchases' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('purchases') }}">
+            <i class="fas fa-file-invoice"></i>
+            <span>Purchase History</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'activity_log' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('activity_log') }}">
+            <i class="fas fa-search"></i>
+            <span>Activity Log</span>
+        </a>
+    </div>
+
+    <!-- ===== PHOTOCOPY ===== -->
+    <div class="menu-label">Photocopy</div>
+    <div class="nav-item {% if request.endpoint == 'new_photocopy' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('new_photocopy') }}">
+            <i class="fas fa-copy"></i>
+            <span>New Photocopy</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'photocopy' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('photocopy') }}">
+            <i class="fas fa-print"></i>
+            <span>Photocopy Jobs</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'paper_stock' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('paper_stock') }}">
+            <i class="fas fa-file-alt"></i>
+            <span>Paper Stock</span>
+        </a>
+    </div>
+
+    <!-- ===== PEOPLE ===== -->
+    <div class="menu-label">People</div>
+    <div class="nav-item {% if request.endpoint == 'customers' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('customers') }}">
+            <i class="fas fa-users"></i>
+            <span>Customers</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'suppliers' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('suppliers') }}">
+            <i class="fas fa-handshake"></i>
+            <span>Suppliers</span>
+        </a>
+    </div>
+
+    <!-- ===== REVENUE ===== -->
+    <div class="menu-label">Revenue</div>
+    <div class="nav-item {% if request.endpoint == 'data_revenue' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('data_revenue') }}">
+            <i class="fas fa-film"></i>
+            <span>Data Revenue</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'bill_payment' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('bill_payment') }}">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <span>Bill Payment</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'mobile_wallet' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('mobile_wallet') }}">
+            <i class="fas fa-mobile-alt"></i>
+            <span>Mobile Wallets</span>
+        </a>
+    </div>
+
+    <!-- ===== FINANCE ===== -->
+    <div class="menu-label">Finance</div>
+    <div class="nav-item {% if request.endpoint == 'expenses' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('expenses') }}">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Expenses</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'reports' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('reports') }}">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reports</span>
+        </a>
+    </div>
+
+    <!-- ===== SYSTEM ===== -->
+    <div class="menu-label">System</div>
+    <div class="nav-item {% if request.endpoint == 'notes' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('notes') }}">
+            <i class="fas fa-sticky-note"></i>
+            <span>Notepad</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'backup' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('backup') }}">
+            <i class="fas fa-database"></i>
+            <span>Backup</span>
+        </a>
+    </div>
+    <div class="nav-item {% if request.endpoint == 'settings' %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('settings') }}">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a class="nav-link" href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+</div>
 
 <!-- ===== MAIN CONTENT ===== -->
 <div class="main-content">
