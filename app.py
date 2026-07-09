@@ -3471,8 +3471,6 @@ def activity_log():
     return render_template('activity_log.html')
 
 
-# ============ ACTIVITY LOG API ============
-
 @app.route('/api/activities')
 @login_required
 def api_activities():
@@ -3559,7 +3557,6 @@ def api_activities():
         
         # ===== 4. DATA REVENUE =====
         try:
-            # Check if DataRevenue table exists
             inspector = inspect(db.engine)
             if 'data_revenue' in inspector.get_table_names():
                 data_revenue = DataRevenue.query.filter(
@@ -3607,8 +3604,8 @@ def api_activities():
                     })
         except Exception as e:
             print(f"Bill payments error: {str(e)}")
-            
-                # ===== 8. REPAIR REVENUE =====
+        
+        # ===== 6. REPAIR REVENUE =====
         try:
             inspector = inspect(db.engine)
             if 'repair_revenue' in inspector.get_table_names():
@@ -3635,7 +3632,7 @@ def api_activities():
         except Exception as e:
             print(f"Repair error: {str(e)}")
         
-        # ===== 9. OTHER REVENUE =====
+        # ===== 7. OTHER REVENUE =====
         try:
             inspector = inspect(db.engine)
             if 'other_revenue' in inspector.get_table_names():
@@ -3656,7 +3653,8 @@ def api_activities():
                     })
         except Exception as e:
             print(f"Other revenue error: {str(e)}")
-        # ===== 6. CUSTOMERS =====
+        
+        # ===== 8. CUSTOMERS =====
         try:
             customers = Customer.query.filter(
                 Customer.created_at.between(month_start, month_end)
@@ -3676,7 +3674,7 @@ def api_activities():
         except Exception as e:
             print(f"Customers error: {str(e)}")
         
-        # ===== 7. PRODUCTS =====
+        # ===== 9. PRODUCTS =====
         try:
             products = Product.query.filter(
                 Product.created_at.between(month_start, month_end)
@@ -3702,7 +3700,6 @@ def api_activities():
         activities.sort(key=lambda x: x.get('time', ''), reverse=True)
         
         # ===== STATS =====
-               # ===== STATS =====
         stats = {
             'total_revenue': sum(a.get('amount', 0) for a in activities if a.get('type') in ['sale', 'photocopy', 'wallet', 'data', 'bill', 'repair', 'other']),
             'total_sales': len([a for a in activities if a.get('type') == 'sale']),
@@ -3732,6 +3729,7 @@ def api_activities():
             'activities': [],
             'stats': {}
         }), 500
+      
 
 # ============ DEBUG ROUTE ============
 
