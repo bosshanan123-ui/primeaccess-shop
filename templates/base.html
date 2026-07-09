@@ -1502,6 +1502,18 @@
                 <span>Bill Payment</span>
             </a>
         </div>
+        <div class="nav-item {% if request.endpoint == 'repair_revenue' %}active{% endif %}">
+    <a class="nav-link" href="{{ url_for('repair_revenue') }}">
+        <i class="fas fa-tools"></i>
+        <span>Repair Revenue</span>
+    </a>
+</div>
+<div class="nav-item {% if request.endpoint == 'other_revenue' %}active{% endif %}">
+    <a class="nav-link" href="{{ url_for('other_revenue') }}">
+        <i class="fas fa-plus-circle"></i>
+        <span>Other Revenue</span>
+    </a>
+</div>
         <div class="nav-item {% if request.endpoint == 'mobile_wallet' %}active{% endif %}">
             <a class="nav-link" href="{{ url_for('mobile_wallet') }}">
                 <i class="fas fa-mobile-alt"></i>
