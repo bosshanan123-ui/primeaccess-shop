@@ -80,7 +80,7 @@ USEFUL_TABLES = [
     'sales', 'sale_items', 'purchases', 'purchase_items',
     'expenses', 'photocopy_jobs', 'mobile_wallet_transactions',
     'data_revenue', 'notes', 'paper_stock', 'customer_dues',
-    'payments', 'bill_payments', 'repair_revenue', 'other_revenue',  # 🆕
+    'payments', 'bill_payments', 'repair_revenue', 'other_revenue',
 ]
 
 # ==================== MODELS ====================
@@ -318,6 +318,7 @@ class PurchaseItem(db.Model):
     total_price = db.Column(db.Float, nullable=False)
     received_quantity = db.Column(db.Integer)
     is_returned = db.Column(db.Boolean, default=False)
+
 # ============ REPAIR REVENUE MODEL ============
 class RepairRevenue(db.Model):
     __tablename__ = 'repair_revenue'
@@ -351,6 +352,7 @@ class OtherRevenue(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     user = db.relationship('User', backref='other_revenues')
+
 class Payment(db.Model):
     __tablename__ = 'payments'
     id = db.Column(db.Integer, primary_key=True)
@@ -638,17 +640,7 @@ def inject_language():
     }
 
 # ==================== ROUTES ====================
-# ===== REPAIR REVENUE (Today) =====
-today_repair = RepairRevenue.query.filter(
-    RepairRevenue.created_at.between(today_start, today_end)
-).all()
-today_repair_profit = sum(r.profit for r in today_repair)
 
-# ===== OTHER REVENUE (Today) =====
-today_other = OtherRevenue.query.filter(
-    OtherRevenue.created_at.between(today_start, today_end)
-).all()
-today_other_revenue = sum(o.amount for o in today_other)
 # ---------- Authentication Routes ----------
 
 @app.route('/')
@@ -902,6 +894,8 @@ def delete_bill_payment(bill_id):
     db.session.commit()
     return jsonify({'status': 'success'})
 
+# ============ DASHBOARD ROUTE ============
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -934,7 +928,6 @@ def dashboard():
     total_wallet_send_today = sum(t.amount for t in today_wallet_send)
     
     # ============ 5. WALLET PROFIT (Today) ============
-    # Rule: Send = 1% profit, Receive = 2% profit
     today_wallet_profit = (total_wallet_send_today * 0.01) + (total_wallet_receive_today * 0.02)
     
     # ============ 6. DATA REVENUE (Today) ============
@@ -943,56 +936,69 @@ def dashboard():
     ).all()
     total_data_revenue_today = sum(r.amount for r in today_data_revenue)
     
-    # ============ 🆕 7. BILL PAYMENT PROFIT (Today) ============
+    # ============ 7. BILL PAYMENT PROFIT (Today) ============
     today_bills = BillPayment.query.filter(
         BillPayment.created_at.between(today_start, today_end)
     ).all()
     today_bill_profit = sum(b.profit_amount for b in today_bills)
     
-    # ============ 8. TOTAL REVENUE (Today) - UPDATED ============
-    # Product Sales + Photocopy Revenue + Wallet Profit + Data Revenue + Bill Profit
-    total_revenue_today = total_sales_today + total_photocopy_revenue + today_wallet_profit + total_data_revenue_today + today_bill_profit
+    # ============ 8. REPAIR REVENUE (Today) ============
+    today_repair = RepairRevenue.query.filter(
+        RepairRevenue.created_at.between(today_start, today_end)
+    ).all()
+    today_repair_profit = sum(r.profit for r in today_repair)
     
-    # ============ 9. EXPENSES (Today) ============
+    # ============ 9. OTHER REVENUE (Today) ============
+    today_other = OtherRevenue.query.filter(
+        OtherRevenue.created_at.between(today_start, today_end)
+    ).all()
+    today_other_revenue = sum(o.amount for o in today_other)
+    
+    # ============ 10. EXPENSES (Today) ============
     today_expenses = Expense.query.filter(Expense.expense_date.between(today_start, today_end)).all()
     total_expenses_today = sum(expense.amount for expense in today_expenses)
     
-    # ============ 10. NET PROFIT (Today) ============
+    # ============ 11. TOTAL REVENUE (Today) ============
+    total_revenue_today = (total_sales_today + total_photocopy_revenue + 
+                          today_wallet_profit + total_data_revenue_today + 
+                          today_bill_profit + today_repair_profit + today_other_revenue)
+    
+    # ============ 12. NET PROFIT (Today) ============
     net_profit_today = total_revenue_today - total_expenses_today
     
-    # ============ 11. DUES (Today) ============
+    # ============ 13. DUES (Today) ============
     today_dues = CustomerDue.query.filter(CustomerDue.due_date.between(today_start, today_end), 
                                          CustomerDue.status == 'pending').all()
     due_amount_today = sum(due.remaining_amount or due.amount for due in today_dues)
     
-    # ============ 12. STOCK ALERTS ============
+    # ============ 14. STOCK ALERTS ============
     low_stock = Product.query.filter(Product.stock_quantity <= Product.min_stock_level).all()
     out_of_stock = Product.query.filter(Product.stock_quantity == 0).all()
     
-    # ============ 13. MONTHLY SALES ============
+    # ============ 15. MONTHLY SALES ============
     month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     monthly_sales = Sale.query.filter(Sale.created_at >= month_start).all()
     total_monthly_sales = sum(sale.total_amount for sale in monthly_sales)
     
-    # ============ 14. WEEKLY SALES ============
+    # ============ 16. WEEKLY SALES ============
     week_start = datetime.now() - timedelta(days=7)
     weekly_sales = Sale.query.filter(Sale.created_at >= week_start).all()
     total_weekly_sales = sum(sale.total_amount for sale in weekly_sales)
     
-    # ============ 15. RECENT ACTIVITY ============
+    # ============ 17. RECENT ACTIVITY ============
     recent_sales = Sale.query.order_by(Sale.created_at.desc()).limit(10).all()
     recent_photocopy = PhotocopyJob.query.order_by(PhotocopyJob.created_at.desc()).limit(5).all()
     recent_expenses = Expense.query.order_by(Expense.expense_date.desc()).limit(5).all()
     
-    # ============ 16. CUSTOMERS ============
+    # ============ 18. CUSTOMERS ============
     total_customers = Customer.query.count()
     new_customers_today = Customer.query.filter(Customer.created_at.between(today_start, today_end)).count()
     
-    # ============ 17. PRODUCTS ============
+    # ============ 19. PRODUCTS ============
     total_products = Product.query.filter_by(is_active=True).count()
     total_products_value = db.session.query(func.sum(Product.purchase_price * Product.stock_quantity)).scalar() or 0
     
-    # ============ 18. DAILY SALES DATA (for chart) ============
+    # ============ 20. DAILY SALES DATA (for chart) ============
     days = [(datetime.now() - timedelta(days=i)).date() for i in range(7, -1, -1)]
     daily_sales_data = []
     for day in days:
@@ -1001,20 +1007,20 @@ def dashboard():
         day_sales = Sale.query.filter(Sale.created_at.between(day_start, day_end)).all()
         daily_sales_data.append(sum(sale.total_amount for sale in day_sales))
     
-    # ============ 19. TOP PRODUCTS ============
+    # ============ 21. TOP PRODUCTS ============
     top_products = db.session.query(
         Product.name,
         func.sum(SaleItem.quantity).label('total_sold')
     ).join(SaleItem).group_by(Product.id).order_by(func.sum(SaleItem.quantity).desc()).limit(10).all()
     
-    # ============ 20. PAYMENT METHODS ============
+    # ============ 22. PAYMENT METHODS ============
     payment_methods = db.session.query(
         Sale.payment_method,
         func.count(Sale.id).label('count'),
         func.sum(Sale.total_amount).label('total')
     ).group_by(Sale.payment_method).all()
     
-    # ============ 21. WALLET BALANCE (Overall) ============
+    # ============ 23. WALLET BALANCE (Overall) ============
     total_received_jazz = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
         MobileWalletTransaction.wallet_type == 'jazzcash',
         MobileWalletTransaction.transaction_type == 'receive'
@@ -1039,7 +1045,7 @@ def dashboard():
     balance_easy = total_received_easy - total_sent_easy
     total_wallet_balance = balance_jazz + balance_easy
     
-    # ============ 22. OVERALL WALLET PROFIT (All time) ============
+    # ============ 24. OVERALL WALLET PROFIT (All time) ============
     total_wallet_send_all = db.session.query(func.sum(MobileWalletTransaction.amount)).filter(
         MobileWalletTransaction.transaction_type == 'send'
     ).scalar() or 0
@@ -1050,10 +1056,10 @@ def dashboard():
     
     wallet_profit_all = (total_wallet_send_all * 0.01) + (total_wallet_receive_all * 0.02)
     
-    # ============ 23. OVERALL DATA REVENUE (All time) ============
+    # ============ 25. OVERALL DATA REVENUE (All time) ============
     total_data_revenue_all = db.session.query(func.sum(DataRevenue.amount)).scalar() or 0
     
-    # ============ 🆕 24. OVERALL BILL PROFIT (All time) ============
+    # ============ 26. OVERALL BILL PROFIT (All time) ============
     total_bill_profit_all = db.session.query(func.sum(BillPayment.profit_amount)).scalar() or 0
     
     # ============ CONTEXT ============
@@ -1066,7 +1072,9 @@ def dashboard():
         'total_wallet_send_today': total_wallet_send_today,
         'today_wallet_profit': today_wallet_profit,
         'total_data_revenue_today': total_data_revenue_today,
-        'today_bill_profit': today_bill_profit,  # 🆕
+        'today_bill_profit': today_bill_profit,
+        'today_repair_profit': today_repair_profit,
+        'today_other_revenue': today_other_revenue,
         'total_revenue_today': total_revenue_today,
         'total_prints_today': total_prints_today,
         
@@ -1077,7 +1085,7 @@ def dashboard():
         'total_data_revenue_all': total_data_revenue_all,
         
         # ===== BILL PROFIT (Overall) =====
-        'total_bill_profit_all': total_bill_profit_all,  # 🆕
+        'total_bill_profit_all': total_bill_profit_all,
         
         # ===== EXPENSES & PROFIT =====
         'total_expenses_today': total_expenses_today,
@@ -2415,12 +2423,12 @@ def reports_sales():
                 'photocopy_revenue': copy_amount,
                 'wallet_revenue': wallet_amount,
                 'wallet_profit': month_wallet_profit,
-                'bill_profit': bill_profit_amount,  # 🆕
+                'bill_profit': bill_profit_amount,
                 'total_revenue': monthly_total,
                 'orders': product_orders,
                 'jobs': copy_jobs,
                 'wallet_txns': wallet_txns,
-                'bills': bill_count  # 🆕
+                'bills': bill_count
             })
             
             # Grand totals
@@ -2455,13 +2463,13 @@ def reports_sales():
                              total_product_sales=total_product_sales,
                              total_photocopy_revenue=total_photocopy_revenue,
                              total_wallet_revenue=total_wallet_revenue,
-                             total_bill_profit=total_bill_profit,  # 🆕
+                             total_bill_profit=total_bill_profit,
                              total_revenue_all=total_revenue_all,
                              total_orders=total_orders,
                              total_jobs=total_jobs,
                              total_wallet_profit=total_wallet_profit,
-                             total_bills_count=total_bills_count,  # 🆕
-                             total_bill_profit_overall=total_bill_profit_overall)  # 🆕
+                             total_bills_count=total_bills_count,
+                             total_bill_profit_overall=total_bill_profit_overall)
                              
     except Exception as e:
         print(f"Sales Report Error: {str(e)}")
@@ -2901,6 +2909,7 @@ def get_theme_preference():
         'status': 'success',
         'theme_mode': theme_mode
     })
+
 # ============ REPAIR REVENUE ROUTES ============
 
 @app.route('/repair_revenue')
@@ -3060,6 +3069,7 @@ def delete_other_revenue(revenue_id):
     db.session.delete(revenue)
     db.session.commit()
     return jsonify({'status': 'success'})
+
 # ---------- Settings Routes ----------
 
 @app.route('/settings')
@@ -3571,7 +3581,7 @@ def api_activities():
         except Exception as e:
             print(f"Data Revenue error: {str(e)}")
         
-        # ===== 🆕 5. BILL PAYMENTS =====
+        # ===== 5. BILL PAYMENTS =====
         try:
             inspector = inspect(db.engine)
             if 'bill_payments' in inspector.get_table_names():
@@ -3583,8 +3593,8 @@ def api_activities():
                         'type': 'bill',
                         'customer': b.customer_name or 'Unknown',
                         'phone': b.phone or '',
-                        'amount': float(b.profit_amount or 0),  # Sirf profit
-                        'bill_amount': float(b.bill_amount or 0),  # Original bill
+                        'amount': float(b.profit_amount or 0),
+                        'bill_amount': float(b.bill_amount or 0),
                         'description': f'{b.bill_type.title()} bill - PKR {b.bill_amount:,.0f}',
                         'category': b.bill_type,
                         'reference': b.reference_number or '',
@@ -3651,8 +3661,8 @@ def api_activities():
             'total_wallet': sum(a.get('amount', 0) for a in activities if a.get('type') == 'wallet'),
             'total_data': sum(a.get('amount', 0) for a in activities if a.get('type') == 'data'),
             'total_customers': len([a for a in activities if a.get('type') == 'customer']),
-            'total_bills': len([a for a in activities if a.get('type') == 'bill']),  # 🆕
-            'total_bill_profit': sum(a.get('amount', 0) for a in activities if a.get('type') == 'bill')  # 🆕
+            'total_bills': len([a for a in activities if a.get('type') == 'bill']),
+            'total_bill_profit': sum(a.get('amount', 0) for a in activities if a.get('type') == 'bill')
         }
         
         return jsonify({
@@ -3886,7 +3896,7 @@ def api_recent_activity():
             'time': job.created_at.strftime('%I:%M %p')
         })
     
-    # 🆕 Recent bill payments
+    # Recent bill payments
     recent_bills = BillPayment.query.order_by(BillPayment.created_at.desc()).limit(3).all()
     for bill in recent_bills:
         activities.append({
@@ -4115,6 +4125,8 @@ def api_sync():
         db.session.rollback()
         print(f"Sync error: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
 # ============================================
 # AI ASSISTANT ROUTES - FULL NATURAL LANGUAGE
 # ============================================
@@ -4652,6 +4664,8 @@ Just type naturally, I'll understand! 😊"""
 📈 **Overall Status:** {'🟢 Excellent business performance!' if data['net_profit'] > 10000 else '🟡 Good performance, keep improving!' if data['net_profit'] > 0 else '🔴 Focus on increasing revenue and reducing expenses!'}
 
 💡 **Recommendation:** {'Give discounts to top customers' if data['top_customers'] else 'Focus on building customer base'}"""
+
+
 # ==================== INITIALIZE DATABASE ====================
 
 if __name__ == '__main__':
@@ -4671,7 +4685,7 @@ if __name__ == '__main__':
             else:
                 print("✅ Theme preference column already exists!")
             
-            # 🆕 Check if bill_payments table exists
+            # Check if bill_payments table exists
             if 'bill_payments' not in inspector.get_table_names():
                 print("⚠️ Bill payments table not found! Please run setup_db.py")
             else:
