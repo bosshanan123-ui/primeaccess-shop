@@ -35,7 +35,7 @@
     </div>
 </div>
 
-<!-- ===== 6 STAT CARDS - REVENUE SOURCES (ALL IN ONE ROW) ===== -->
+<!-- ===== ROW 1: 5 STAT CARDS ===== -->
 <div class="row g-4 mb-4 stagger">
     <!-- ===== 1. TOTAL REVENUE (ALL SOURCES) ===== -->
     <div class="col-xxl-2 col-xl-4 col-lg-6">
@@ -93,7 +93,7 @@
         </div>
     </div>
     
-    <!-- ===== 5. DATA REVENUE (NEW) ===== -->
+    <!-- ===== 5. DATA REVENUE ===== -->
     <div class="col-xxl-2 col-xl-4 col-lg-6">
         <div class="stat-card" style="border-left-color: #e17055;">
             <div class="stat-icon" style="background: #e17055;"><i class="fas fa-film"></i></div>
@@ -106,31 +106,11 @@
             </small>
         </div>
     </div>
-    <!-- ===== 7. REPAIR REVENUE ===== -->
-<div class="col-xxl-2 col-xl-4 col-lg-6">
-    <div class="stat-card" style="border-left-color: #f39c12;">
-        <div class="stat-icon" style="background: #f39c12;"><i class="fas fa-tools"></i></div>
-        <div class="stat-number" data-count="{{ today_repair_profit }}" data-currency="true">PKR 0</div>
-        <div class="stat-label">
-            {% if current_lang == 'ur' %}ریپیئر منافع{% else %}Repair Profit{% endif %}
-        </div>
-        <small>{% if current_lang == 'ur' %}کسٹمر قیمت - پارٹس خرچ{% else %}Customer Price - Parts Cost{% endif %}</small>
-    </div>
 </div>
 
-<!-- ===== 8. OTHER REVENUE ===== -->
-<div class="col-xxl-2 col-xl-4 col-lg-6">
-    <div class="stat-card" style="border-left-color: #e74c3c;">
-        <div class="stat-icon" style="background: #e74c3c;"><i class="fas fa-plus-circle"></i></div>
-        <div class="stat-number" data-count="{{ today_other_revenue }}" data-currency="true">PKR 0</div>
-        <div class="stat-label">
-            {% if current_lang == 'ur' %}دیگر ریونیو{% else %}Other Revenue{% endif %}
-        </div>
-        <small>{% if current_lang == 'ur' %}ایپس + لوازمات + وغیرہ{% else %}Apps + Accessories + etc{% endif %}</small>
-    </div>
-</div>
-
-    <!-- ===== 6. BILL PAYMENT PROFIT (NEW) ===== -->
+<!-- ===== ROW 2: 5 STAT CARDS ===== -->
+<div class="row g-4 mb-4 stagger">
+    <!-- ===== 6. BILL PAYMENT PROFIT ===== -->
     <div class="col-xxl-2 col-xl-4 col-lg-6">
         <div class="stat-card" style="border-left-color: #a29bfe;">
             <div class="stat-icon" style="background: #a29bfe;"><i class="fas fa-file-invoice-dollar"></i></div>
@@ -141,6 +121,56 @@
             <small>
                 {% if current_lang == 'ur' %}&lt; 5K = 20 | ≥ 5K = 50{% else %}&lt; 5K = 20 | ≥ 5K = 50{% endif %}
             </small>
+        </div>
+    </div>
+    
+    <!-- ===== 7. REPAIR REVENUE ===== -->
+    <div class="col-xxl-2 col-xl-4 col-lg-6">
+        <div class="stat-card" style="border-left-color: #f39c12;">
+            <div class="stat-icon" style="background: #f39c12;"><i class="fas fa-tools"></i></div>
+            <div class="stat-number" data-count="{{ today_repair_profit }}" data-currency="true">PKR 0</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}ریپیئر منافع{% else %}Repair Profit{% endif %}
+            </div>
+            <small>{% if current_lang == 'ur' %}کسٹمر قیمت - پارٹس خرچ{% else %}Customer Price - Parts Cost{% endif %}</small>
+        </div>
+    </div>
+    
+    <!-- ===== 8. OTHER REVENUE ===== -->
+    <div class="col-xxl-2 col-xl-4 col-lg-6">
+        <div class="stat-card" style="border-left-color: #e74c3c;">
+            <div class="stat-icon" style="background: #e74c3c;"><i class="fas fa-plus-circle"></i></div>
+            <div class="stat-number" data-count="{{ today_other_revenue }}" data-currency="true">PKR 0</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}دیگر ریونیو{% else %}Other Revenue{% endif %}
+            </div>
+            <small>{% if current_lang == 'ur' %}ایپس + لوازمات + وغیرہ{% else %}Apps + Accessories + etc{% endif %}</small>
+        </div>
+    </div>
+    
+    <!-- ===== 9. TODAY'S EXPENSES ===== -->
+    <div class="col-xxl-2 col-xl-4 col-lg-6">
+        <div class="stat-card" style="border-left-color: #e74c3c;">
+            <div class="stat-icon" style="background: #e74c3c;"><i class="fas fa-money-bill-wave"></i></div>
+            <div class="stat-number" data-count="{{ total_expenses_today }}" data-currency="true">PKR 0</div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}آج کے اخراجات{% else %}Today's Expenses{% endif %}
+            </div>
+            <small>{% if current_lang == 'ur' %}کل اخراجات{% else %}Total Expenses{% endif %}</small>
+        </div>
+    </div>
+    
+    <!-- ===== 10. NET PROFIT ===== -->
+    <div class="col-xxl-2 col-xl-4 col-lg-6">
+        <div class="stat-card" style="border-left-color: {% if net_profit_today > 0 %}#00b894{% else %}#e17055{% endif %};">
+            <div class="stat-icon" style="background: {% if net_profit_today > 0 %}#00b894{% else %}#e17055{% endif %};"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-number" data-count="{{ net_profit_today }}" data-currency="true" style="color: {% if net_profit_today > 0 %}#00b894{% else %}#e17055{% endif %};">
+                PKR 0
+            </div>
+            <div class="stat-label">
+                {% if current_lang == 'ur' %}خالص منافع{% else %}Net Profit{% endif %}
+            </div>
+            <small>{% if current_lang == 'ur' %}ریونیو - اخراجات{% else %}Revenue - Expenses{% endif %}</small>
         </div>
     </div>
 </div>
