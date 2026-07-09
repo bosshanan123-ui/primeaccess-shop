@@ -7,90 +7,377 @@
 
 {% block extra_css %}
 <style>
+    /* ============================================ */
+    /*   AI ASSISTANT - ULTIMATE DESIGN             */
+    /* ============================================ */
+
+    .ai-header-section {
+        background: linear-gradient(135deg, #2563EB, #7C3AED, #EC4899);
+        border-radius: var(--radius-lg);
+        padding: 30px 40px;
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+        animation: gradientShift 8s ease-in-out infinite;
+        background-size: 300% 300%;
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .ai-header-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 50%;
+        animation: floatGlow 10s ease-in-out infinite;
+    }
+
+    .ai-header-section::after {
+        content: '';
+        position: absolute;
+        bottom: -40%;
+        left: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 50%;
+        animation: floatGlow 12s ease-in-out infinite reverse;
+    }
+
+    @keyframes floatGlow {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(30px, -30px) scale(1.1); }
+    }
+
+    .ai-header-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .ai-header-content .ai-brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .ai-header-content .ai-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        animation: pulseIcon 3s ease-in-out infinite;
+        border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    @keyframes pulseIcon {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255,255,255,0.1); }
+        50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(255,255,255,0.2); }
+    }
+
+    .ai-header-content .ai-title {
+        color: white;
+    }
+
+    .ai-header-content .ai-title h2 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin: 0;
+        text-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    }
+
+    .ai-header-content .ai-title span {
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+
+    .ai-header-content .ai-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(10px);
+        padding: 8px 16px;
+        border-radius: 50px;
+        color: white;
+        font-size: 0.75rem;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .ai-status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #34D399;
+        animation: blinkDot 1.5s ease-in-out infinite;
+    }
+
+    @keyframes blinkDot {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+
+    /* ===== CHAT CONTAINER ===== */
     .chat-container {
-        height: 70vh;
+        height: 65vh;
         overflow-y: auto;
-        padding: 20px;
+        padding: 24px;
         background: var(--bg-body);
         border-radius: var(--radius-md);
         border: 1px solid var(--border-color);
+        scroll-behavior: smooth;
     }
-    
+
+    .chat-container::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .chat-container::-webkit-scrollbar-track {
+        background: var(--bg-body);
+    }
+
+    .chat-container::-webkit-scrollbar-thumb {
+        background: var(--brand-primary);
+        border-radius: 10px;
+    }
+
+    /* ===== CHAT MESSAGES ===== */
     .chat-message {
         margin-bottom: 16px;
         display: flex;
         align-items: flex-start;
         gap: 12px;
-        animation: fadeInUp 0.3s ease;
+        animation: messageSlide 0.4s ease forwards;
+        opacity: 0;
+        transform: translateY(20px);
     }
-    
+
+    @keyframes messageSlide {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     .chat-message.ai {
         flex-direction: row;
     }
-    
+
     .chat-message.user {
         flex-direction: row-reverse;
     }
-    
+
     .chat-message .avatar {
-        width: 40px;
-        height: 40px;
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         flex-shrink: 0;
+        position: relative;
     }
-    
+
     .chat-message.ai .avatar {
         background: linear-gradient(135deg, #2563EB, #7C3AED);
         color: white;
+        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
     }
-    
+
+    .chat-message.ai .avatar::after {
+        content: '';
+        position: absolute;
+        inset: -3px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2563EB, #7C3AED, #EC4899);
+        z-index: -1;
+        animation: spinGlow 4s linear infinite;
+        opacity: 0.6;
+    }
+
+    @keyframes spinGlow {
+        to { transform: rotate(360deg); }
+    }
+
     .chat-message.user .avatar {
         background: var(--bg-card-hover);
         color: var(--text-primary);
+        border: 2px solid var(--border-color);
     }
-    
+
     .chat-message .bubble {
-        max-width: 75%;
-        padding: 12px 16px;
+        max-width: 78%;
+        padding: 14px 20px;
         border-radius: var(--radius-md);
+        font-size: 0.9rem;
+        line-height: 1.7;
+        position: relative;
+        box-shadow: var(--shadow-sm);
+        transition: all var(--transition-fast);
+    }
+
+    .chat-message.ai .bubble {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
-        font-size: 0.9rem;
-        line-height: 1.6;
-    }
-    
-    .chat-message.ai .bubble {
         border-top-left-radius: 4px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     }
-    
+
+    .chat-message.ai .bubble:hover {
+        box-shadow: var(--shadow-md);
+    }
+
     .chat-message.user .bubble {
-        border-top-right-radius: 4px;
         background: var(--brand-gradient);
         color: white;
+        border-top-right-radius: 4px;
+        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.2);
     }
-    
+
     .chat-message .bubble .time {
-        font-size: 0.6rem;
-        color: var(--text-muted);
-        margin-top: 4px;
+        font-size: 0.55rem;
+        opacity: 0.5;
+        margin-top: 6px;
         display: block;
     }
-    
+
     .chat-message.user .bubble .time {
         color: rgba(255,255,255,0.6);
     }
-    
+
+    /* ===== TYPING INDICATOR ===== */
+    .typing-indicator {
+        display: none;
+        padding: 14px 20px;
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        max-width: 100px;
+        margin-left: 54px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .typing-indicator span {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text-muted);
+        margin: 0 2px;
+        animation: typingDot 1.4s infinite both;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingDot {
+        0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ===== WELCOME MESSAGE ===== */
+    .welcome-message {
+        text-align: center;
+        padding: 50px 20px;
+    }
+
+    .welcome-message .icon {
+        font-size: 5rem;
+        margin-bottom: 16px;
+        display: inline-block;
+        animation: welcomeFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes welcomeFloat {
+        0%, 100% { transform: translateY(0) rotate(-5deg); }
+        50% { transform: translateY(-10px) rotate(5deg); }
+    }
+
+    .welcome-message h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: var(--brand-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .welcome-message .sub-text {
+        color: var(--text-muted);
+        max-width: 500px;
+        margin: 0 auto 4px;
+        font-size: 0.95rem;
+    }
+
+    .welcome-message .sub-text-2 {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        opacity: 0.6;
+    }
+
+    /* ===== QUICK ACTIONS ===== */
+    .quick-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .quick-actions .btn {
+        font-size: 0.7rem;
+        padding: 6px 14px;
+        border-radius: 50px;
+        background: var(--bg-card);
+        border: 1.5px solid var(--border-color);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        font-weight: 500;
+    }
+
+    .quick-actions .btn:hover {
+        background: var(--brand-gradient);
+        color: white;
+        border-color: transparent;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+    }
+
+    .quick-actions .btn i {
+        margin-right: 4px;
+    }
+
+    /* ===== CHAT INPUT ===== */
     .chat-input-area {
         padding: 16px 20px;
         display: flex;
         gap: 12px;
         border-top: 1px solid var(--border-color);
+        background: var(--bg-card);
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+        position: relative;
     }
-    
+
     .chat-input-area input {
         flex: 1;
         padding: 12px 16px;
@@ -100,14 +387,20 @@
         color: var(--text-primary);
         font-size: 0.9rem;
         transition: all var(--transition-fast);
+        font-family: 'Inter', sans-serif;
     }
-    
+
     .chat-input-area input:focus {
         outline: none;
         border-color: var(--brand-primary);
         box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.06);
     }
-    
+
+    .chat-input-area input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.5;
+    }
+
     .chat-input-area .btn-send {
         padding: 12px 24px;
         border-radius: var(--radius-md);
@@ -117,130 +410,132 @@
         font-weight: 600;
         cursor: pointer;
         transition: all var(--transition-fast);
-    }
-    
-    .chat-input-area .btn-send:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
-    }
-    
-    .quick-actions {
+        font-size: 0.9rem;
         display: flex;
+        align-items: center;
         gap: 8px;
+    }
+
+    .chat-input-area .btn-send:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+    }
+
+    .chat-input-area .btn-send:active {
+        transform: scale(0.98);
+    }
+
+    /* ===== FEATURES BAR ===== */
+    .ai-features-bar {
+        display: flex;
+        gap: 12px;
         flex-wrap: wrap;
-        justify-content: center;
-        margin-top: 16px;
-    }
-    
-    .quick-actions .btn {
-        font-size: 0.7rem;
-        padding: 6px 14px;
-        border-radius: 50px;
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        color: var(--text-secondary);
-        cursor: pointer;
-        transition: all var(--transition-fast);
-    }
-    
-    .quick-actions .btn:hover {
-        background: var(--brand-gradient);
-        color: white;
-        border-color: transparent;
-    }
-    
-    .typing-indicator {
-        display: none;
-        padding: 12px 16px;
-        background: var(--bg-card);
+        padding: 12px 20px;
+        background: var(--bg-card-hover);
         border-radius: var(--radius-md);
-        border: 1px solid var(--border-color);
-        max-width: 100px;
-        margin-left: 52px;
-    }
-    
-    .typing-indicator span {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--text-muted);
-        margin: 0 2px;
-        animation: typing 1.4s infinite both;
-    }
-    
-    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-    
-    @keyframes typing {
-        0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-        40% { transform: scale(1); opacity: 1; }
-    }
-    
-    .welcome-message {
-        text-align: center;
-        padding: 40px 20px;
-    }
-    
-    .welcome-message .icon {
-        font-size: 4rem;
         margin-bottom: 16px;
+        border: 1px solid var(--border-color);
     }
-    
-    .welcome-message h3 {
-        font-size: 1.3rem;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-    
-    .welcome-message p {
+
+    .ai-features-bar .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.7rem;
         color: var(--text-muted);
-        max-width: 500px;
-        margin: 0 auto;
     }
-    
+
+    .ai-features-bar .feature-item i {
+        color: var(--brand-primary);
+    }
+
+    /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
+        .ai-header-section {
+            padding: 20px;
+        }
+        .ai-header-content .ai-title h2 {
+            font-size: 1.2rem;
+        }
+        .ai-header-content .ai-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 1.5rem;
+        }
         .chat-container {
-            height: 60vh;
+            height: 55vh;
+            padding: 16px;
         }
         .chat-message .bubble {
-            max-width: 85%;
+            max-width: 90%;
             font-size: 0.8rem;
+            padding: 10px 14px;
         }
         .quick-actions .btn {
             font-size: 0.6rem;
+            padding: 4px 10px;
+        }
+        .ai-features-bar {
+            padding: 8px 12px;
+        }
+        .ai-features-bar .feature-item {
+            font-size: 0.6rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .ai-header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .chat-input-area input {
+            font-size: 0.8rem;
+        }
+        .chat-input-area .btn-send {
+            padding: 10px 16px;
+            font-size: 0.8rem;
+        }
+        .welcome-message .icon {
+            font-size: 3.5rem;
+        }
+        .welcome-message h3 {
+            font-size: 1.2rem;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div class="row align-items-center">
-        <div class="col">
-            <h1><i class="fas fa-robot text-primary me-2"></i>
-                {% if current_lang == 'ur' %}اے آئی اسسٹنٹ{% else %}AI Assistant{% endif %}
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
-                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
-                    </a></li>
-                    <li class="breadcrumb-item active">
-                        {% if current_lang == 'ur' %}اے آئی اسسٹنٹ{% else %}AI Assistant{% endif %}
-                    </li>
-                </ol>
-            </nav>
+<!-- ===== AI HEADER SECTION ===== -->
+<div class="ai-header-section">
+    <div class="ai-header-content">
+        <div class="ai-brand">
+            <div class="ai-icon">
+                <i class="fas fa-brain"></i>
+            </div>
+            <div class="ai-title">
+                <h2>🚀 PrimeAI Assistant</h2>
+                <span>{% if current_lang == 'ur' %}آپ کا ذاتی بزنس اسسٹنٹ{% else %}Your Personal Business Assistant{% endif %}</span>
+            </div>
         </div>
-        <div class="col-auto">
-            <button class="btn btn-outline-secondary" onclick="clearChat()">
-                <i class="fas fa-trash me-2"></i>
-                {% if current_lang == 'ur' %}چیٹ صاف کریں{% else %}Clear Chat{% endif %}
-            </button>
+        <div class="ai-status">
+            <span class="ai-status-dot"></span>
+            <span>{% if current_lang == 'ur' %}لائیو اور تیار{% else %}Live &amp; Ready{% endif %}</span>
+            <span style="opacity:0.5; font-size:0.6rem;">| v3.0</span>
         </div>
     </div>
 </div>
 
+<!-- ===== FEATURES BAR ===== -->
+<div class="ai-features-bar">
+    <span class="feature-item"><i class="fas fa-check-circle"></i> {% if current_lang == 'ur' %}اردو اور انگریزی{% else %}Urdu &amp; English{% endif %}</span>
+    <span class="feature-item"><i class="fas fa-calendar-alt"></i> {% if current_lang == 'ur' %}کسی بھی تاریخ کا ڈیٹا{% else %}Any Date Data{% endif %}</span>
+    <span class="feature-item"><i class="fas fa-chart-line"></i> {% if current_lang == 'ur' %}لائیو تجزیہ{% else %}Live Analysis{% endif %}</span>
+    <span class="feature-item"><i class="fas fa-lightbulb"></i> {% if current_lang == 'ur' %}ذہین مشورے{% else %}AI Insights{% endif %}</span>
+    <span class="feature-item"><i class="fas fa-shield-alt"></i> {% if current_lang == 'ur' %}100% محفوظ{% else %}100% Secure{% endif %}</span>
+</div>
+
+<!-- ===== CHAT CARD ===== -->
 <div class="card">
     <div class="card-body p-0">
         <!-- Chat Container -->
@@ -249,16 +544,19 @@
             <div class="welcome-message" id="welcomeMessage">
                 <div class="icon">🤖</div>
                 <h3>Assalam o Alaikum Abdul Hanan! 👋</h3>
-                <p>{% if current_lang == 'ur' %}میں آپ کا شاپ اسسٹنٹ ہوں۔ آپ مجھ سے اپنی شاپ کے بارے میں کوئی بھی سوال پوچھ سکتے ہیں۔{% else %}I'm your shop assistant. You can ask me anything about your shop.{% endif %}</p>
+                <p class="sub-text">{% if current_lang == 'ur' %}میں آپ کا ذاتی بزنس اسسٹنٹ ہوں۔ آپ مجھ سے اپنی شاپ کے بارے میں کوئی بھی سوال پوچھ سکتے ہیں۔{% else %}I'm your personal business assistant. You can ask me anything about your shop.{% endif %}</p>
+                <p class="sub-text-2">💡 {% if current_lang == 'ur' %}اردو یا انگریزی میں پوچھیں - میں دونوں سمجھتا ہوں!{% else %}Ask in Urdu or English - I understand both!{% endif %}</p>
                 <div class="quick-actions">
-                    <button class="btn" onclick="askQuestion('today sales')">📊 Today's Sales</button>
-                    <button class="btn" onclick="askQuestion('today profit')">💰 Today's Profit</button>
-                    <button class="btn" onclick="askQuestion('yesterday sales')">📅 Yesterday</button>
-                    <button class="btn" onclick="askQuestion('this month summary')">📈 This Month</button>
-                    <button class="btn" onclick="askQuestion('top products')">🏆 Top Products</button>
-                    <button class="btn" onclick="askQuestion('top customers')">👥 Top Customers</button>
-                    <button class="btn" onclick="askQuestion('low stock')">📦 Low Stock</button>
-                    <button class="btn" onclick="askQuestion('summary')">📊 Full Summary</button>
+                    <button class="btn" onclick="askQuestion('today sales')"><i class="fas fa-chart-bar"></i> Today's Sales</button>
+                    <button class="btn" onclick="askQuestion('today profit')"><i class="fas fa-coins"></i> Today's Profit</button>
+                    <button class="btn" onclick="askQuestion('yesterday sales')"><i class="fas fa-calendar-day"></i> Yesterday</button>
+                    <button class="btn" onclick="askQuestion('this month summary')"><i class="fas fa-calendar-alt"></i> This Month</button>
+                    <button class="btn" onclick="askQuestion('top products')"><i class="fas fa-trophy"></i> Top Products</button>
+                    <button class="btn" onclick="askQuestion('top customers')"><i class="fas fa-users"></i> Top Customers</button>
+                    <button class="btn" onclick="askQuestion('low stock')"><i class="fas fa-box"></i> Low Stock</button>
+                    <button class="btn" onclick="askQuestion('summary')"><i class="fas fa-file-alt"></i> Full Summary</button>
+                    <button class="btn" onclick="askQuestion('repair ka hisab')"><i class="fas fa-tools"></i> Repair Report</button>
+                    <button class="btn" onclick="askQuestion('bill payment profit')"><i class="fas fa-file-invoice-dollar"></i> Bill Profit</button>
                 </div>
             </div>
             
@@ -280,6 +578,7 @@
                    onkeypress="if(event.key==='Enter') sendMessage()">
             <button class="btn-send" onclick="sendMessage()">
                 <i class="fas fa-paper-plane"></i>
+                <span>{% if current_lang == 'ur' %}بھیجیں{% else %}Send{% endif %}</span>
             </button>
         </div>
     </div>
@@ -289,7 +588,7 @@
 {% block extra_js %}
 <script>
 // ============================================
-// AI ASSISTANT - COMPLETE JAVASCRIPT
+// AI ASSISTANT - ULTIMATE JAVASCRIPT
 // ============================================
 
 let chatHistory = [];
@@ -401,6 +700,7 @@ function clearChat() {
             document.getElementById('chatMessages').innerHTML = '';
             document.getElementById('welcomeMessage').style.display = 'block';
             chatHistory = [];
+            showToast('💬 Chat cleared successfully!', 'success');
         }
     });
 }
@@ -415,13 +715,19 @@ function scrollToBottom() {
 
 // ============ KEYBOARD SHORTCUTS ============
 document.addEventListener('keydown', function(e) {
+    // Ctrl+/ to focus chat
     if (e.ctrlKey && e.key === '/') {
         e.preventDefault();
         document.getElementById('chatInput').focus();
     }
+    // Escape to clear input
+    if (e.key === 'Escape') {
+        document.getElementById('chatInput').value = '';
+    }
 });
 
-console.log('🤖 AI Assistant loaded successfully!');
+console.log('🤖 PrimeAI Assistant loaded successfully!');
 console.log('💡 Press Ctrl+/ to focus chat');
+console.log('💡 Press Escape to clear input');
 </script>
 {% endblock %}
