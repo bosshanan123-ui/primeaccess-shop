@@ -3607,7 +3607,55 @@ def api_activities():
                     })
         except Exception as e:
             print(f"Bill payments error: {str(e)}")
+            
+                # ===== 8. REPAIR REVENUE =====
+        try:
+            inspector = inspect(db.engine)
+            if 'repair_revenue' in inspector.get_table_names():
+                repairs = RepairRevenue.query.filter(
+                    RepairRevenue.created_at.between(month_start, month_end)
+                ).all()
+                for r in repairs:
+                    activities.append({
+                        'type': 'repair',
+                        'customer': r.customer_name or 'Unknown',
+                        'phone': r.phone or '',
+                        'amount': float(r.profit or 0),
+                        'description': f'{r.device} - {r.issue[:50]}',
+                        'category': r.device,
+                        'time': r.created_at.strftime('%d/%m/%Y %I:%M %p'),
+                        'details': {
+                            'device': r.device,
+                            'issue': r.issue,
+                            'customer_amount': float(r.customer_amount or 0),
+                            'parts_cost': float(r.parts_cost or 0),
+                            'status': r.status or 'pending'
+                        }
+                    })
+        except Exception as e:
+            print(f"Repair error: {str(e)}")
         
+        # ===== 9. OTHER REVENUE =====
+        try:
+            inspector = inspect(db.engine)
+            if 'other_revenue' in inspector.get_table_names():
+                others = OtherRevenue.query.filter(
+                    OtherRevenue.created_at.between(month_start, month_end)
+                ).all()
+                for o in others:
+                    activities.append({
+                        'type': 'other',
+                        'customer': o.customer_name or 'Unknown',
+                        'amount': float(o.amount or 0),
+                        'description': o.description or '',
+                        'category': o.category or 'other',
+                        'time': o.created_at.strftime('%d/%m/%Y %I:%M %p'),
+                        'details': {
+                            'category': o.category or 'other'
+                        }
+                    })
+        except Exception as e:
+            print(f"Other revenue error: {str(e)}")
         # ===== 6. CUSTOMERS =====
         try:
             customers = Customer.query.filter(
@@ -3654,15 +3702,17 @@ def api_activities():
         activities.sort(key=lambda x: x.get('time', ''), reverse=True)
         
         # ===== STATS =====
+               # ===== STATS =====
         stats = {
-            'total_revenue': sum(a.get('amount', 0) for a in activities if a.get('type') in ['sale', 'photocopy', 'wallet', 'data', 'bill']),
+            'total_revenue': sum(a.get('amount', 0) for a in activities if a.get('type') in ['sale', 'photocopy', 'wallet', 'data', 'bill', 'repair', 'other']),
             'total_sales': len([a for a in activities if a.get('type') == 'sale']),
             'total_photocopy': len([a for a in activities if a.get('type') == 'photocopy']),
             'total_wallet': sum(a.get('amount', 0) for a in activities if a.get('type') == 'wallet'),
             'total_data': sum(a.get('amount', 0) for a in activities if a.get('type') == 'data'),
             'total_customers': len([a for a in activities if a.get('type') == 'customer']),
-            'total_bills': len([a for a in activities if a.get('type') == 'bill']),
-            'total_bill_profit': sum(a.get('amount', 0) for a in activities if a.get('type') == 'bill')
+            'total_bill_profit': sum(a.get('amount', 0) for a in activities if a.get('type') == 'bill'),
+            'total_repair_profit': sum(a.get('amount', 0) for a in activities if a.get('type') == 'repair'),
+            'total_other_revenue': sum(a.get('amount', 0) for a in activities if a.get('type') == 'other')
         }
         
         return jsonify({
