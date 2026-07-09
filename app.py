@@ -2903,7 +2903,165 @@ def get_theme_preference():
         'status': 'success',
         'theme_mode': theme_mode
     })
+# ============ REPAIR REVENUE ROUTES ============
 
+@app.route('/repair_revenue')
+@login_required
+def repair_revenue():
+    """Repair Revenue page"""
+    repairs = RepairRevenue.query.order_by(RepairRevenue.created_at.desc()).all()
+    total_profit = db.session.query(func.sum(RepairRevenue.profit)).scalar() or 0
+    return render_template('repair_revenue.html', repairs=repairs, total_profit=total_profit)
+
+
+@app.route('/repair/add', methods=['POST'])
+@login_required
+def add_repair():
+    """Add new repair"""
+    customer_name = request.form.get('customer_name')
+    phone = request.form.get('phone')
+    device = request.form.get('device')
+    issue = request.form.get('issue')
+    customer_amount = float(request.form.get('customer_amount'))
+    parts_cost = float(request.form.get('parts_cost'))
+    status = request.form.get('status', 'pending')
+    notes = request.form.get('notes')
+    
+    profit = customer_amount - parts_cost
+    
+    repair = RepairRevenue(
+        customer_name=customer_name,
+        phone=phone,
+        device=device,
+        issue=issue,
+        customer_amount=customer_amount,
+        parts_cost=parts_cost,
+        profit=profit,
+        status=status,
+        notes=notes,
+        created_by=current_user.id
+    )
+    
+    db.session.add(repair)
+    db.session.commit()
+    
+    create_notification(
+        user_id=None,
+        title="🔧 New Repair Added!",
+        message=f"{customer_name} - {device} repair. Profit: PKR {profit:,.0f}",
+        type='sale',
+        link='/repair_revenue'
+    )
+    db.session.commit()
+    
+    flash(f'✅ Repair added! Profit: PKR {profit:,.0f}', 'success')
+    return redirect(url_for('repair_revenue'))
+
+
+@app.route('/repair/<int:repair_id>/edit', methods=['GET'])
+@login_required
+def edit_repair(repair_id):
+    """Get repair data for editing"""
+    repair = RepairRevenue.query.get_or_404(repair_id)
+    return jsonify({
+        'status': 'success',
+        'id': repair.id,
+        'customer_name': repair.customer_name,
+        'phone': repair.phone,
+        'device': repair.device,
+        'issue': repair.issue,
+        'customer_amount': repair.customer_amount,
+        'parts_cost': repair.parts_cost,
+        'status': repair.status,
+        'notes': repair.notes
+    })
+
+
+@app.route('/repair/<int:repair_id>/update', methods=['POST'])
+@login_required
+def update_repair(repair_id):
+    """Update repair"""
+    repair = RepairRevenue.query.get_or_404(repair_id)
+    
+    repair.customer_name = request.form.get('customer_name')
+    repair.phone = request.form.get('phone')
+    repair.device = request.form.get('device')
+    repair.issue = request.form.get('issue')
+    repair.customer_amount = float(request.form.get('customer_amount'))
+    repair.parts_cost = float(request.form.get('parts_cost'))
+    repair.profit = repair.customer_amount - repair.parts_cost
+    repair.status = request.form.get('status')
+    repair.notes = request.form.get('notes')
+    repair.updated_at = datetime.utcnow()
+    
+    db.session.commit()
+    
+    flash('✅ Repair updated successfully!', 'success')
+    return redirect(url_for('repair_revenue'))
+
+
+@app.route('/repair/<int:repair_id>/delete', methods=['POST'])
+@login_required
+def delete_repair(repair_id):
+    """Delete repair"""
+    repair = RepairRevenue.query.get_or_404(repair_id)
+    db.session.delete(repair)
+    db.session.commit()
+    return jsonify({'status': 'success'})
+
+
+# ============ OTHER REVENUE ROUTES ============
+
+@app.route('/other_revenue')
+@login_required
+def other_revenue():
+    """Other Revenue page"""
+    revenues = OtherRevenue.query.order_by(OtherRevenue.created_at.desc()).all()
+    total_other_revenue = db.session.query(func.sum(OtherRevenue.amount)).scalar() or 0
+    return render_template('other_revenue.html', revenues=revenues, total_other_revenue=total_other_revenue)
+
+
+@app.route('/other_revenue/add', methods=['POST'])
+@login_required
+def add_other_revenue():
+    """Add other revenue"""
+    description = request.form.get('description')
+    amount = float(request.form.get('amount'))
+    category = request.form.get('category', 'other')
+    customer_name = request.form.get('customer_name')
+    
+    revenue = OtherRevenue(
+        description=description,
+        amount=amount,
+        category=category,
+        customer_name=customer_name,
+        created_by=current_user.id
+    )
+    
+    db.session.add(revenue)
+    db.session.commit()
+    
+    create_notification(
+        user_id=None,
+        title="💵 New Other Revenue!",
+        message=f"{description} - PKR {amount:,.0f}",
+        type='payment',
+        link='/other_revenue'
+    )
+    db.session.commit()
+    
+    flash(f'✅ Other revenue added: {description} - PKR {amount:,.0f}', 'success')
+    return redirect(url_for('other_revenue'))
+
+
+@app.route('/other_revenue/delete/<int:revenue_id>', methods=['POST'])
+@login_required
+def delete_other_revenue(revenue_id):
+    """Delete other revenue"""
+    revenue = OtherRevenue.query.get_or_404(revenue_id)
+    db.session.delete(revenue)
+    db.session.commit()
+    return jsonify({'status': 'success'})
 # ---------- Settings Routes ----------
 
 @app.route('/settings')
