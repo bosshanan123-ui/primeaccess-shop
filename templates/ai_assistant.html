@@ -1,0 +1,427 @@
+<!-- templates/ai_assistant.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if current_lang == 'ur' %}اے آئی اسسٹنٹ - شاپ مینجمنٹ{% else %}AI Assistant - Shop Management{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        height: 70vh;
+        overflow-y: auto;
+        padding: 20px;
+        background: var(--bg-body);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+    }
+    
+    .chat-message {
+        margin-bottom: 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        animation: fadeInUp 0.3s ease;
+    }
+    
+    .chat-message.ai {
+        flex-direction: row;
+    }
+    
+    .chat-message.user {
+        flex-direction: row-reverse;
+    }
+    
+    .chat-message .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    .chat-message.ai .avatar {
+        background: linear-gradient(135deg, #2563EB, #7C3AED);
+        color: white;
+    }
+    
+    .chat-message.user .avatar {
+        background: var(--bg-card-hover);
+        color: var(--text-primary);
+    }
+    
+    .chat-message .bubble {
+        max-width: 75%;
+        padding: 12px 16px;
+        border-radius: var(--radius-md);
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+    
+    .chat-message.ai .bubble {
+        border-top-left-radius: 4px;
+    }
+    
+    .chat-message.user .bubble {
+        border-top-right-radius: 4px;
+        background: var(--brand-gradient);
+        color: white;
+    }
+    
+    .chat-message .bubble .time {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+        display: block;
+    }
+    
+    .chat-message.user .bubble .time {
+        color: rgba(255,255,255,0.6);
+    }
+    
+    .chat-input-area {
+        padding: 16px 20px;
+        display: flex;
+        gap: 12px;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .chat-input-area input {
+        flex: 1;
+        padding: 12px 16px;
+        border-radius: var(--radius-md);
+        border: 2px solid var(--border-color);
+        background: var(--bg-input);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: all var(--transition-fast);
+    }
+    
+    .chat-input-area input:focus {
+        outline: none;
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.06);
+    }
+    
+    .chat-input-area .btn-send {
+        padding: 12px 24px;
+        border-radius: var(--radius-md);
+        background: var(--brand-gradient);
+        color: white;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+    }
+    
+    .chat-input-area .btn-send:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+    }
+    
+    .quick-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 16px;
+    }
+    
+    .quick-actions .btn {
+        font-size: 0.7rem;
+        padding: 6px 14px;
+        border-radius: 50px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+    }
+    
+    .quick-actions .btn:hover {
+        background: var(--brand-gradient);
+        color: white;
+        border-color: transparent;
+    }
+    
+    .typing-indicator {
+        display: none;
+        padding: 12px 16px;
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        max-width: 100px;
+        margin-left: 52px;
+    }
+    
+    .typing-indicator span {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text-muted);
+        margin: 0 2px;
+        animation: typing 1.4s infinite both;
+    }
+    
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes typing {
+        0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+    
+    .welcome-message {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .welcome-message .icon {
+        font-size: 4rem;
+        margin-bottom: 16px;
+    }
+    
+    .welcome-message h3 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    
+    .welcome-message p {
+        color: var(--text-muted);
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    @media (max-width: 768px) {
+        .chat-container {
+            height: 60vh;
+        }
+        .chat-message .bubble {
+            max-width: 85%;
+            font-size: 0.8rem;
+        }
+        .quick-actions .btn {
+            font-size: 0.6rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h1><i class="fas fa-robot text-primary me-2"></i>
+                {% if current_lang == 'ur' %}اے آئی اسسٹنٹ{% else %}AI Assistant{% endif %}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">
+                        {% if current_lang == 'ur' %}ہوم{% else %}Home{% endif %}
+                    </a></li>
+                    <li class="breadcrumb-item active">
+                        {% if current_lang == 'ur' %}اے آئی اسسٹنٹ{% else %}AI Assistant{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-secondary" onclick="clearChat()">
+                <i class="fas fa-trash me-2"></i>
+                {% if current_lang == 'ur' %}چیٹ صاف کریں{% else %}Clear Chat{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <!-- Chat Container -->
+        <div class="chat-container" id="chatContainer">
+            <!-- Welcome Message -->
+            <div class="welcome-message" id="welcomeMessage">
+                <div class="icon">🤖</div>
+                <h3>Assalam o Alaikum Abdul Hanan! 👋</h3>
+                <p>{% if current_lang == 'ur' %}میں آپ کا شاپ اسسٹنٹ ہوں۔ آپ مجھ سے اپنی شاپ کے بارے میں کوئی بھی سوال پوچھ سکتے ہیں۔{% else %}I'm your shop assistant. You can ask me anything about your shop.{% endif %}</p>
+                <div class="quick-actions">
+                    <button class="btn" onclick="askQuestion('today sales')">📊 Today's Sales</button>
+                    <button class="btn" onclick="askQuestion('today profit')">💰 Today's Profit</button>
+                    <button class="btn" onclick="askQuestion('yesterday sales')">📅 Yesterday</button>
+                    <button class="btn" onclick="askQuestion('this month summary')">📈 This Month</button>
+                    <button class="btn" onclick="askQuestion('top products')">🏆 Top Products</button>
+                    <button class="btn" onclick="askQuestion('top customers')">👥 Top Customers</button>
+                    <button class="btn" onclick="askQuestion('low stock')">📦 Low Stock</button>
+                    <button class="btn" onclick="askQuestion('summary')">📊 Full Summary</button>
+                </div>
+            </div>
+            
+            <!-- Messages -->
+            <div id="chatMessages"></div>
+            
+            <!-- Typing Indicator -->
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <!-- Input Area -->
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" 
+                   placeholder="{% if current_lang == 'ur' %}اپنا سوال پوچھیں... (مثال: 10 جولائی 2026 کی سیل){% else %}Ask your question... (e.g., sales on 10 july 2026){% endif %}"
+                   onkeypress="if(event.key==='Enter') sendMessage()">
+            <button class="btn-send" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ============================================
+// AI ASSISTANT - COMPLETE JAVASCRIPT
+// ============================================
+
+let chatHistory = [];
+let isProcessing = false;
+
+// ============ SEND MESSAGE ============
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message || isProcessing) return;
+    
+    input.value = '';
+    
+    addMessage('user', message);
+    document.getElementById('welcomeMessage').style.display = 'none';
+    
+    showTyping();
+    isProcessing = true;
+    
+    fetch('/api/ai/ask', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            question: message,
+            history: chatHistory.slice(-10)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideTyping();
+        isProcessing = false;
+        
+        if (data.status === 'success') {
+            addMessage('ai', data.response);
+            chatHistory.push({ role: 'user', content: message });
+            chatHistory.push({ role: 'assistant', content: data.response });
+        } else {
+            addMessage('ai', '❌ Sorry, I encountered an error. Please try again.');
+        }
+        scrollToBottom();
+    })
+    .catch(error => {
+        hideTyping();
+        isProcessing = false;
+        addMessage('ai', '❌ Network error. Please check your connection.');
+        scrollToBottom();
+        console.error('Error:', error);
+    });
+}
+
+// ============ ASK QUESTION ============
+function askQuestion(question) {
+    document.getElementById('chatInput').value = question;
+    sendMessage();
+}
+
+// ============ ADD MESSAGE ============
+function addMessage(type, content) {
+    const container = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${type}`;
+    
+    const avatar = type === 'ai' ? '🤖' : '👤';
+    const avatarBg = type === 'ai' ? 'background: linear-gradient(135deg, #2563EB, #7C3AED);' : '';
+    
+    let formattedContent = content;
+    formattedContent = formattedContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formattedContent = formattedContent.replace(/^\s*[-•]\s*/gm, '• ');
+    formattedContent = formattedContent.replace(/\n/g, '<br>');
+    
+    messageDiv.innerHTML = `
+        <div class="avatar" style="${avatarBg}">${avatar}</div>
+        <div class="bubble">
+            ${formattedContent}
+            <span class="time">${new Date().toLocaleTimeString()}</span>
+        </div>
+    `;
+    
+    container.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+// ============ TYPING INDICATOR ============
+function showTyping() {
+    document.getElementById('typingIndicator').style.display = 'block';
+    scrollToBottom();
+}
+
+function hideTyping() {
+    document.getElementById('typingIndicator').style.display = 'none';
+}
+
+// ============ CLEAR CHAT ============
+function clearChat() {
+    const lang = '{{ current_lang }}';
+    Swal.fire({
+        title: lang === 'ur' ? 'چیٹ صاف کریں؟' : 'Clear Chat?',
+        text: lang === 'ur' ? 'کیا آپ واقعی چیٹ کی تاریخ صاف کرنا چاہتے ہیں؟' : 'Do you want to clear chat history?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#2563EB',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: lang === 'ur' ? 'ہاں، صاف کریں!' : 'Yes, clear it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('chatMessages').innerHTML = '';
+            document.getElementById('welcomeMessage').style.display = 'block';
+            chatHistory = [];
+        }
+    });
+}
+
+// ============ SCROLL TO BOTTOM ============
+function scrollToBottom() {
+    const container = document.getElementById('chatContainer');
+    setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+    }, 100);
+}
+
+// ============ KEYBOARD SHORTCUTS ============
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === '/') {
+        e.preventDefault();
+        document.getElementById('chatInput').focus();
+    }
+});
+
+console.log('🤖 AI Assistant loaded successfully!');
+console.log('💡 Press Ctrl+/ to focus chat');
+</script>
+{% endblock %}
