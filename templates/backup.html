@@ -25,10 +25,18 @@
         </div>
         <div class="col-auto">
             <form method="POST" class="d-inline">
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-save me-2"></i>
-                    {% if current_lang == 'ur' %}بیک اپ بنائیں{% else %}Create Backup{% endif %}
-                </button>
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <select name="filter_type" class="form-select form-select-sm" style="width: auto; min-width: 140px;">
+                        <option value="all">{% if current_lang == 'ur' %}تمام ڈیٹا{% else %}All Data{% endif %}</option>
+                        <option value="today">{% if current_lang == 'ur' %}صرف آج کا{% else %}Only Today{% endif %}</option>
+                        <option value="week">{% if current_lang == 'ur' %}اس ہفتے کا{% else %}This Week{% endif %}</option>
+                        <option value="month">{% if current_lang == 'ur' %}اس مہینے کا{% else %}This Month{% endif %}</option>
+                    </select>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>
+                        {% if current_lang == 'ur' %}بیک اپ بنائیں{% else %}Create Backup{% endif %}
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -72,12 +80,10 @@
                 <label class="form-label fw-semibold">
                     {% if current_lang == 'ur' %}اپنی تاریخ{% else %}Custom Date Range{% endif %}
                 </label>
-                <div class="d-flex gap-2">
-                    <input type="date" class="form-control form-control-sm" id="dateFrom">
-                    <span class="align-self-center">
-                        {% if current_lang == 'ur' %}تک{% else %}to{% endif %}
-                    </span>
-                    <input type="date" class="form-control form-control-sm" id="dateTo">
+                <div class="d-flex gap-2 flex-wrap">
+                    <input type="date" class="form-control form-control-sm" id="dateFrom" style="width: 130px;">
+                    <span class="align-self-center">{% if current_lang == 'ur' %}تک{% else %}to{% endif %}</span>
+                    <input type="date" class="form-control form-control-sm" id="dateTo" style="width: 130px;">
                     <button class="btn btn-primary btn-sm" onclick="applyCustomDate()">
                         <i class="fas fa-search me-1"></i>
                         {% if current_lang == 'ur' %}لگائیں{% else %}Apply{% endif %}
@@ -96,21 +102,15 @@
                 </label>
                 <div class="d-flex gap-2">
                     <div class="p-2 bg-light rounded text-center flex-fill">
-                        <div class="small text-muted">
-                            {% if current_lang == 'ur' %}کل{% else %}Total{% endif %}
-                        </div>
+                        <div class="small text-muted">{% if current_lang == 'ur' %}کل{% else %}Total{% endif %}</div>
                         <div class="fw-bold" id="totalCount">{{ backups|length }}</div>
                     </div>
                     <div class="p-2 bg-light rounded text-center flex-fill">
-                        <div class="small text-muted">
-                            {% if current_lang == 'ur' %}دستی{% else %}Manual{% endif %}
-                        </div>
+                        <div class="small text-muted">{% if current_lang == 'ur' %}دستی{% else %}Manual{% endif %}</div>
                         <div class="fw-bold" id="manualCount">{{ backups|selectattr('type', 'equalto', 'manual')|list|length }}</div>
                     </div>
                     <div class="p-2 bg-light rounded text-center flex-fill">
-                        <div class="small text-muted">
-                            {% if current_lang == 'ur' %}خودکار{% else %}Auto{% endif %}
-                        </div>
+                        <div class="small text-muted">{% if current_lang == 'ur' %}خودکار{% else %}Auto{% endif %}</div>
                         <div class="fw-bold" id="autoCount">{{ backups|selectattr('type', 'equalto', 'auto')|list|length }}</div>
                     </div>
                 </div>
@@ -148,24 +148,12 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>
-                            {% if current_lang == 'ur' %}فائل کا نام{% else %}Filename{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}سائز{% else %}Size{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}بنایا{% else %}Created By{% endif %}
-                        </th>
-                        <th>
-                            {% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}
-                        </th>
+                        <th>{% if current_lang == 'ur' %}فائل کا نام{% else %}Filename{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}قسم{% else %}Type{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}تاریخ{% else %}Date{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}سائز{% else %}Size{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}بنایا{% else %}Created By{% endif %}</th>
+                        <th>{% if current_lang == 'ur' %}اعمال{% else %}Actions{% endif %}</th>
                     </tr>
                 </thead>
                 <tbody id="backupTableBody">
@@ -178,13 +166,17 @@
                             </td>
                             <td>
                                 {% if backup.type == 'auto' %}
-                                    <span class="badge bg-info">
-                                        {% if current_lang == 'ur' %}خودکار{% else %}Auto{% endif %}
-                                    </span>
+                                    <span class="badge bg-info">{% if current_lang == 'ur' %}خودکار{% else %}Auto{% endif %}</span>
+                                {% elif backup.type == 'today' %}
+                                    <span class="badge bg-success">{% if current_lang == 'ur' %}آج{% else %}Today{% endif %}</span>
+                                {% elif backup.type == 'week' %}
+                                    <span class="badge bg-warning">{% if current_lang == 'ur' %}ہفتہ{% else %}Week{% endif %}</span>
+                                {% elif backup.type == 'month' %}
+                                    <span class="badge bg-info">{% if current_lang == 'ur' %}مہینہ{% else %}Month{% endif %}</span>
+                                {% elif backup.type == 'custom' %}
+                                    <span class="badge bg-secondary">{% if current_lang == 'ur' %}اپنی{% else %}Custom{% endif %}</span>
                                 {% else %}
-                                    <span class="badge bg-success">
-                                        {% if current_lang == 'ur' %}دستی{% else %}Manual{% endif %}
-                                    </span>
+                                    <span class="badge bg-success">{% if current_lang == 'ur' %}دستی{% else %}Manual{% endif %}</span>
                                 {% endif %}
                             </td>
                             <td>{{ backup.backup_date.strftime('%d/%m/%Y %H:%M') }}</td>
@@ -226,12 +218,8 @@
                         <tr id="noDataRow">
                             <td colspan="7" class="text-center text-muted py-4">
                                 <i class="fas fa-database fa-3x d-block mb-3"></i>
-                                <h5>
-                                    {% if current_lang == 'ur' %}کوئی بیک اپ نہیں ملا{% else %}No backups found{% endif %}
-                                </h5>
-                                <p>
-                                    {% if current_lang == 'ur' %}اپنا پہلا بیک اپ بنانے کے لیے "بیک اپ بنائیں" پر کلک کریں۔{% else %}Click "Create Backup" to create your first backup.{% endif %}
-                                </p>
+                                <h5>{% if current_lang == 'ur' %}کوئی بیک اپ نہیں ملا{% else %}No backups found{% endif %}</h5>
+                                <p>{% if current_lang == 'ur' %}اپنا پہلا بیک اپ بنانے کے لیے "بیک اپ بنائیں" پر کلک کریں۔{% else %}Click "Create Backup" to create your first backup.{% endif %}</p>
                             </td>
                         </tr>
                     {% endfor %}
@@ -286,7 +274,6 @@
                 if (data.status === 'success') {
                     updateTable(data.backups);
                     const label = getFilterLabel(filterType, lang);
-                    const infoMsg = lang === 'ur' ? 'دکھا رہا ہے: ' + data.count + ' بیک اپ' : 'Showing ' + data.count + ' backups';
                     document.getElementById('filterInfo').textContent = label + ' (' + data.count + ' ' + (lang === 'ur' ? 'بیک اپ' : 'backups') + ')';
                     document.getElementById('totalCount').textContent = data.count;
                     const successMsg = lang === 'ur' ? '✅ ' + data.count + ' بیک اپ دکھا رہا ہے' : '✅ Showing ' + data.count + ' backups';
@@ -393,9 +380,20 @@
         }
         
         backups.forEach((backup, index) => {
-            const typeBadge = backup.type === 'auto' 
-                ? `<span class="badge bg-info">${lang === 'ur' ? 'خودکار' : 'Auto'}</span>` 
-                : `<span class="badge bg-success">${lang === 'ur' ? 'دستی' : 'Manual'}</span>`;
+            let typeBadge = '';
+            if (backup.type === 'auto') {
+                typeBadge = `<span class="badge bg-info">${lang === 'ur' ? 'خودکار' : 'Auto'}</span>`;
+            } else if (backup.type === 'today') {
+                typeBadge = `<span class="badge bg-success">${lang === 'ur' ? 'آج' : 'Today'}</span>`;
+            } else if (backup.type === 'week') {
+                typeBadge = `<span class="badge bg-warning">${lang === 'ur' ? 'ہفتہ' : 'Week'}</span>`;
+            } else if (backup.type === 'month') {
+                typeBadge = `<span class="badge bg-info">${lang === 'ur' ? 'مہینہ' : 'Month'}</span>`;
+            } else if (backup.type === 'custom') {
+                typeBadge = `<span class="badge bg-secondary">${lang === 'ur' ? 'اپنی' : 'Custom'}</span>`;
+            } else {
+                typeBadge = `<span class="badge bg-success">${lang === 'ur' ? 'دستی' : 'Manual'}</span>`;
+            }
             
             const tr = document.createElement('tr');
             tr.dataset.id = backup.id;
