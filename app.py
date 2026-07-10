@@ -2607,22 +2607,77 @@ def backup():
     if request.method == 'POST':
         try:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            backup_filename = f"backup_{timestamp}.json"
+            
+            # Get filter type from form (default: all)
+            filter_type = request.form.get('filter_type', 'all')
             
             # For Supabase PostgreSQL - Export data as JSON
             inspector = inspect(db.engine)
             tables = inspector.get_table_names()
             
             backup_data = {}
+            
+            # Get date range based on filter type
+            today = datetime.now().date()
+            today_start = datetime.combine(today, datetime.min.time())
+            today_end = datetime.combine(today, datetime.max.time())
+            
+            # Week start (Monday)
+            week_start = today - timedelta(days=today.weekday())
+            week_start = datetime.combine(week_start, datetime.min.time())
+            
+            # Month start
+            month_start = today.replace(day=1)
+            month_start = datetime.combine(month_start, datetime.min.time())
+            
             for table in tables:
                 if table.startswith('sqlite_'):
                     continue
                 try:
-                    result = db.session.execute(f'SELECT * FROM {table}').fetchall()
+                    # Get columns for this table
+                    columns = [col['name'] for col in inspector.get_columns(table)]
                     
-                    # ✅ FIXED: Better row to dict conversion
+                    # Build query with date filter if needed
+                    if filter_type == 'today':
+                        date_column = get_date_column(columns)
+                        if date_column:
+                            query = f"SELECT * FROM {table} WHERE {date_column} BETWEEN '{today_start.isoformat()}' AND '{today_end.isoformat()}'"
+                        else:
+                            query = f"SELECT * FROM {table}"
+                            
+                    elif filter_type == 'week':
+                        date_column = get_date_column(columns)
+                        if date_column:
+                            query = f"SELECT * FROM {table} WHERE {date_column} BETWEEN '{week_start.isoformat()}' AND '{today_end.isoformat()}'"
+                        else:
+                            query = f"SELECT * FROM {table}"
+                            
+                    elif filter_type == 'month':
+                        date_column = get_date_column(columns)
+                        if date_column:
+                            query = f"SELECT * FROM {table} WHERE {date_column} BETWEEN '{month_start.isoformat()}' AND '{today_end.isoformat()}'"
+                        else:
+                            query = f"SELECT * FROM {table}"
+                            
+                    elif filter_type == 'custom':
+                        date_from = request.form.get('date_from')
+                        date_to = request.form.get('date_to')
+                        date_column = get_date_column(columns)
+                        
+                        if date_from and date_to and date_column:
+                            start_dt = datetime.strptime(date_from, '%Y-%m-%d')
+                            end_dt = datetime.strptime(date_to, '%Y-%m-%d')
+                            start_dt = datetime.combine(start_dt.date(), datetime.min.time())
+                            end_dt = datetime.combine(end_dt.date(), datetime.max.time())
+                            query = f"SELECT * FROM {table} WHERE {date_column} BETWEEN '{start_dt.isoformat()}' AND '{end_dt.isoformat()}'"
+                        else:
+                            query = f"SELECT * FROM {table}"
+                    else:  # all
+                        query = f"SELECT * FROM {table}"
+                    
+                    result = db.session.execute(query).fetchall()
+                    
                     if result:
-                        # Get column names from result
                         columns = result[0].keys()
                         backup_data[table] = [dict(zip(columns, row)) for row in result]
                     else:
@@ -2632,7 +2687,10 @@ def backup():
                     print(f"Error backing up table {table}: {str(e)}")
                     backup_data[table] = []
             
-            # ✅ FIXED: Better JSON serialization
+            # Check if any data was exported
+            total_records = sum(len(data) for data in backup_data.values())
+            
+            # Better JSON serialization
             def json_serializer(obj):
                 if isinstance(obj, datetime):
                     return obj.isoformat()
@@ -2641,6 +2699,17 @@ def backup():
                 return str(obj)
             
             json_data = json.dumps(backup_data, default=json_serializer, indent=2).encode('utf-8')
+            
+            # Generate filename with filter type
+            filter_names = {
+                'all': 'full',
+                'today': 'today',
+                'week': 'week',
+                'month': 'month',
+                'custom': 'custom'
+            }
+            filter_prefix = filter_names.get(filter_type, 'full')
+            backup_filename = f"backup_{filter_prefix}_{timestamp}.json"
             
             # Upload to Supabase Storage
             success = upload_to_supabase_storage(json_data, backup_filename)
@@ -2653,14 +2722,14 @@ def backup():
             backup = Backup(
                 filename=backup_filename,
                 size=len(json_data),
-                type='manual',
+                type=filter_type if filter_type != 'all' else 'manual',
                 created_by=current_user.id,
-                notes=f'Manual backup by {current_user.username}'
+                notes=f'Backup by {current_user.username} - {filter_type} data ({total_records} records)'
             )
             db.session.add(backup)
             db.session.commit()
             
-            flash(f'✅ Backup created successfully! {len(tables)} tables exported.', 'success')
+            flash(f'✅ Backup created successfully! {total_records} records exported.', 'success')
             
         except Exception as e:
             print(f"Backup Error: {str(e)}")
@@ -2671,6 +2740,14 @@ def backup():
     backups = Backup.query.order_by(Backup.backup_date.desc()).all()
     return render_template('backup.html', backups=backups)
 
+
+def get_date_column(columns):
+    """Find the date column in a table"""
+    date_columns = ['created_at', 'updated_at', 'date', 'expense_date', 'backup_date', 'payment_date']
+    for col in date_columns:
+        if col in columns:
+            return col
+    return None
 
 @app.route('/backup/download/<int:backup_id>')
 @login_required
