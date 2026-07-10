@@ -1028,6 +1028,10 @@
         to { transform: translateX(0); opacity: 1; }
     }
 
+    /* ============================================ */
+    /*   FLOATING ACTION BUTTON - DRAGABLE          */
+    /* ============================================ */
+
     .fab-container {
         position: fixed;
         bottom: 30px;
@@ -1037,55 +1041,221 @@
         flex-direction: column;
         align-items: center;
         gap: 10px;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: default;
     }
+
+    /* Drag Handle */
+    .fab-drag-handle {
+        position: absolute;
+        top: -22px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--text-muted);
+        cursor: grab;
+        font-size: 0.6rem;
+        opacity: 0.3;
+        transition: all var(--transition-fast);
+        padding: 2px 10px;
+        border-radius: 10px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        z-index: 5;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .fab-drag-handle:hover {
+        opacity: 0.8;
+        background: var(--bg-card-hover);
+    }
+
+    .fab-drag-handle:active {
+        cursor: grabbing;
+    }
+
     .fab-container .fab {
-        width: 56px;
-        height: 56px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
         background: var(--brand-gradient);
         color: white;
         border: none;
-        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+        box-shadow: 0 4px 25px rgba(37, 99, 235, 0.35);
         cursor: pointer;
         transition: all var(--transition-normal);
-        font-size: 1.2rem;
+        font-size: 1.4rem;
         display: flex;
         align-items: center;
         justify-content: center;
+        position: relative;
+        z-index: 2;
     }
+
+    .fab-container .fab::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        background: var(--brand-gradient);
+        opacity: 0.3;
+        z-index: -1;
+        animation: fabPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes fabPulse {
+        0%, 100% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.15); opacity: 0.1; }
+    }
+
     .fab-container .fab:hover {
-        transform: scale(1.1) rotate(90deg);
-        box-shadow: 0 6px 30px rgba(37, 99, 235, 0.4);
+        transform: scale(1.08) rotate(90deg);
+        box-shadow: 0 6px 35px rgba(37, 99, 235, 0.45);
     }
+
+    .fab-container .fab:active {
+        transform: scale(0.95);
+    }
+
     .fab-container .fab-actions {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
         opacity: 0;
-        transform: scale(0.8);
+        transform: scale(0.6) translateY(20px);
         transition: all var(--transition-normal);
         pointer-events: none;
+        position: relative;
+        z-index: 1;
     }
+
     .fab-container.open .fab-actions {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateY(0);
         pointer-events: all;
     }
+
+    .fab-container.open .fab {
+        transform: rotate(45deg);
+        box-shadow: 0 4px 30px rgba(37, 99, 235, 0.5);
+    }
+
     .fab-container .fab-actions .fab-item {
-        width: 44px;
-        height: 44px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
         border: none;
         color: white;
         cursor: pointer;
         transition: all var(--transition-fast);
-        font-size: 0.9rem;
+        font-size: 1rem;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: var(--shadow-md);
+        position: relative;
+        animation: fabItemPop 0.3s ease backwards;
     }
-    .fab-container .fab-actions .fab-item:hover { transform: scale(1.1); }
+
+    .fab-container.open .fab-actions .fab-item:nth-child(1) { animation-delay: 0.05s; }
+    .fab-container.open .fab-actions .fab-item:nth-child(2) { animation-delay: 0.10s; }
+    .fab-container.open .fab-actions .fab-item:nth-child(3) { animation-delay: 0.15s; }
+    .fab-container.open .fab-actions .fab-item:nth-child(4) { animation-delay: 0.20s; }
+    .fab-container.open .fab-actions .fab-item:nth-child(5) { animation-delay: 0.25s; }
+    .fab-container.open .fab-actions .fab-item:nth-child(6) { animation-delay: 0.30s; }
+    .fab-container.open .fab-actions .fab-item:nth-child(7) { animation-delay: 0.35s; }
+    .fab-container.open .fab-actions .fab-item:nth-child(8) { animation-delay: 0.40s; }
+    .fab-container.open .fab-actions .fab-item:nth-child(9) { animation-delay: 0.45s; }
+
+    @keyframes fabItemPop {
+        from {
+            opacity: 0;
+            transform: scale(0.4) translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .fab-container .fab-actions .fab-item:hover {
+        transform: scale(1.12) !important;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.25);
+    }
+
+    .fab-container .fab-actions .fab-item .fab-label {
+        position: absolute;
+        right: calc(100% + 12px);
+        background: var(--bg-card);
+        color: var(--text-primary);
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        white-space: nowrap;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        opacity: 0;
+        transform: translateX(10px);
+        transition: all var(--transition-fast);
+        pointer-events: none;
+    }
+
+    .fab-container .fab-actions .fab-item:hover .fab-label {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .fab-container {
+            bottom: 20px;
+            right: 20px;
+        }
+        .fab-container .fab {
+            width: 52px;
+            height: 52px;
+            font-size: 1.2rem;
+        }
+        .fab-container .fab-actions .fab-item {
+            width: 44px;
+            height: 44px;
+            font-size: 0.85rem;
+        }
+        .fab-container .fab-actions .fab-item .fab-label {
+            font-size: 0.5rem;
+            padding: 2px 10px;
+        }
+        .fab-drag-handle {
+            font-size: 0.5rem;
+            padding: 2px 8px;
+            top: -18px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .fab-container {
+            bottom: 15px;
+            right: 15px;
+        }
+        .fab-container .fab {
+            width: 48px;
+            height: 48px;
+            font-size: 1rem;
+        }
+        .fab-container .fab-actions .fab-item {
+            width: 40px;
+            height: 40px;
+            font-size: 0.75rem;
+        }
+        .fab-container .fab-actions {
+            gap: 8px;
+        }
+    }
 
     .page-loader {
         position: fixed;
@@ -1404,15 +1574,17 @@
                 <span>Dashboard</span>
             </a>
         </div>
-    <!-- ===== AI ASSISTANT ===== -->
-<div class="menu-label">Smart Tools</div>
-<div class="nav-item {% if request.endpoint == 'ai_assistant' %}active{% endif %}">
-    <a class="nav-link" href="{{ url_for('ai_assistant') }}">
-        <i class="fas fa-robot"></i>
-        <span>AI Assistant</span>
-        <span class="badge bg-success">New</span>
-    </a>
-</div>
+
+        <!-- ===== AI ASSISTANT ===== -->
+        <div class="menu-label">Smart Tools</div>
+        <div class="nav-item {% if request.endpoint == 'ai_assistant' %}active{% endif %}">
+            <a class="nav-link" href="{{ url_for('ai_assistant') }}">
+                <i class="fas fa-robot"></i>
+                <span>AI Assistant</span>
+                <span class="badge bg-success">New</span>
+            </a>
+        </div>
+
         <!-- ===== SALES & INVENTORY ===== -->
         <div class="menu-label">Sales &amp; Inventory</div>
         <div class="nav-item {% if request.endpoint == 'new_sale' %}active{% endif %}">
@@ -1503,17 +1675,17 @@
             </a>
         </div>
         <div class="nav-item {% if request.endpoint == 'repair_revenue' %}active{% endif %}">
-    <a class="nav-link" href="{{ url_for('repair_revenue') }}">
-        <i class="fas fa-tools"></i>
-        <span>Repair Revenue</span>
-    </a>
-</div>
-<div class="nav-item {% if request.endpoint == 'other_revenue' %}active{% endif %}">
-    <a class="nav-link" href="{{ url_for('other_revenue') }}">
-        <i class="fas fa-plus-circle"></i>
-        <span>Other Revenue</span>
-    </a>
-</div>
+            <a class="nav-link" href="{{ url_for('repair_revenue') }}">
+                <i class="fas fa-tools"></i>
+                <span>Repair Revenue</span>
+            </a>
+        </div>
+        <div class="nav-item {% if request.endpoint == 'other_revenue' %}active{% endif %}">
+            <a class="nav-link" href="{{ url_for('other_revenue') }}">
+                <i class="fas fa-plus-circle"></i>
+                <span>Other Revenue</span>
+            </a>
+        </div>
         <div class="nav-item {% if request.endpoint == 'mobile_wallet' %}active{% endif %}">
             <a class="nav-link" href="{{ url_for('mobile_wallet') }}">
                 <i class="fas fa-mobile-alt"></i>
@@ -1860,23 +2032,56 @@
     </div>
 </div>
 
-<!-- ===== FLOATING ACTION BUTTON ===== -->
-<div class="fab-container">
+<!-- ===== DRAGABLE FLOATING ACTION BUTTON ===== -->
+<div class="fab-container" id="fabContainer">
+    <!-- Drag Handle -->
+    <div class="fab-drag-handle" id="fabDragHandle">
+        <i class="fas fa-grip-vertical"></i>
+        <span>Drag</span>
+    </div>
+    
+    <!-- Main FAB Button -->
     <button class="fab" id="fabToggle" data-tooltip="Quick Actions">
-        <i class="fas fa-plus"></i>
+        <i class="fas fa-plus" id="fabIcon"></i>
     </button>
-    <div class="fab-actions">
+    
+    <!-- Quick Actions -->
+    <div class="fab-actions" id="fabActions">
         <button class="fab-item" style="background: #2563EB;" onclick="window.location.href='{{ url_for('new_sale') }}'" data-tooltip="New Sale">
             <i class="fas fa-cart-plus"></i>
+            <span class="fab-label">New Sale</span>
         </button>
         <button class="fab-item" style="background: #0D9488;" onclick="window.location.href='{{ url_for('new_purchase') }}'" data-tooltip="New Purchase">
             <i class="fas fa-truck"></i>
+            <span class="fab-label">Purchase</span>
         </button>
         <button class="fab-item" style="background: #7C3AED;" onclick="window.location.href='{{ url_for('add_customer') }}'" data-tooltip="Add Customer">
             <i class="fas fa-user-plus"></i>
+            <span class="fab-label">Customer</span>
         </button>
         <button class="fab-item" style="background: #D97706;" onclick="window.location.href='{{ url_for('new_photocopy') }}'" data-tooltip="New Photocopy">
             <i class="fas fa-copy"></i>
+            <span class="fab-label">Photocopy</span>
+        </button>
+        <button class="fab-item" style="background: #E11D48;" onclick="window.location.href='{{ url_for('add_expense') }}'" data-tooltip="Add Expense">
+            <i class="fas fa-money-bill-wave"></i>
+            <span class="fab-label">Expense</span>
+        </button>
+        <button class="fab-item" style="background: #F59E0B;" onclick="window.location.href='{{ url_for('bill_payment') }}'" data-tooltip="Bill Payment">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <span class="fab-label">Bill</span>
+        </button>
+        <button class="fab-item" style="background: #8B5CF6;" onclick="window.location.href='{{ url_for('repair_revenue') }}'" data-tooltip="Repair">
+            <i class="fas fa-tools"></i>
+            <span class="fab-label">Repair</span>
+        </button>
+        <button class="fab-item" style="background: #EC4899;" onclick="window.location.href='{{ url_for('data_revenue') }}'" data-tooltip="Data Revenue">
+            <i class="fas fa-film"></i>
+            <span class="fab-label">Data</span>
+        </button>
+        <button class="fab-item" style="background: #06B6D4;" onclick="window.location.href='{{ url_for('notes') }}'" data-tooltip="Quick Note">
+            <i class="fas fa-sticky-note"></i>
+            <span class="fab-label">Note</span>
         </button>
     </div>
 </div>
@@ -2678,6 +2883,168 @@ window.addEventListener('scroll', function() {
 })();
 
 // ============================================
+// DRAGABLE FAB - COMPLETE
+// ============================================
+
+(function() {
+    const fabContainer = document.getElementById('fabContainer');
+    const fabToggle = document.getElementById('fabToggle');
+    const fabActions = document.getElementById('fabActions');
+    const dragHandle = document.getElementById('fabDragHandle');
+    
+    let isDragging = false;
+    let startX, startY, initialX, initialY;
+    let isOpen = false;
+    
+    // ============ LOAD SAVED POSITION ============
+    function loadFabPosition() {
+        const savedX = localStorage.getItem('fabPositionX');
+        const savedY = localStorage.getItem('fabPositionY');
+        if (savedX !== null && savedY !== null) {
+            fabContainer.style.right = 'auto';
+            fabContainer.style.bottom = 'auto';
+            fabContainer.style.left = savedX + 'px';
+            fabContainer.style.top = savedY + 'px';
+        }
+    }
+    
+    // ============ SAVE POSITION ============
+    function saveFabPosition(x, y) {
+        localStorage.setItem('fabPositionX', x);
+        localStorage.setItem('fabPositionY', y);
+    }
+    
+    // ============ TOGGLE FAB ============
+    function toggleFab(e) {
+        if (isDragging) {
+            isDragging = false;
+            return;
+        }
+        isOpen = !isOpen;
+        fabContainer.classList.toggle('open', isOpen);
+        const icon = fabToggle.querySelector('i');
+        if (isOpen) {
+            icon.className = 'fas fa-times';
+        } else {
+            icon.className = 'fas fa-plus';
+        }
+    }
+    
+    // ============ DRAG EVENTS ============
+    function startDrag(e) {
+        const touch = e.touches ? e.touches[0] : e;
+        isDragging = true;
+        
+        const rect = fabContainer.getBoundingClientRect();
+        startX = touch.clientX;
+        startY = touch.clientY;
+        initialX = rect.left;
+        initialY = rect.top;
+        
+        fabContainer.style.transition = 'none';
+        fabContainer.style.cursor = 'grabbing';
+        dragHandle.style.opacity = '1';
+    }
+    
+    function onDrag(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        
+        const touch = e.touches ? e.touches[0] : e;
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        
+        let newX = initialX + dx;
+        let newY = initialY + dy;
+        
+        // Keep within viewport bounds
+        const containerWidth = fabContainer.offsetWidth || 80;
+        const containerHeight = fabContainer.offsetHeight || 200;
+        const maxX = window.innerWidth - containerWidth - 20;
+        const maxY = window.innerHeight - containerHeight - 20;
+        
+        newX = Math.max(10, Math.min(maxX, newX));
+        newY = Math.max(10, Math.min(maxY, newY));
+        
+        fabContainer.style.left = newX + 'px';
+        fabContainer.style.top = newY + 'px';
+        fabContainer.style.right = 'auto';
+        fabContainer.style.bottom = 'auto';
+    }
+    
+    function endDrag(e) {
+        if (isDragging) {
+            isDragging = false;
+            fabContainer.style.transition = '';
+            fabContainer.style.cursor = '';
+            dragHandle.style.opacity = '';
+            
+            const rect = fabContainer.getBoundingClientRect();
+            saveFabPosition(rect.left, rect.top);
+        }
+    }
+    
+    // ============ EVENT LISTENERS ============
+    // Drag Handle
+    if (dragHandle) {
+        dragHandle.addEventListener('mousedown', startDrag);
+        dragHandle.addEventListener('touchstart', startDrag, { passive: true });
+    }
+    
+    // FAB Toggle
+    if (fabToggle) {
+        fabToggle.addEventListener('click', toggleFab);
+    }
+    
+    // Global drag events
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('touchmove', onDrag, { passive: false });
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchend', endDrag);
+    
+    // ============ RESET POSITION ============
+    window.resetFabPosition = function() {
+        localStorage.removeItem('fabPositionX');
+        localStorage.removeItem('fabPositionY');
+        fabContainer.style.left = 'auto';
+        fabContainer.style.top = 'auto';
+        fabContainer.style.right = '30px';
+        fabContainer.style.bottom = '30px';
+        showToast('🔄 FAB position reset!', 'info');
+    };
+    
+    // ============ CLOSE ON OUTSIDE CLICK ============
+    document.addEventListener('click', function(e) {
+        if (isOpen && !fabContainer.contains(e.target)) {
+            isOpen = false;
+            fabContainer.classList.remove('open');
+            const icon = fabToggle.querySelector('i');
+            icon.className = 'fas fa-plus';
+        }
+    });
+    
+    // ============ KEYBOARD SHORTCUT FOR FAB ============
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (fabContainer && fabContainer.classList.contains('open')) {
+                fabContainer.classList.remove('open');
+                const icon = fabToggle.querySelector('i');
+                if (icon) icon.className = 'fas fa-plus';
+            }
+        }
+    });
+    
+    // ============ LOAD SAVED POSITION ============
+    loadFabPosition();
+    
+    console.log('📌 Dragable FAB initialized!');
+    console.log('💡 Drag the "⋮ Drag" handle to move FAB anywhere');
+    console.log('💡 Click FAB to open/close quick actions');
+    console.log('💡 Press ESC to close FAB');
+    console.log('💡 Double-click "Drag" to reset position');
+})();
+
+// ============================================
 // DOM CONTENT LOADED - MAIN INITIALIZATION
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -2708,11 +3075,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = '/products?search=' + encodeURIComponent(query);
             }
         }
-    });
-    
-    // FAB Toggle
-    document.getElementById('fabToggle').addEventListener('click', function() {
-        document.querySelector('.fab-container').classList.toggle('open');
     });
     
     // Sidebar Search
@@ -2758,6 +3120,7 @@ window.addEventListener('load', function() {
 
 console.log('%c🚀 PRIMEACCESS v3.0 - Complete Theme System', 'font-size:20px; font-weight:bold; color:#2563EB;');
 console.log('%c🔑 Features: Light/Dark/Auto/Light Sensor | 15 Color Themes', 'font-size:12px; color:#7C3AED;');
+console.log('%c💡 Dragable FAB with 9 Quick Actions', 'font-size:12px; color:#00b894;');
 console.log('%c💡 Type /help for more commands', 'font-size:12px; color:#94A3B8;');
 </script>
 {% block extra_js %}{% endblock %}
